@@ -1,0 +1,131 @@
+{ parameter
+    (or (pair %mint
+           (pair (address %address) (nat %amount))
+           (pair (bytes %metadata) (nat %royalties)))
+        (unit %withdraw)) ;
+  storage
+    (pair (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
+                      (address %administrator))
+                (pair (address %hicetnuncMinterAddress) (bool %isMinted)))
+          (mutez %totalWithdrawalsSum)) ;
+  code { UNPAIR ;
+         IF_LEFT
+           { SWAP ;
+             DUP ;
+             CAR ;
+             CDR ;
+             CAR ;
+             CONTRACT %mint_OBJKT
+               (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+             IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+             PUSH mutez 0 ;
+             DIG 3 ;
+             TRANSFER_TOKENS ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             CDR ;
+             PUSH bool True ;
+             DUP 4 ;
+             CAR ;
+             CDR ;
+             CAR ;
+             PAIR ;
+             DIG 3 ;
+             CAR ;
+             CAR ;
+             PAIR ;
+             PAIR ;
+             NIL operation ;
+             DIG 2 ;
+             CONS ;
+             PAIR }
+           { DROP ;
+             DUP ;
+             CDR ;
+             BALANCE ;
+             ADD ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             SENDER ;
+             SWAP ;
+             CAR ;
+             CAR ;
+             CAR ;
+             SWAP ;
+             GET ;
+             IF_NONE { PUSH mutez 0 ; PUSH nat 0 ; PAIR } {} ;
+             PUSH nat 1000 ;
+             DUG 2 ;
+             DUP ;
+             DUG 3 ;
+             CAR ;
+             MUL ;
+             EDIV ;
+             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+             CAR ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             CDR ;
+             SWAP ;
+             SUB ;
+             PUSH mutez 0 ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             COMPARE ;
+             EQ ;
+             IF { PUSH string "Nothing to withdraw" ; FAILWITH } {} ;
+             SENDER ;
+             CONTRACT unit ;
+             IF_NONE { PUSH string "Not a contract" ; FAILWITH } {} ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             UNIT ;
+             TRANSFER_TOKENS ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             DUP 5 ;
+             CDR ;
+             ADD ;
+             DIG 4 ;
+             CAR ;
+             PAIR ;
+             DIG 2 ;
+             DUP 4 ;
+             CDR ;
+             ADD ;
+             DIG 3 ;
+             CAR ;
+             PAIR ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             CDR ;
+             DUP 3 ;
+             CAR ;
+             CDR ;
+             DUP 4 ;
+             CAR ;
+             CAR ;
+             CDR ;
+             DIG 4 ;
+             CAR ;
+             CAR ;
+             CAR ;
+             DIG 4 ;
+             SOME ;
+             SENDER ;
+             UPDATE ;
+             PAIR ;
+             PAIR ;
+             PAIR ;
+             NIL operation ;
+             DIG 2 ;
+             CONS ;
+             PAIR } } }
+
