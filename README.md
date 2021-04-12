@@ -27,3 +27,11 @@ After contract is ready:
 Mad ideas:
 - future idea #1: is it possible to make shareas as token that have some supply and those who have this token can withdraw their profits from contract? Looks not very easy to achieve because it is not clear how to track which shares are withdrawn and which are not.
 
+
+----
+### Running tests:
+1. Install requirements (pytezos + pytest):
+```pip install pytezos_tests\requirements.txt```
+2. Run tests:
+```pytest . -v```
+
