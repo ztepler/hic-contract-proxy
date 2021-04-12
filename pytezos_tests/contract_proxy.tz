@@ -1,47 +1,64 @@
 { parameter
-    (or (pair %mint
-           (pair (address %address) (nat %amount))
-           (pair (bytes %metadata) (nat %royalties)))
+    (or (or (pair %mint
+               (pair (address %address) (nat %amount))
+               (pair (bytes %metadata) (nat %royalties)))
+            (pair %swap (pair (nat %objkt_amount) (nat %objkt_id)) (mutez %xtz_per_objkt)))
         (unit %withdraw)) ;
   storage
-    (pair (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
-                      (address %administrator))
-                (pair (address %hicetnuncMinterAddress) (bool %isMinted)))
-          (mutez %totalWithdrawalsSum)) ;
+    (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
+                (address %administrator))
+          (pair (address %hicetnuncMinterAddress) (mutez %totalWithdrawalsSum))) ;
   code { UNPAIR ;
          IF_LEFT
-           { SWAP ;
-             DUP ;
-             CAR ;
-             CDR ;
-             CAR ;
-             CONTRACT %mint_OBJKT
-               (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
-             IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
-             PUSH mutez 0 ;
-             DIG 3 ;
-             TRANSFER_TOKENS ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             CDR ;
-             PUSH bool True ;
-             DUP 4 ;
-             CAR ;
-             CDR ;
-             CAR ;
-             PAIR ;
-             DIG 3 ;
-             CAR ;
-             CAR ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             DIG 2 ;
-             CONS ;
-             PAIR }
+           { IF_LEFT
+               { SWAP ;
+                 DUP ;
+                 CAR ;
+                 CDR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF {}
+                    { PUSH string "Entrypoint mint can call only administrator" ; FAILWITH } ;
+                 DUP ;
+                 CDR ;
+                 CAR ;
+                 CONTRACT %mint_OBJKT
+                   (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DIG 3 ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
+                 PAIR }
+               { SWAP ;
+                 DUP ;
+                 CAR ;
+                 CDR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF {} { PUSH string "swap can call only administrator" ; FAILWITH } ;
+                 DUP ;
+                 CDR ;
+                 CAR ;
+                 CONTRACT %swap
+                   (pair (pair (nat %objkt_amount) (nat %objkt_id)) (mutez %xtz_per_objkt)) ;
+                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DIG 3 ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
+                 PAIR } }
            { DROP ;
              DUP ;
+             CDR ;
              CDR ;
              BALANCE ;
              ADD ;
@@ -50,7 +67,6 @@
              DUG 2 ;
              SENDER ;
              SWAP ;
-             CAR ;
              CAR ;
              CAR ;
              SWAP ;
@@ -91,7 +107,12 @@
              DUG 2 ;
              DUP 5 ;
              CDR ;
+             CDR ;
              ADD ;
+             DUP 5 ;
+             CDR ;
+             CAR ;
+             PAIR ;
              DIG 4 ;
              CAR ;
              PAIR ;
@@ -109,19 +130,13 @@
              DUP 3 ;
              CAR ;
              CDR ;
-             DUP 4 ;
+             DIG 3 ;
              CAR ;
              CAR ;
-             CDR ;
-             DIG 4 ;
-             CAR ;
-             CAR ;
-             CAR ;
-             DIG 4 ;
+             DIG 3 ;
              SOME ;
              SENDER ;
              UPDATE ;
-             PAIR ;
              PAIR ;
              PAIR ;
              NIL operation ;

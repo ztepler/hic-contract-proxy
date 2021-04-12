@@ -7,6 +7,14 @@ type mintParams is record [
 ]
 
 
+(* This is params that used in h=n swap call *)
+type swapParams is record [
+    objkt_amount : nat;
+    objkt_id : nat;
+    xtz_per_objkt : tez;
+]
+
+
 type account is record [
     (* share value would be nat that in sum should be equal to 1000 *)
     share : nat;
@@ -18,6 +26,7 @@ type account is record [
 
 type action is
 | Mint of mintParams
+| Swap of swapParams
 | Withdraw of unit
 
 
@@ -31,9 +40,6 @@ type storage is record [
     (* totalWithdrawalsSum is the total amount of all withdrawals from all of the participants *)
     totalWithdrawalsSum : tez;
 
-    (* is token minted or not *)
-    isMinted : bool;
-
     (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
     hicetnuncMinterAddress : address;
 ]
@@ -41,7 +47,8 @@ type storage is record [
 
 function mint(var s : storage; var p : mintParams) : (list(operation) * storage) is
 block {
-    // TODO: check that sum of the shares is equal to 1000 plz!
+    if (Tezos.sender = s.administrator) then skip
+    else failwith("Entrypoint mint can call only administrator");
 
     const hicReceiver : contract(mintParams) =
         case (Tezos.get_entrypoint_opt("%mint_OBJKT", s.hicetnuncMinterAddress) : option(contract(mintParams))) of
@@ -50,7 +57,22 @@ block {
         end;
 
     const callToHic : operation = Tezos.transaction(p, 0tez, hicReceiver);
-    s.isMinted := True;
+
+} with (list[callToHic], s)
+
+
+function swap(var s : storage; var p : swapParams) : (list(operation) * storage) is
+block {
+    if (Tezos.sender = s.administrator) then skip
+        else failwith("swap can call only administrator");
+
+    const hicReceiver : contract(swapParams) =
+        case (Tezos.get_entrypoint_opt("%swap", s.hicetnuncMinterAddress) : option(contract(swapParams))) of
+        | None -> (failwith("No minter found") : contract(swapParams))
+        | Some(con) -> con
+        end;
+
+    const callToHic : operation = Tezos.transaction(p, 0tez, hicReceiver);
 
 } with (list[callToHic], s)
 
@@ -95,5 +117,6 @@ block {
 function main (var params : action; var s : storage) : (list(operation) * storage) is
 case params of
 | Mint(p) -> mint(s, p)
+| Swap(p) -> swap(s, p)
 | Withdraw -> withdraw(s)
 end

@@ -19,7 +19,6 @@ class DeterminedTest(TestCase):
                 self.p3: {'share': 170, 'withdrawalsSum': 0}
             },
             'totalWithdrawalsSum': 0,
-            'isMinted': False,
             'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
         }
 
@@ -28,6 +27,12 @@ class DeterminedTest(TestCase):
             'amount': 1,
             'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
             'royalties': 250
+        }
+
+        self.swap_params = {
+            'objkt_amount': 1,
+            'objkt_id': 30000,
+            'xtz_per_objkt': 10_000_000,
         }
 
         self.result = None
@@ -42,15 +47,40 @@ class DeterminedTest(TestCase):
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'mint_OBJKT'
-        assert self.result.storage['isMinted']
 
-
+        
     def _test_nothing_withdraw_error(self):
         """ Testing that withdrawing with zero balance raises MichelsonRuntimeError """
 
         with self.assertRaises(MichelsonRuntimeError):
             self.result = self.contract.withdraw().interpret(
                 storage=self.result.storage, sender=self.p1, balance=0)
+
+
+    def _test_mint_call_without_admin_role(self):
+        """ Testing that calling mint from non-administrator address is not possible """
+
+        with self.assertRaises(MichelsonRuntimeError):
+            self.result = self.contract.mint(self.mint_params).interpret(
+                storage=self.result.storage, sender=self.p2)
+
+
+    def _swap_call(self):
+        """ Testing that swapping doesn't fail with default params """
+
+        self.result = self.contract.swap(self.swap_params).interpret(
+            storage=self.init_storage, sender=self.p1)
+
+        assert len(self.result.operations) == 1
+        assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
+
+
+    def _swap_call_without_admin_role(self):
+        """ Testing that calling swap from non-administrator address is not possible """
+
+        with self.assertRaises(MichelsonRuntimeError):
+            self.result = self.contract.swap(self.swap_params).interpret(
+                storage=self.result.storage, sender=self.p2)
 
 
     def _test_p1_withdraw(self):
@@ -139,7 +169,10 @@ class DeterminedTest(TestCase):
 
     def test_interactions(self):
         self._mint_call()
+        self._test_mint_call_without_admin_role()
         self._test_nothing_withdraw_error()
+        self._swap_call()
+        self._swap_call_without_admin_role()
         self._test_p1_withdraw()
         self._test_p2_withdraw()
         self._test_p3_withdraw()
