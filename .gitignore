@@ -2,4 +2,7 @@ node_modules
 build
 package-lock.json
 faucet.json
+*.ipynb
+**/.ipynb_checkpoints/*
+**/__pycache__/*
 
