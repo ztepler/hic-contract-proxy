@@ -7,10 +7,16 @@ The most important tasks:
     - set creator as administrator (who can use this contract to call H=N minter)
 - add method to this contract that makes call to H=N minter and creates new objkt using H=N interface
 - add method to withdraw profits from contract
+- how to track what amounts should be distributed? should it be another method to distribute tokens that received by smart contract? I mean if one takes it share it should be tracked somehow
+    1. it is possible to recalculate balances each time withdraw is called, if there are was new incomings
+    2. it is possible to keep both accrued value and withdrawn value and each withdraw recalculate withdraw value from caller and accrued values if there was some incomings from the past withdrawals
 - test this contract in pytezos to be shure that it is working properly
 - find the way to recreate all IPFS calls and upload some asset and metadata (maybe just find the code from H=N frontend?)
 - test this contract in mainnet with pair of mine accounts
 - clean up code, write little docs, publish
+
+Possible problems:
+- not equal divisions
 
 After contract is ready:
 - make simple frontend that allows to mint object using this contract address
