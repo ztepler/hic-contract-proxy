@@ -11,6 +11,8 @@ The most important tasks:
     1. it is possible to recalculate balances each time withdraw is called, if there are was new incomings
     2. it is possible to keep both accrued value and withdrawn value and each withdraw recalculate withdraw value from caller and accrued values if there was some incomings from the past withdrawals
 - test this contract in pytezos to be shure that it is working properly
+- need to implement swap and cancel swap too
+- need to implement hDAO distribution ?
 - find the way to recreate all IPFS calls and upload some asset and metadata (maybe just find the code from H=N frontend?)
 - test this contract in mainnet with pair of mine accounts
 - clean up code, write little docs, publish
