@@ -10,5 +10,8 @@
     "ligo",
     "blockchain",
     "truffle"
-  ]
+  ],
+  "dependencies": {
+    "@taquito/taquito": "^8.1.0"
+  }
 }
