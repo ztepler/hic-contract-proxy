@@ -8,11 +8,10 @@ type mintParams is record [
 
 
 (* This is params that used in h=n swap call *)
-type swapParams is record [
-    objkt_amount : nat;
-    objkt_id : nat;
-    xtz_per_objkt : tez;
-]
+type swapParams is michelson_pair(
+    nat, "objkt_amount",
+    michelson_pair(nat, "objkt_id", tez, "xtz_per_objkt"),
+"")
 
 
 type account is record [
