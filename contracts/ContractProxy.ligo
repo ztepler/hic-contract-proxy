@@ -27,6 +27,7 @@ type action is
 | Mint of mintParams
 | Swap of swapParams
 | Withdraw of unit
+| Default of unit
 
 
 type storage is record [
@@ -118,4 +119,5 @@ case params of
 | Mint(p) -> mint(s, p)
 | Swap(p) -> swap(s, p)
 | Withdraw -> withdraw(s)
+| Default -> ((nil: list(operation)), s)
 end

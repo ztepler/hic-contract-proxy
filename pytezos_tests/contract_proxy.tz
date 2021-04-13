@@ -1,9 +1,10 @@
 { parameter
-    (or (or (pair %mint
+    (or (or (unit %default)
+            (pair %mint
                (pair (address %address) (nat %amount))
-               (pair (bytes %metadata) (nat %royalties)))
-            (pair %swap (pair (nat %objkt_amount) (nat %objkt_id)) (mutez %xtz_per_objkt)))
-        (unit %withdraw)) ;
+               (pair (bytes %metadata) (nat %royalties))))
+        (or (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt)))
+            (unit %withdraw))) ;
   storage
     (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
                 (address %administrator))
@@ -11,6 +12,7 @@
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
+               { DROP ; NIL operation ; PAIR }
                { SWAP ;
                  DUP ;
                  CAR ;
@@ -33,7 +35,8 @@
                  NIL operation ;
                  DIG 2 ;
                  CONS ;
-                 PAIR }
+                 PAIR } }
+           { IF_LEFT
                { SWAP ;
                  DUP ;
                  CAR ;
@@ -46,7 +49,7 @@
                  CDR ;
                  CAR ;
                  CONTRACT %swap
-                   (pair (pair (nat %objkt_amount) (nat %objkt_id)) (mutez %xtz_per_objkt)) ;
+                   (pair (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))) ;
                  IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                  PUSH mutez 0 ;
                  DIG 3 ;
@@ -55,92 +58,92 @@
                  NIL operation ;
                  DIG 2 ;
                  CONS ;
-                 PAIR } }
-           { DROP ;
-             DUP ;
-             CDR ;
-             CDR ;
-             BALANCE ;
-             ADD ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             SENDER ;
-             SWAP ;
-             CAR ;
-             CAR ;
-             SWAP ;
-             GET ;
-             IF_NONE { PUSH mutez 0 ; PUSH nat 0 ; PAIR } {} ;
-             PUSH nat 1000 ;
-             DUG 2 ;
-             DUP ;
-             DUG 3 ;
-             CAR ;
-             MUL ;
-             EDIV ;
-             IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
-             CAR ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             CDR ;
-             SWAP ;
-             SUB ;
-             PUSH mutez 0 ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             COMPARE ;
-             EQ ;
-             IF { PUSH string "Nothing to withdraw" ; FAILWITH } {} ;
-             SENDER ;
-             CONTRACT unit ;
-             IF_NONE { PUSH string "Not a contract" ; FAILWITH } {} ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             UNIT ;
-             TRANSFER_TOKENS ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             DUP 5 ;
-             CDR ;
-             CDR ;
-             ADD ;
-             DUP 5 ;
-             CDR ;
-             CAR ;
-             PAIR ;
-             DIG 4 ;
-             CAR ;
-             PAIR ;
-             DIG 2 ;
-             DUP 4 ;
-             CDR ;
-             ADD ;
-             DIG 3 ;
-             CAR ;
-             PAIR ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             CDR ;
-             DUP 3 ;
-             CAR ;
-             CDR ;
-             DIG 3 ;
-             CAR ;
-             CAR ;
-             DIG 3 ;
-             SOME ;
-             SENDER ;
-             UPDATE ;
-             PAIR ;
-             PAIR ;
-             NIL operation ;
-             DIG 2 ;
-             CONS ;
-             PAIR } } }
+                 PAIR }
+               { DROP ;
+                 DUP ;
+                 CDR ;
+                 CDR ;
+                 BALANCE ;
+                 ADD ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 SENDER ;
+                 SWAP ;
+                 CAR ;
+                 CAR ;
+                 SWAP ;
+                 GET ;
+                 IF_NONE { PUSH mutez 0 ; PUSH nat 0 ; PAIR } {} ;
+                 PUSH nat 1000 ;
+                 DUG 2 ;
+                 DUP ;
+                 DUG 3 ;
+                 CAR ;
+                 MUL ;
+                 EDIV ;
+                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                 CAR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 SWAP ;
+                 SUB ;
+                 PUSH mutez 0 ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 COMPARE ;
+                 EQ ;
+                 IF { PUSH string "Nothing to withdraw" ; FAILWITH } {} ;
+                 SENDER ;
+                 CONTRACT unit ;
+                 IF_NONE { PUSH string "Not a contract" ; FAILWITH } {} ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 UNIT ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 DUP 5 ;
+                 CDR ;
+                 CDR ;
+                 ADD ;
+                 DUP 5 ;
+                 CDR ;
+                 CAR ;
+                 PAIR ;
+                 DIG 4 ;
+                 CAR ;
+                 PAIR ;
+                 DIG 2 ;
+                 DUP 4 ;
+                 CDR ;
+                 ADD ;
+                 DIG 3 ;
+                 CAR ;
+                 PAIR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 DIG 3 ;
+                 CAR ;
+                 CAR ;
+                 DIG 3 ;
+                 SOME ;
+                 SENDER ;
+                 UPDATE ;
+                 PAIR ;
+                 PAIR ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
+                 PAIR } } } }
 
