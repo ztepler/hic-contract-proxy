@@ -5,8 +5,8 @@ const { pkh } = require("../faucet.json");
 const initialStorage = {
   administrator: pkh,
   accounts: MichelsonMap.fromLiteral({
-    tz1f94uZ7SF2fLKnMjFzGQTbznd8qpAZ12is: {share: 330, withdrawalsSum: 0},
-    tz1NvGRKVwoihihAubacMHrDrd2uM6tumrZv: {share: 670, withdrawalsSum: 0},
+    tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ: {share: 330, withdrawalsSum: 0},
+    tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos: {share: 670, withdrawalsSum: 0},
   }),
   totalWithdrawalsSum: 0,
   hicetnuncMinterAddress: "KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9",
