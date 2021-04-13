@@ -1,9 +1,7 @@
 plan:
 
 The most important tasks:
-- need to implement swap 
 - find the way to recreate all IPFS calls and upload some asset and metadata (maybe just find the code from H=N frontend?)
-- test this contract in mainnet with pair of mine accounts
 - clean up code, write little docs, publish
 - need to implement cancel swap
 - need to implement hDAO distribution ?
@@ -25,4 +23,11 @@ Mad ideas:
 ```pip install pytezos_tests\requirements.txt```
 2. Run tests:
 ```pytest . -v```
+
+### Example:
+The first objkt that succeed is https://www.hicetnunc.xyz/objkt/31447
+
+I minted this objkt using originated KT1F12PhZuUavUwesn7eqCaEZ5PZgZDnoC5c smart contract (where I added two mine accounts with 67% and 33% shares between them), then I swapped it and bought by myself for 1tez. After that I called withdrawals from each of my two accs. You can see the interactions on BCD:
+
+https://better-call.dev/mainnet/KT1F12PhZuUavUwesn7eqCaEZ5PZgZDnoC5c/operations
 
