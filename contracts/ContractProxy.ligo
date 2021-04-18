@@ -45,7 +45,7 @@ type storage is record [
 ]
 
 
-function mint(var s : storage; var p : mintParams) : (list(operation) * storage) is
+function mint_OBJKT(var s : storage; var p : mintParams) : (list(operation) * storage) is
 block {
     if (Tezos.sender = s.administrator) then skip
     else failwith("Entrypoint mint can call only administrator");
@@ -56,6 +56,9 @@ block {
         | Some(con) -> con
         end;
 
+    (* TODO: should mintParams be updated to replace minter with proxy contract?
+        or at least should it be checked that adress is correct (but who knows the sc
+        address atm, right)? *)
     const callToHic : operation = Tezos.transaction(p, 0tez, hicReceiver);
 
 } with (list[callToHic], s)
