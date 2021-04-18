@@ -34,5 +34,5 @@ https://better-call.dev/mainnet/KT1F12PhZuUavUwesn7eqCaEZ5PZgZDnoC5c/operations
 
 
 ### Example with auto payments:
-https://better-call.dev/florencenet/KT1Nja3rA8PofAXrd4mMVyzrsyh6S22rLEFF/operations
+https://better-call.dev/mainnet/KT1PR98zmCpY8k7Hk1ibwbKi8m94UHMAjHe5/operations
 
