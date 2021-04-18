@@ -1,4 +1,4 @@
-const ContractProxy = artifacts.require("ContractProxy");
+const ContractProxy = artifacts.require("ContractProxyBigMap");
 const { MichelsonMap } = require("@taquito/taquito");
 const { pkh } = require("../faucet.json");
 

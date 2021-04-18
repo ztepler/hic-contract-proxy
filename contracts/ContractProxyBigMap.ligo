@@ -24,7 +24,7 @@ type account is record [
 
 
 type action is
-| Mint of mintParams
+| Mint_OBJKT of mintParams
 | Swap of swapParams
 | Withdraw of unit
 | Default of unit
@@ -45,7 +45,7 @@ type storage is record [
 ]
 
 
-function mint_OBJKT(var s : storage; var p : mintParams) : (list(operation) * storage) is
+function mint(var s : storage; var p : mintParams) : (list(operation) * storage) is
 block {
     if (Tezos.sender = s.administrator) then skip
     else failwith("Entrypoint mint can call only administrator");
@@ -119,7 +119,7 @@ block {
 
 function main (var params : action; var s : storage) : (list(operation) * storage) is
 case params of
-| Mint(p) -> mint(s, p)
+| Mint_OBJKT(p) -> mint(s, p)
 | Swap(p) -> swap(s, p)
 | Withdraw -> withdraw(s)
 | Default -> ((nil: list(operation)), s)
