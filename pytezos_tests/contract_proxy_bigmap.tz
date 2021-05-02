@@ -1,6 +1,6 @@
 { parameter
     (or (or (unit %default)
-            (pair %mint
+            (pair %mint_OBJKT
                (pair (address %address) (nat %amount))
                (pair (bytes %metadata) (nat %royalties))))
         (or (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt)))

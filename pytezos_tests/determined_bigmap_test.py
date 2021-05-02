@@ -6,7 +6,7 @@ from os.path import dirname, join
 class DeterminedTest(TestCase):
 
     def setUp(self):
-        self.contract = ContractInterface.from_file(join(dirname(__file__), 'contract_proxy.tz'))
+        self.contract = ContractInterface.from_file(join(dirname(__file__), 'contract_proxy_bigmap.tz'))
         self.p1 = 'tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ'
         self.p2 = 'tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos'
         self.p3 = 'tz1RS9GoEXakf9iyBmSaheLMcakFRtzBXpWE'
@@ -42,7 +42,7 @@ class DeterminedTest(TestCase):
     def _mint_call(self):
         """ Testing that minting doesn't fail with default params """
 
-        self.result = self.contract.mint(self.mint_params).interpret(
+        self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
             storage=self.init_storage, sender=self.p1)
 
         assert len(self.result.operations) == 1
@@ -61,7 +61,7 @@ class DeterminedTest(TestCase):
         """ Testing that calling mint from non-administrator address is not possible """
 
         with self.assertRaises(MichelsonRuntimeError):
-            self.result = self.contract.mint(self.mint_params).interpret(
+            self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
                 storage=self.result.storage, sender=self.p2)
 
 
