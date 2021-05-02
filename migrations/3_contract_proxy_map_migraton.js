@@ -7,7 +7,7 @@ const initialStorage = {
   shares: MichelsonMap.fromLiteral({
     tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ: 330,
     tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos: 670,
-  }),
+  }), 
   hicetnuncMinterAddress: "KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9",
 };
 

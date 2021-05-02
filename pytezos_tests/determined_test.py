@@ -48,7 +48,7 @@ class DeterminedTest(TestCase):
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'mint_OBJKT'
 
-        
+
     def _test_nothing_withdraw_error(self):
         """ Testing that withdrawing with zero balance raises MichelsonRuntimeError """
 
