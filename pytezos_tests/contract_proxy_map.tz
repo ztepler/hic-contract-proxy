@@ -6,9 +6,9 @@
         (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt)))) ;
   storage
     (pair (pair (address %administrator) (address %hicetnuncMinterAddress))
-          (map %shares address nat)) ;
+          (pair (map %shares address nat) (nat %totalShares))) ;
   code { LAMBDA
-           (pair (pair address address) (map address nat))
+           (pair (pair address address) (pair (map address nat) nat))
            unit
            { CAR ;
              CAR ;
@@ -29,9 +29,14 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
+                 CAR ;
                  ITER { SWAP ;
                         PAIR ;
-                        PUSH nat 1000 ;
+                        SWAP ;
+                        DUP ;
+                        DUG 2 ;
+                        CDR ;
+                        CDR ;
                         SWAP ;
                         DUP ;
                         DUG 2 ;

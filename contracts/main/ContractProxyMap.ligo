@@ -19,6 +19,9 @@ type storage is record [
     (* shares is map of all participants with the shares that they would recieve *)
     shares : map(address, nat);
 
+    (* the sum of the shares should be equal to totalShares *)
+    totalShares : nat;
+
     (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
     hicetnuncMinterAddress : address;
 ]
@@ -48,12 +51,14 @@ function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
     for participantAddress -> participantShare in map store.shares block {
-        const payoutAmount : tez = Tezos.amount * participantShare / 1000n;
+        const payoutAmount : tez = Tezos.amount * participantShare / store.totalShares;
 
         const receiver : contract(unit) = getReceiver(participantAddress);
         const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
         operations := op # operations
     }
+
+    (* TODO: return dust to the last participant? *)
 } with (operations, store)
 
 

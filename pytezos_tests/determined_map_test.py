@@ -18,6 +18,7 @@ class DeterminedTest(TestCase):
                 self.p2: 500,
                 self.p3: 170
             },
+            'totalShares': 1000,
             'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
         }
 
