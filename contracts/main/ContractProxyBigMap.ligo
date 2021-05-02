@@ -14,9 +14,19 @@ type swapParams is michelson_pair(
 "")
 
 
+type account is record [
+    (* share value would be nat that in sum should be equal to 1000 *)
+    share : nat;
+
+    (* withdrawalsSum is the sum that already withdrawn from contract by this participant *)
+    withdrawalsSum : tez;
+]
+
+
 type action is
 | Mint_OBJKT of mintParams
 | Swap of swapParams
+| Withdraw of unit
 | Default of unit
 
 
@@ -24,8 +34,11 @@ type storage is record [
     (* administrator is originator of the contract, this is the only one who can call mint *)
     administrator : address;
 
-    (* shares is map of all participants with the shares that they would recieve *)
-    shares : map(address, nat);
+    (* account is map of all participants with their shares and the sum, that rhey already withdrawn *)
+    accounts : big_map(address, account);
+
+    (* totalWithdrawalsSum is the total amount of all withdrawals from all of the participants *)
+    totalWithdrawalsSum : tez;
 
     (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
     hicetnuncMinterAddress : address;
@@ -43,6 +56,9 @@ block {
         | Some(con) -> con
         end;
 
+    (* TODO: should mintParams be updated to replace minter with proxy contract?
+        or at least should it be checked that adress is correct (but who knows the sc
+        address atm, right)? *)
     const callToHic : operation = Tezos.transaction(p, 0tez, hicReceiver);
 
 } with (list[callToHic], s)
@@ -71,22 +87,40 @@ function getReceiver(var a : address) : contract(unit) is
     end;
 
 
-function default(var s : storage) : (list(operation) * storage) is
-block {
-    var operations : list(operation) := nil;
-    for participantAddress -> participantShare in map s.shares block {
-        const payoutAmount : tez = Tezos.amount * participantShare / 1000n;
+function getAccount(var participant : address; var s : storage) : account is
+case Big_map.find_opt(participant, s.accounts) of
+| Some(acc) -> acc
+| None -> record[ share = 0n; withdrawalsSum = 0tez ]
+end;
 
-        const receiver : contract(unit) = getReceiver(participantAddress);
-        const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
-        operations := op # operations
-    }
-} with (operations, s)
+
+function withdraw(var s : storage) : (list(operation) * storage) is
+block {
+
+    const totalRevenue = Tezos.balance + s.totalWithdrawalsSum;
+
+    var participant : account := getAccount(Tezos.sender, s);
+
+    (* NOTE: there are can be not equal division, what would happen? *)
+    const totalParticipantEarnings = participant.share * totalRevenue / 1000n;
+    const payoutAmount = totalParticipantEarnings - participant.withdrawalsSum;
+
+    if (payoutAmount = 0tez) then failwith("Nothing to withdraw") else skip;
+
+    const receiver : contract(unit) = getReceiver(Tezos.sender);
+    const payoutOperation : operation = Tezos.transaction(unit, payoutAmount, receiver);
+
+    s.totalWithdrawalsSum := s.totalWithdrawalsSum + payoutAmount;
+    participant.withdrawalsSum := participant.withdrawalsSum + payoutAmount;
+    s.accounts[Tezos.sender] := participant
+
+} with (list[payoutOperation], s)
 
 
 function main (var params : action; var s : storage) : (list(operation) * storage) is
 case params of
 | Mint_OBJKT(p) -> mint(s, p)
 | Swap(p) -> swap(s, p)
-| Default -> default(s)
+| Withdraw -> withdraw(s)
+| Default -> ((nil: list(operation)), s)
 end
