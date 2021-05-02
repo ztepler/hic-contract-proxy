@@ -18,6 +18,7 @@ Here you can find forked hicetnunc frontend, that allows to pick a proxy contrac
 - need to implement possibility to withdraw any tokens from contract (to withdraw hDAO and to withdraw tokens that are locked inside the contract)
 - make simple frontend that allows to originate new kind of this contract
 - need to write more tests
+- should I replace assert -> assertEqual in the tests?
 
 
 ### Next mad ideas:

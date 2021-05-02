@@ -9,6 +9,9 @@
 type action is
 | Mint_OBJKT of mintParams
 | Swap of swapParams
+| Cancel_swap of cancelSwapParams
+| Collect of collectParams
+| Curate of curateParams
 | Default of unit
 
 
@@ -47,6 +50,27 @@ block {
 } with (list[callToHic], store)
 
 
+function cancelSwap(var store : storage; var params : cancelSwapParams) : (list(operation) * storage) is
+block {
+    checkSenderIsAdmin(store);
+    const callToHic = callCancelSwap(store.hicetnuncMinterAddress, params);
+} with (list[callToHic], store)
+
+
+function collect(var store : storage; var params : collectParams) : (list(operation) * storage) is
+block {
+    checkSenderIsAdmin(store);
+    const callToHic = callCollect(store.hicetnuncMinterAddress, params);
+} with (list[callToHic], store)
+
+
+function curate(var store : storage; var params : curateParams) : (list(operation) * storage) is
+block {
+    checkSenderIsAdmin(store);
+    const callToHic = callCurate(store.hicetnuncMinterAddress, params);
+} with (list[callToHic], store)
+
+
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
@@ -66,6 +90,9 @@ function main (var params : action; var store : storage) : (list(operation) * st
 case params of
 | Mint_OBJKT(p) -> mint_OBJKT(store, p)
 | Swap(p) -> swap(store, p)
+| Cancel_swap(p) -> cancelSwap(store, p)
+| Collect(p) -> collect(store, p)
+| Curate(p) -> curate(store, p)
 | Default -> default(store)
 end
 

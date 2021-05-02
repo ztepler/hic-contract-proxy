@@ -52,9 +52,11 @@ class DeterminedTest(TestCase):
     def _test_mint_call_without_admin_role(self):
         """ Testing that calling mint from non-administrator address is not possible """
 
-        with self.assertRaises(MichelsonRuntimeError):
+        with self.assertRaises(MichelsonRuntimeError) as cm:
             self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
                 storage=self.result.storage, sender=self.p2)
+
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
 
     def _swap_call(self):
@@ -70,9 +72,82 @@ class DeterminedTest(TestCase):
     def _swap_call_without_admin_role(self):
         """ Testing that calling swap from non-administrator address is not possible """
 
-        with self.assertRaises(MichelsonRuntimeError):
+        with self.assertRaises(MichelsonRuntimeError) as cm:
             self.result = self.contract.swap(self.swap_params).interpret(
                 storage=self.result.storage, sender=self.p2)
+
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+
+    def _cancel_swap_call(self):
+        """ Testing that cancel swap doesn't fail with default params """
+
+        some_swap_id = 42
+        self.result = self.contract.cancel_swap(some_swap_id).interpret(
+            storage=self.init_storage, sender=self.p1)
+
+        assert len(self.result.operations) == 1
+        assert self.result.operations[0]['parameters']['entrypoint'] == 'cancel_swap'
+        assert self.result.operations[0]['parameters']['value'] == {'int': '42'}
+
+
+    def _cancel_swap_call_without_admin_role(self):
+        """ Testing that calling cancel swap from non-administrator address is not possible """
+
+        some_swap_id = 42
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self.result = self.contract.cancel_swap(some_swap_id).interpret(
+                storage=self.result.storage, sender=self.p3)
+
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+
+    def _collect_call(self):
+        """ Testing that collect doesn't fail with default params """
+
+        some_collect_params = {'objkt_amount': 1, 'swap_id': 42}
+        self.result = self.contract.collect(some_collect_params).interpret(
+            storage=self.init_storage, sender=self.p1)
+
+        assert len(self.result.operations) == 1
+        assert self.result.operations[0]['parameters']['entrypoint'] == 'collect'
+        assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '1'}
+        assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '42'}
+
+
+    def _collect_call_without_admin_role(self):
+        """ Testing that calling collect from non-administrator address is not possible """
+
+        some_collect_params = {'objkt_amount': 1, 'swap_id': 42}
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self.result = self.contract.collect(some_collect_params).interpret(
+                storage=self.result.storage, sender=self.p3)
+
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+
+    def _curate_call(self):
+        """ Testing that curate doesn't fail with default params """
+
+        curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
+        self.result = self.contract.curate(curate_params).interpret(
+            storage=self.init_storage, sender=self.p1)
+
+        assert len(self.result.operations) == 1
+        assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
+        assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '100'}
+        assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '100000'}
+
+
+    def _curate_call_without_admin_role(self):
+        """ Testing that calling curate from non-administrator address is not possible """
+
+        curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self.result = self.contract.curate(curate_params).interpret(
+                storage=self.result.storage, sender=self.p3)
+
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
 
     def test_interactions(self):
@@ -80,4 +155,8 @@ class DeterminedTest(TestCase):
         self._test_mint_call_without_admin_role()
         self._swap_call()
         self._swap_call_without_admin_role()
+        self._cancel_swap_call()
+        self._cancel_swap_call_without_admin_role()
+        self._collect_call()
+        self._collect_call_without_admin_role()
 
