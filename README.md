@@ -1,22 +1,28 @@
-Okay, there are two contracts now. One using bigmaps that allows to add a lot of shareholders but it require to call withdraw for each participant. Another using simple maps and doing all distribution inside Default entrypoint, so there is no need in withdraw method. Looks like second is more useful for current purposes.
+### Distributing wealth between multiple collaborators
 
-NOTE: this contracts is not audited, not well tested, this is just proof of concept. There are no cancel swap entrypoint implemented yet. Be carefull if you use it.
+This is experimental smart contracts collection that aimed to be used with hic et nunc as a "proxy". At the moment there are two contracts in this git that allows to distribute earnings that received by this contract:
+1. One using bigmaps that allows to add a lot of shareholders but it require to call withdraw for each participant.
+2. Another using simple maps and doing all distribution inside Default entrypoint, so there is no need in withdraw method. Looks like second is more useful for current purposes.
 
-Frontend to use this contract (simple forked hic et nunc) would be soon (do I need to host it somewhere to give opportunity to test interactions with it?).
+Looks like the second approach is easier, at least for small amount of participants.
+
+NOTE: this contracts is not audited, not well tested, this is just proof of concept. There are no cancel swap entrypoint implemented yet. Use it for own risk and fun.
+
+Here you can find forked hicetnunc frontend, that allows to pick a proxy contract and mint/swap objects using it: https://github.com/ztepler/hicetnunc
+
 
 ### Next tasks:
-- need to write more tests (the contract with map have no test at the moment)
-- need to implement cancel swap
-- clean up code, write little docs, publish
-- need to implement hDAO distribution ?
+- need to implement cancel swap and all other entrypoints from h=n
+- need to implement possibility to add / withdraw tokens from contract (it would allow to swap custom tokens and it may be useful for galleries)
+- write little docs
+- need to implement possibility to withdraw any tokens from contract (to withdraw hDAO and to withdraw tokens that are locked inside the contract)
 - make simple frontend that allows to originate new kind of this contract
+- need to write more tests
 
-Possible problems:
-- not equal divisions
 
-Mad ideas:
-- future idea #1: is it possible to make shareas as token that have some supply and those who have this token can withdraw their profits from contract? Looks not very easy to achieve because it is not clear how to track which shares are withdrawn and which are not.
-
+### Next mad ideas:
+- future idea #1: looks like it is possible to make shares as FA2 token and distribute earnings between those who have this token (with Map contract)
+- future idea #2: it should be possible to distribute some tokens for every participant that buys something from contract (in the way hDAO airdrop was). Need to test this possibility
 
 ----
 ### Running tests:
