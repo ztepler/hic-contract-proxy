@@ -1,17 +1,9 @@
-(* This is params that used in h=n mint call *)
-type mintParams is record [
-    address : address;
-    amount : nat;
-    metadata : bytes;
-    royalties : nat
-]
+(* Including hic et nunc interface: *)
+#include "../partials/hicetnunc.ligo"
 
 
-(* This is params that used in h=n swap call *)
-type swapParams is michelson_pair(
-    nat, "objkt_amount",
-    michelson_pair(nat, "objkt_id", tez, "xtz_per_objkt"),
-"")
+(* Including common functions: *)
+#include "../partials/general.ligo"
 
 
 type account is record [
@@ -45,48 +37,6 @@ type storage is record [
 ]
 
 
-function mint(var s : storage; var p : mintParams) : (list(operation) * storage) is
-block {
-    if (Tezos.sender = s.administrator) then skip
-    else failwith("Entrypoint mint can call only administrator");
-
-    const hicReceiver : contract(mintParams) =
-        case (Tezos.get_entrypoint_opt("%mint_OBJKT", s.hicetnuncMinterAddress) : option(contract(mintParams))) of
-        | None -> (failwith("No minter found") : contract(mintParams))
-        | Some(con) -> con
-        end;
-
-    (* TODO: should mintParams be updated to replace minter with proxy contract?
-        or at least should it be checked that adress is correct (but who knows the sc
-        address atm, right)? *)
-    const callToHic : operation = Tezos.transaction(p, 0tez, hicReceiver);
-
-} with (list[callToHic], s)
-
-
-function swap(var s : storage; var p : swapParams) : (list(operation) * storage) is
-block {
-    if (Tezos.sender = s.administrator) then skip
-        else failwith("swap can call only administrator");
-
-    const hicReceiver : contract(swapParams) =
-        case (Tezos.get_entrypoint_opt("%swap", s.hicetnuncMinterAddress) : option(contract(swapParams))) of
-        | None -> (failwith("No minter found") : contract(swapParams))
-        | Some(con) -> con
-        end;
-
-    const callToHic : operation = Tezos.transaction(p, 0tez, hicReceiver);
-
-} with (list[callToHic], s)
-
-
-function getReceiver(var a : address) : contract(unit) is
-    case (Tezos.get_contract_opt(a): option(contract(unit))) of
-    | Some (con) -> con
-    | None -> (failwith ("Not a contract") : (contract(unit)))
-    end;
-
-
 function getAccount(var participant : address; var s : storage) : account is
 case Big_map.find_opt(participant, s.accounts) of
 | Some(acc) -> acc
@@ -117,10 +67,29 @@ block {
 } with (list[payoutOperation], s)
 
 
-function main (var params : action; var s : storage) : (list(operation) * storage) is
+function checkSenderIsAdmin(var store : storage) : unit is
+    if (Tezos.sender = store.administrator) then unit
+    else failwith("Entrypoint can call only administrator");
+
+
+function mint_OBJKT(var store : storage; var params : mintParams) : (list(operation) * storage) is
+block {
+    checkSenderIsAdmin(store);
+    const callToHic = callMintOBJKT(store.hicetnuncMinterAddress, params);
+} with (list[callToHic], store)
+
+
+function swap(var store : storage; var params : swapParams) : (list(operation) * storage) is
+block {
+    checkSenderIsAdmin(store);
+    const callToHic = callSwap(store.hicetnuncMinterAddress, params);
+} with (list[callToHic], store)
+
+
+function main (var params : action; var store : storage) : (list(operation) * storage) is
 case params of
-| Mint_OBJKT(p) -> mint(s, p)
-| Swap(p) -> swap(s, p)
-| Withdraw -> withdraw(s)
-| Default -> ((nil: list(operation)), s)
+| Mint_OBJKT(p) -> mint_OBJKT(store, p)
+| Swap(p) -> swap(store, p)
+| Withdraw -> withdraw(store)
+| Default -> ((nil: list(operation)), store)
 end

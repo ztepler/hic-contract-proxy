@@ -9,27 +9,36 @@
     (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
                 (address %administrator))
           (pair (address %hicetnuncMinterAddress) (mutez %totalWithdrawalsSum))) ;
-  code { UNPAIR ;
+  code { LAMBDA
+           (pair (pair (big_map address (pair nat mutez)) address) (pair address mutez))
+           unit
+           { CAR ;
+             CDR ;
+             SENDER ;
+             COMPARE ;
+             EQ ;
+             IF { UNIT }
+                { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
+         SWAP ;
+         UNPAIR ;
          IF_LEFT
            { IF_LEFT
-               { DROP ; NIL operation ; PAIR }
+               { DROP ; SWAP ; DROP ; NIL operation ; PAIR }
                { SWAP ;
                  DUP ;
-                 CAR ;
-                 CDR ;
-                 SENDER ;
-                 COMPARE ;
-                 EQ ;
-                 IF {}
-                    { PUSH string "Entrypoint mint can call only administrator" ; FAILWITH } ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
                  DUP ;
+                 DUG 2 ;
                  CDR ;
                  CAR ;
                  CONTRACT %mint_OBJKT
                    (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
                  IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                  PUSH mutez 0 ;
-                 DIG 3 ;
+                 DIG 2 ;
                  TRANSFER_TOKENS ;
                  SWAP ;
                  NIL operation ;
@@ -39,20 +48,19 @@
            { IF_LEFT
                { SWAP ;
                  DUP ;
-                 CAR ;
-                 CDR ;
-                 SENDER ;
-                 COMPARE ;
-                 EQ ;
-                 IF {} { PUSH string "swap can call only administrator" ; FAILWITH } ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
                  DUP ;
+                 DUG 2 ;
                  CDR ;
                  CAR ;
                  CONTRACT %swap
                    (pair (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))) ;
                  IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                  PUSH mutez 0 ;
-                 DIG 3 ;
+                 DIG 2 ;
                  TRANSFER_TOKENS ;
                  SWAP ;
                  NIL operation ;
@@ -60,6 +68,8 @@
                  CONS ;
                  PAIR }
                { DROP ;
+                 SWAP ;
+                 DROP ;
                  DUP ;
                  CDR ;
                  CDR ;
