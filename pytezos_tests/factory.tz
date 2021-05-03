@@ -1,8 +1,30 @@
-{ parameter
-    (pair (pair (address %administrator) (address %hicetnuncMinterAddress))
-          (pair (map %shares address nat) (nat %totalShares))) ;
-  storage nat ;
+{ parameter (pair (address %administrator) (map %shares address nat)) ;
+  storage (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) ;
   code { UNPAIR ;
+         PUSH nat 0 ;
+         SWAP ;
+         DUP ;
+         DUG 2 ;
+         CDR ;
+         ITER { SWAP ; PAIR ; DUP ; CDR ; CDR ; SWAP ; CAR ; ADD } ;
+         PUSH nat 0 ;
+         SWAP ;
+         DUP ;
+         DUG 2 ;
+         COMPARE ;
+         EQ ;
+         IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
+         SWAP ;
+         DUP ;
+         DUG 2 ;
+         CDR ;
+         PAIR ;
+         DUP 3 ;
+         CAR ;
+         DIG 2 ;
+         CAR ;
+         PAIR ;
+         PAIR ;
          PUSH mutez 0 ;
          NONE key_hash ;
          PAIR ;
@@ -181,8 +203,12 @@
                             PAIR } } } } ;
          PAIR ;
          PUSH nat 1 ;
-         DIG 2 ;
+         DUP 3 ;
+         CDR ;
          ADD ;
+         DIG 2 ;
+         CAR ;
+         PAIR ;
          NIL operation ;
          DIG 2 ;
          CAR ;
