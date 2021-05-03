@@ -12,10 +12,12 @@ Here you can find forked hicetnunc frontend, that allows you to pick proxy contr
 
 
 ### Next tasks:
+- test factory contract creation (test for different shares option)
 - make form in forked h=n frontend that allows to originate new kind of this contract
 - need to implement possibility to add / withdraw tokens from contract (it would allow to swap custom tokens and it may be useful for galleries + possibility to add/remove hDAO)
 - write little docs
 - write more tests
+- change administrator method
 
 
 ### Next mad ideas:
@@ -39,4 +41,9 @@ https://better-call.dev/mainnet/KT1F12PhZuUavUwesn7eqCaEZ5PZgZDnoC5c/operations
 
 ### Example with auto payments (ContractProxyMap):
 https://better-call.dev/mainnet/KT1PR98zmCpY8k7Hk1ibwbKi8m94UHMAjHe5/operations
+
+
+### Factory example (florencenet):
+https://better-call.dev/florencenet/KT1ExTWLVt41GBqrs2BhB9aoM317Fkd2wqfW/operations
+Created proxy contract with 4 accounts and send here 8xtz: https://better-call.dev/florencenet/opg/op3wwbfwEs81o8JtohSNGdkdujHTC45Af84vNQA2c6yuLh3ZB7k/contents
 
