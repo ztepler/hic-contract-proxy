@@ -22,26 +22,29 @@ type factoryStorage is record [
 ]
 
 
-type newStorage is record [
+type originationParams is record [
     (* administrator is originator of the contract, this is the only one who can call mint *)
     administrator : address;
 
     (* shares is map of all participants with the shares that they would recieve *)
     shares : map(address, nat);
+
+    (* set of participants that should sign before contract can mint *)
+    coreParticipants : set(address);
 ]
 
 
 type factoryAction is
-| Create_proxy of newStorage
+| Create_proxy of originationParams
 
 
-function createProxy(const newStore : newStorage; var factoryStore : factoryStorage)
+function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
     (* Calculating total shares: *)
     var totalShares : nat := 0n;
-    for participantAddress -> participantShare in map newStore.shares block {
+    for participantAddress -> participantShare in map params.shares block {
         totalShares := totalShares + participantShare
     };
 
@@ -52,10 +55,13 @@ block {
 
     (* Preparing initial storage: *)
     const initialStore : storage = record[
-        administrator = newStore.administrator;
-        shares = newStore.shares;
+        administrator = params.administrator;
+        shares = params.shares;
         totalShares = totalShares;
         hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
+        suggestedMint = (None : option(mintParams));
+        signs = (set [] : set(address));
+        coreParticipants = params.coreParticipants;
     ];
 
     (* Making originate operation: *)

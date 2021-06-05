@@ -11,6 +11,13 @@ class DeterminedTest(TestCase):
         self.p2 = 'tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos'
         self.p3 = 'tz1RS9GoEXakf9iyBmSaheLMcakFRtzBXpWE'
 
+        self.mint_params = {
+            'address': 'KT1VRdyXdMb452GRnSz7tPFQVg96bq2XAmSN',
+            'amount': 1,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 250
+        }
+
         self.init_storage = {
             'administrator': self.p1,
             'shares': {
@@ -20,13 +27,9 @@ class DeterminedTest(TestCase):
             },
             'totalShares': 1000,
             'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
-        }
-
-        self.mint_params = {
-            'address': 'KT1VRdyXdMb452GRnSz7tPFQVg96bq2XAmSN',
-            'amount': 1,
-            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
-            'royalties': 250
+            'suggestedMint': self.mint_params,
+            'coreParticipants': {self.p1, self.p2, self.p3},
+            'signs': {self.p1, self.p2, self.p3},
         }
 
         self.swap_params = {
@@ -45,8 +48,20 @@ class DeterminedTest(TestCase):
         self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
             storage=self.init_storage, sender=self.p1)
 
+        assert len(self.result.operations) == 0
+
+
+    def _finalize_mint_call(self):
+        """ Testing that minting doesn't fail with default params """
+
+        self.result = self.contract.finalizeMint().interpret(
+            storage=self.init_storage, sender=self.p1)
+
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'mint_OBJKT'
+        op_bytes = self.result.operations[0]['parameters']['value']['args'][1]['bytes']
+        metadata = self.mint_params['metadata']
+        assert op_bytes == metadata
 
 
     def _test_mint_call_without_admin_role(self):
@@ -152,6 +167,7 @@ class DeterminedTest(TestCase):
 
     def test_interactions(self):
         self._mint_call()
+        self._finalize_mint_call()
         self._test_mint_call_without_admin_role()
         self._swap_call()
         self._swap_call_without_admin_role()
@@ -160,3 +176,4 @@ class DeterminedTest(TestCase):
         self._collect_call()
         self._collect_call_without_admin_role()
 
+        # TODO: default entrypoint tests
