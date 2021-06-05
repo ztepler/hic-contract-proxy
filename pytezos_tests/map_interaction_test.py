@@ -3,10 +3,13 @@ from unittest import TestCase
 from os.path import dirname, join
 
 
-class DeterminedTest(TestCase):
+CONTRACT_FN = '../build/tz/contract_proxy_map.tz'
+
+
+class MapInteractionTest(TestCase):
 
     def setUp(self):
-        self.contract = ContractInterface.from_file(join(dirname(__file__), 'contract_proxy_map.tz'))
+        self.contract = ContractInterface.from_file(join(dirname(__file__), CONTRACT_FN))
         self.p1 = 'tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ'
         self.p2 = 'tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos'
         self.p3 = 'tz1RS9GoEXakf9iyBmSaheLMcakFRtzBXpWE'

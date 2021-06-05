@@ -10,7 +10,7 @@ type createProxyFuncType is (option(key_hash) * tez * storage) -> (operation * a
 const createProxyFunc : createProxyFuncType =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT
-#include "../../pytezos_tests/contract_proxy_map.tz"
+#include "../../build/tz/contract_proxy_map.tz"
         ;
           PAIR } |}
  : createProxyFuncType)];

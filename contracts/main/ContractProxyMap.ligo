@@ -108,7 +108,6 @@ block {
 function checkAllCoreSigned(const core : set(address); const signs : set(address)) : unit is
 block {
     var isAllSigned : bool := True;
-    (* TODO: try to remove brackets *)
     for participant in set core block {
         isAllSigned := signs contains participant and isAllSigned
     };
