@@ -1,27 +1,43 @@
 { parameter
     (or (or (or (nat %cancel_swap) (pair %collect (nat %objkt_amount) (nat %swap_id)))
             (or (pair %curate (nat %hDAO_amount) (nat %objkt_id)) (unit %default)))
-        (or (pair %mint_OBJKT
-               (pair (address %address) (nat %amount))
-               (pair (bytes %metadata) (nat %royalties)))
-            (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))))) ;
+        (or (or (unit %finalizeMint)
+                (pair %mint_OBJKT
+                   (pair (address %address) (nat %amount))
+                   (pair (bytes %metadata) (nat %royalties))))
+            (or (pair %sign
+                   (pair (address %address) (nat %amount))
+                   (pair (bytes %metadata) (nat %royalties)))
+                (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt)))))) ;
   storage
-    (pair (pair (address %administrator) (address %hicetnuncMinterAddress))
-          (pair (map %shares address nat) (nat %totalShares))) ;
+    (pair (pair (pair (address %administrator) (set %coreParticipants address))
+                (pair (address %hicetnuncMinterAddress) (map %shares address nat)))
+          (pair (pair (set %signs address)
+                      (option %suggestedMint
+                         (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties)))))
+                (nat %totalShares))) ;
   code { LAMBDA
-           (pair (pair address address) (pair (map address nat) nat))
+           (pair (pair (pair address (set address)) (pair address (map address nat)))
+                 (pair (pair (set address) (option (pair (pair address nat) (pair bytes nat)))) nat))
            unit
            { CAR ;
+             CAR ;
              CAR ;
              SENDER ;
              COMPARE ;
              EQ ;
              IF { UNIT }
                 { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
-         SWAP ;
+         LAMBDA
+           (option (pair (pair address nat) (pair bytes nat)))
+           (pair (pair address nat) (pair bytes nat))
+           { IF_NONE { PUSH string "No mint is proposed" ; FAILWITH } {} } ;
+         DIG 2 ;
          UNPAIR ;
          IF_LEFT
-           { IF_LEFT
+           { DIG 2 ;
+             DROP ;
+             IF_LEFT
                { IF_LEFT
                    { SWAP ;
                      DUP ;
@@ -33,6 +49,7 @@
                      DUG 2 ;
                      CAR ;
                      CDR ;
+                     CAR ;
                      CONTRACT %cancel_swap nat ;
                      IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                      PUSH mutez 0 ;
@@ -53,6 +70,7 @@
                      DUG 2 ;
                      CAR ;
                      CDR ;
+                     CAR ;
                      CONTRACT %collect (pair (nat %objkt_amount) (nat %swap_id)) ;
                      IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                      PUSH mutez 0 ;
@@ -74,6 +92,7 @@
                      DUG 2 ;
                      CAR ;
                      CDR ;
+                     CAR ;
                      CONTRACT %collect (pair (nat %hDAO_amount) (nat %objkt_id)) ;
                      IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                      PUSH mutez 0 ;
@@ -91,8 +110,9 @@
                      SWAP ;
                      DUP ;
                      DUG 2 ;
-                     CDR ;
                      CAR ;
+                     CDR ;
+                     CDR ;
                      ITER { SWAP ;
                             PAIR ;
                             SWAP ;
@@ -126,46 +146,183 @@
                             CONS } ;
                      PAIR } } }
            { IF_LEFT
-               { SWAP ;
-                 DUP ;
-                 DIG 3 ;
-                 SWAP ;
-                 EXEC ;
-                 DROP ;
-                 DUP ;
-                 DUG 2 ;
-                 CAR ;
-                 CDR ;
-                 CONTRACT %mint_OBJKT
-                   (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
-                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
-                 PUSH mutez 0 ;
-                 DIG 2 ;
-                 TRANSFER_TOKENS ;
-                 SWAP ;
-                 NIL operation ;
-                 DIG 2 ;
-                 CONS ;
-                 PAIR }
-               { SWAP ;
-                 DUP ;
-                 DIG 3 ;
-                 SWAP ;
-                 EXEC ;
-                 DROP ;
-                 DUP ;
-                 DUG 2 ;
-                 CAR ;
-                 CDR ;
-                 CONTRACT %swap
-                   (pair (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))) ;
-                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
-                 PUSH mutez 0 ;
-                 DIG 2 ;
-                 TRANSFER_TOKENS ;
-                 SWAP ;
-                 NIL operation ;
-                 DIG 2 ;
-                 CONS ;
-                 PAIR } } } }
+               { IF_LEFT
+                   { DROP ;
+                     DIG 2 ;
+                     DROP ;
+                     DUP ;
+                     CDR ;
+                     CAR ;
+                     CAR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CAR ;
+                     CAR ;
+                     CDR ;
+                     PUSH bool True ;
+                     SWAP ;
+                     ITER { SWAP ; PAIR ; DUP ; CAR ; DUP 3 ; DIG 2 ; CDR ; MEM ; AND } ;
+                     SWAP ;
+                     DROP ;
+                     IF {} { PUSH string "Can't mint while proposal is not signed" ; FAILWITH } ;
+                     DUP ;
+                     CDR ;
+                     CAR ;
+                     CDR ;
+                     DIG 2 ;
+                     SWAP ;
+                     EXEC ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CAR ;
+                     CDR ;
+                     CAR ;
+                     CONTRACT %mint_OBJKT
+                       (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+                     IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                     PUSH mutez 0 ;
+                     DIG 2 ;
+                     TRANSFER_TOKENS ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     CDR ;
+                     DUP 3 ;
+                     CDR ;
+                     CAR ;
+                     CDR ;
+                     EMPTY_SET address ;
+                     PAIR ;
+                     PAIR ;
+                     DIG 2 ;
+                     CAR ;
+                     PAIR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     NONE (pair (pair address nat) (pair bytes nat)) ;
+                     DUP 3 ;
+                     CDR ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR ;
+                     NIL operation ;
+                     DIG 2 ;
+                     CONS ;
+                     PAIR }
+                   { DIG 2 ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     CAR ;
+                     CDR ;
+                     EMPTY_SET address ;
+                     PAIR ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     DIG 2 ;
+                     SOME ;
+                     DUP 3 ;
+                     CDR ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR } }
+               { IF_LEFT
+                   { DIG 3 ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     CDR ;
+                     CAR ;
+                     CDR ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DIG 2 ;
+                     COMPARE ;
+                     NEQ ;
+                     IF { PUSH string "Signing params differ from suggested" ; FAILWITH } {} ;
+                     DUP ;
+                     CAR ;
+                     CAR ;
+                     CDR ;
+                     SENDER ;
+                     MEM ;
+                     IF {} { PUSH string "Sender is not core participant" ; FAILWITH } ;
+                     DUP ;
+                     CDR ;
+                     CDR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     CAR ;
+                     CDR ;
+                     DUP 3 ;
+                     CDR ;
+                     CAR ;
+                     CAR ;
+                     PUSH bool True ;
+                     SENDER ;
+                     UPDATE ;
+                     PAIR ;
+                     PAIR ;
+                     SWAP ;
+                     CAR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR }
+                   { DIG 2 ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     DUP ;
+                     DUG 2 ;
+                     CAR ;
+                     CDR ;
+                     CAR ;
+                     CONTRACT %swap
+                       (pair (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))) ;
+                     IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                     PUSH mutez 0 ;
+                     DIG 2 ;
+                     TRANSFER_TOKENS ;
+                     SWAP ;
+                     NIL operation ;
+                     DIG 2 ;
+                     CONS ;
+                     PAIR } } } } }
 
