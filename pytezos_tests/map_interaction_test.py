@@ -57,7 +57,7 @@ class MapInteractionTest(TestCase):
     def _finalize_mint_call(self):
         """ Testing that minting doesn't fail with default params """
 
-        self.result = self.contract.finalizeMint().interpret(
+        self.result = self.contract.finalize_mint().interpret(
             storage=self.init_storage, sender=self.p1)
 
         assert len(self.result.operations) == 1

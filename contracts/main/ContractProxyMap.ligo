@@ -14,7 +14,7 @@ type action is
 | Curate of curateParams
 | Default of unit
 | Sign of mintParams
-| FinalizeMint of unit
+| Finalize_mint of unit
 
 
 (* Ledger with flags is core participant signed or not *)
@@ -163,6 +163,6 @@ case params of
 | Curate(p) -> curate(store, p)
 | Default -> default(store)
 | Sign(p) -> sign(store, p)
-| FinalizeMint -> finalizeMint(store)
+| Finalize_mint -> finalizeMint(store)
 end
 
