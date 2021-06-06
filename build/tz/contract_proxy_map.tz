@@ -1,7 +1,7 @@
 { parameter
     (or (or (or (nat %cancel_swap) (pair %collect (nat %objkt_amount) (nat %swap_id)))
             (or (pair %curate (nat %hDAO_amount) (nat %objkt_id)) (unit %default)))
-        (or (or (unit %finalizeMint)
+        (or (or (unit %finalize_mint)
                 (pair %mint_OBJKT
                    (pair (address %address) (nat %amount))
                    (pair (bytes %metadata) (nat %royalties))))
