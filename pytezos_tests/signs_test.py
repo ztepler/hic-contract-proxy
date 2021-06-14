@@ -156,8 +156,19 @@ class SignsTest(TestCase):
             self._finalize_mint(self.admin)
         self.assertTrue("Can't mint while proposal is not signed" in str(cm.exception))
 
+        # TODO: test:
+        # - admin changes proposal
+        # - p2 tries to mint and fails
+        # - p2 signs new proposal
+        # - admin tries to mint and failed because p1 is not signed
+        # - p1 signs again
+
         # second core signs and succeed:
         self._sign(self.p2)
 
         # admin succesfully mints second contract:
         self._finalize_mint(self.admin)
+
+        # TODO: should no core participants be allowed? Maybe do special test with it
+        # - admin creates new contract with no core
+        # - admin propose mint and then call mint   
