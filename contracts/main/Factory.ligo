@@ -59,8 +59,6 @@ block {
         shares = params.shares;
         totalShares = totalShares;
         hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
-        suggestedMint = (None : option(mintParams));
-        signs = (set [] : set(address));
         coreParticipants = params.coreParticipants;
     ];
 

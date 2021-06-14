@@ -30,9 +30,7 @@ class MapInteractionTest(TestCase):
             },
             'totalShares': 1000,
             'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
-            'suggestedMint': self.mint_params,
             'coreParticipants': {self.p1, self.p2, self.p3},
-            'signs': {self.p1, self.p2, self.p3},
         }
 
         self.swap_params = {
@@ -49,15 +47,6 @@ class MapInteractionTest(TestCase):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
-            storage=self.init_storage, sender=self.p1)
-
-        assert len(self.result.operations) == 0
-
-
-    def _finalize_mint_call(self):
-        """ Testing that minting doesn't fail with default params """
-
-        self.result = self.contract.finalize_mint().interpret(
             storage=self.init_storage, sender=self.p1)
 
         assert len(self.result.operations) == 1
@@ -170,7 +159,6 @@ class MapInteractionTest(TestCase):
 
     def test_interactions(self):
         self._mint_call()
-        self._finalize_mint_call()
         self._test_mint_call_without_admin_role()
         self._swap_call()
         self._swap_call_without_admin_role()

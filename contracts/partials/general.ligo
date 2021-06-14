@@ -4,3 +4,13 @@ function getReceiver(var a : address) : contract(unit) is
     | None -> (failwith ("Not a contract") : (contract(unit)))
     end;
 
+
+function checkAllCoreSigned(const core : set(address); const signs : set(address)) : unit is
+block {
+    var isAllSigned : bool := True;
+    for participant in set core block {
+        isAllSigned := signs contains participant and isAllSigned
+    };
+
+    if isAllSigned then skip else failwith("Can't mint while proposal is not signed");
+} with unit
