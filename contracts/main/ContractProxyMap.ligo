@@ -25,6 +25,10 @@ type storage is record [
     (* shares is map of all participants with the shares that they would recieve *)
     shares : map(address, nat);
 
+    (* Count is useful to understand when it is last participant while
+        iterating over transactions: *)
+    participantCount : nat;
+
     (* the sum of the shares should be equal to totalShares *)
     totalShares : nat;
 
@@ -80,12 +84,20 @@ block {
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
+    var opNumber : nat := 0n;
+    var allocatedPayouts : tez := 0tez;
+
     for participantAddress -> participantShare in map store.shares block {
-        const payoutAmount : tez = Tezos.amount * participantShare / store.totalShares;
+        opNumber := opNumber + 1n;
+        const isLast : bool = opNumber = store.participantCount;
+        const payoutAmount : tez = if isLast
+            then Tezos.amount - allocatedPayouts
+            else Tezos.amount * participantShare / store.totalShares;
 
         const receiver : contract(unit) = getReceiver(participantAddress);
         const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
-        operations := op # operations
+        operations := op # operations;
+        allocatedPayouts := allocatedPayouts + payoutAmount;
     }
 
     (* TODO: return dust to the last participant? *)

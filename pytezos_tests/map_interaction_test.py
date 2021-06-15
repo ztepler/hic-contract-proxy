@@ -139,7 +139,12 @@ class MapInteractionTest(TestCase):
         self.result = self.collab.default().with_amount(amount).interpret(
             storage=self.storage, sender=sender)
 
+        # TODO: wen operation == 0 it should not appear!
         ops = self.result.operations
+        # Operations is collected in reversed order
+        # Order means because one (last) operation takes dust:
+        ops = list(reversed(ops))
+
         shares = self.originate_params['shares']
         total_shares = sum(shares.values())
         self.assertEqual(len(ops), len(shares))
@@ -153,6 +158,7 @@ class MapInteractionTest(TestCase):
         accumulated_amount = 0
         for address, part_amount in amounts.items():
             is_last_operation = address == ops[-1]['destination']
+            # Or maybe check that only one operation can diff not more than 1n?
             if is_last_operation:
                 calc_amount = amount - accumulated_amount
             else:
@@ -209,10 +215,10 @@ class MapInteractionTest(TestCase):
         self._default_call(self.tips, 1000)
 
         # Default entrypoint tests with value that hard to split equally:
-        # self._default_call(self.tips, 337)
+        self._default_call(self.tips, 337)
 
         # Default entrypoint tests with value that very hard to split:
-        # self._default_call(self.tips, 1)
+        self._default_call(self.tips, 1)
 
         # TODO: test contract creation from factory with another edgecase params:
         # - test collab with 1 participant cant be created with only 1 share
@@ -220,3 +226,7 @@ class MapInteractionTest(TestCase):
         # - test that maximum participants is limited
         # - 0 share for participant should not be allowed
         # - need to make MORE tests
+
+        # TODO: maybe run this tests with different contracts created with
+        # different shares and participant count (starting with factory and
+        # then calling all tests)
