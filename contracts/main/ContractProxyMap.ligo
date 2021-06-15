@@ -14,6 +14,7 @@ type action is
 | Curate of curateParams
 | Default of unit
 (* TODO: Views that would allow to make signatures in V2 *)
+(* TODO: Transfer method to withdraw tokens from contract *)
 
 
 type storage is record [

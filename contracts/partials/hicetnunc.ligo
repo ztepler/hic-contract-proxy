@@ -101,7 +101,7 @@ block {
 function callCurate(var minterAddress : address; var params : curateParams) : operation is
 block {
     const hicReceiver : contract(curateParams) =
-        case (Tezos.get_entrypoint_opt("%collect", minterAddress)
+        case (Tezos.get_entrypoint_opt("%curate", minterAddress)
             : option(contract(curateParams))) of
         | None -> (failwith("No minter found") : contract(curateParams))
         | Some(con) -> con
