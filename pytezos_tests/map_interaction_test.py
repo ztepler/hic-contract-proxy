@@ -7,6 +7,23 @@ COLLAB_FN = '../build/tz/contract_proxy_map.tz'
 FACTORY_FN = '../build/tz/factory.tz'
 
 
+
+def split_amount(amount, shares, last_address):
+    """ Splits amount according to the shares dict """
+
+    total_shares = sum(shares.values())
+
+    amounts = {
+        address: int(share*amount/total_shares)
+        for address, share in shares.items() if address != last_address
+    }
+
+    accumulated_amount = sum(amounts.values())
+    amounts[last_address] = amount - accumulated_amount
+
+    return amounts
+
+
 class MapInteractionTest(TestCase):
 
     def setUp(self):
@@ -146,7 +163,6 @@ class MapInteractionTest(TestCase):
         ops = list(reversed(ops))
 
         shares = self.originate_params['shares']
-        total_shares = sum(shares.values())
         self.assertEqual(len(ops), len(shares))
 
         # Checking that sum of the operations is correct and no dust is left
@@ -155,16 +171,11 @@ class MapInteractionTest(TestCase):
 
         # Checking that each participant get amount he should receive:
         amounts = {op['destination']: int(op['amount']) for op in ops}
-        accumulated_amount = 0
-        for address, part_amount in amounts.items():
-            is_last_operation = address == ops[-1]['destination']
-            # Or maybe check that only one operation can diff not more than 1n?
-            if is_last_operation:
-                calc_amount = amount - accumulated_amount
-            else:
-                calc_amount = int(shares[address]*amount/total_shares)
-            accumulated_amount += calc_amount
-            self.assertEqual(calc_amount, part_amount)
+
+        # Check all amounts equals
+        last_address = ops[-1]['destination']
+        calc_amounts = split_amount(amount, shares, last_address)
+        self.assertEqual(calc_amounts, amounts)
 
 
     def test_interactions(self):
