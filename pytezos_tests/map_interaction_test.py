@@ -139,7 +139,26 @@ class MapInteractionTest(TestCase):
         self.result = self.collab.default().with_amount(amount).interpret(
             storage=self.storage, sender=sender)
 
-        # assert 
+        ops = self.result.operations
+        shares = self.originate_params['shares']
+        total_shares = sum(shares.values())
+        self.assertEqual(len(ops), len(shares))
+
+        # Checking that sum of the operations is correct and no dust is left
+        ops_sum = sum(int(op['amount']) for op in ops)
+        self.assertEqual(ops_sum, amount)
+
+        # Checking that each participant get amount he should receive:
+        amounts = {op['destination']: int(op['amount']) for op in ops}
+        accumulated_amount = 0
+        for address, part_amount in amounts.items():
+            is_last_operation = address == ops[-1]['destination']
+            if is_last_operation:
+                calc_amount = amount - accumulated_amount
+            else:
+                calc_amount = int(shares[address]*amount/total_shares)
+            accumulated_amount += calc_amount
+            self.assertEqual(calc_amount, part_amount)
 
 
     def test_interactions(self):
@@ -186,5 +205,18 @@ class MapInteractionTest(TestCase):
             self._curate_call(self.tips)
         self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
-        # Default entrypoint tests:
+        # Default entrypoint tests with value that can be easy splitted:
         self._default_call(self.tips, 1000)
+
+        # Default entrypoint tests with value that hard to split equally:
+        # self._default_call(self.tips, 337)
+
+        # Default entrypoint tests with value that very hard to split:
+        # self._default_call(self.tips, 1)
+
+        # TODO: test contract creation from factory with another edgecase params:
+        # - test collab with 1 participant cant be created with only 1 share
+        # - test that collab with 0 core cant be created
+        # - test that maximum participants is limited
+        # - 0 share for participant should not be allowed
+        # - need to make MORE tests
