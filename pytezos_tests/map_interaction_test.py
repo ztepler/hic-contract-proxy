@@ -239,7 +239,7 @@ class MapInteractionTest(TestCase):
         self._default_call(self.tips, 1)
 
         # Default entrypoint tests with very big value (100 bln tez):
-        # self._default_call(self.tips, 10**17)
+        self._default_call(self.tips, 10**17)
 
         # TODO: test contract creation from factory with another edgecase params:
         # - test collab with 1 participant cant be created with only 1 share
@@ -251,3 +251,6 @@ class MapInteractionTest(TestCase):
         # TODO: maybe run this tests with different contracts created with
         # different shares and participant count (starting with factory and
         # then calling all tests)
+
+        # TODO: test with very big share numbers
+        # TODO: maybe it is good to limit share numbers by some value

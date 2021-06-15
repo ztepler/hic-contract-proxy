@@ -83,6 +83,13 @@ block {
 } with (list[callToHic], store)
 
 
+function tezToNat(const value : tez) : nat is value / 1mutez
+function natToTez(const value : nat) : tez is value * 1mutez
+
+(* natDiv required to prevent mutez overflow: *)
+function natDiv(const value : tez; const num : nat; const den : nat) : tez is
+    natToTez(tezToNat(value) * num / den)
+
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
@@ -94,7 +101,7 @@ block {
         const isLast : bool = opNumber = Set.size(store.shares);
         const payoutAmount : tez = if isLast
             then Tezos.amount - allocatedPayouts
-            else Tezos.amount * participantShare / store.totalShares;
+            else natDiv(Tezos.amount, participantShare, store.totalShares);
 
         const receiver : contract(unit) = getReceiver(participantAddress);
         const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
