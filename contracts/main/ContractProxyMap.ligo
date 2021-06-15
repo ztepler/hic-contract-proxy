@@ -98,7 +98,8 @@ block {
 
         const receiver : contract(unit) = getReceiver(participantAddress);
         const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
-        operations := op # operations;
+
+        if payoutAmount > 0tez then operations := op # operations else skip;
         allocatedPayouts := allocatedPayouts + payoutAmount;
     }
 

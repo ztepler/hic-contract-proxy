@@ -13,13 +13,21 @@ def split_amount(amount, shares, last_address):
 
     total_shares = sum(shares.values())
 
+    # calculating amounts, int always rounds down:
     amounts = {
         address: int(share*amount/total_shares)
         for address, share in shares.items() if address != last_address
     }
 
+    # dust goes to the last_address:
     accumulated_amount = sum(amounts.values())
     amounts[last_address] = amount - accumulated_amount
+
+    # removing 0-operations:
+    amounts = {
+        address: amount for address, amount in amounts.items()
+        if amount > 0
+    }
 
     return amounts
 
@@ -156,25 +164,24 @@ class MapInteractionTest(TestCase):
         self.result = self.collab.default().with_amount(amount).interpret(
             storage=self.storage, sender=sender)
 
-        # TODO: wen operation == 0 it should not appear!
         ops = self.result.operations
         # Operations is collected in reversed order
         # Order means because one (last) operation takes dust:
         ops = list(reversed(ops))
 
         shares = self.originate_params['shares']
-        self.assertEqual(len(ops), len(shares))
+        last_address = ops[-1]['destination']
+        calc_amounts = split_amount(amount, shares, last_address)
 
         # Checking that sum of the operations is correct and no dust is left
         ops_sum = sum(int(op['amount']) for op in ops)
         self.assertEqual(ops_sum, amount)
+        self.assertEqual(len(ops), len(calc_amounts))
 
         # Checking that each participant get amount he should receive:
         amounts = {op['destination']: int(op['amount']) for op in ops}
 
         # Check all amounts equals
-        last_address = ops[-1]['destination']
-        calc_amounts = split_amount(amount, shares, last_address)
         self.assertEqual(calc_amounts, amounts)
 
 
@@ -230,6 +237,9 @@ class MapInteractionTest(TestCase):
 
         # Default entrypoint tests with value that very hard to split:
         self._default_call(self.tips, 1)
+
+        # Default entrypoint tests with very big value (100 bln tez):
+        # self._default_call(self.tips, 10**17)
 
         # TODO: test contract creation from factory with another edgecase params:
         # - test collab with 1 participant cant be created with only 1 share
