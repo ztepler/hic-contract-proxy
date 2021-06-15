@@ -14,7 +14,7 @@ class BigMapInteractionTest(TestCase):
         self.p2 = 'tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos'
         self.p3 = 'tz1RS9GoEXakf9iyBmSaheLMcakFRtzBXpWE'
 
-        self.init_storage = {
+        self.storage = {
             'administrator': self.p1,
             'accounts': {
                 self.p1: {'share': 330, 'withdrawalsSum': 0},
@@ -46,7 +46,7 @@ class BigMapInteractionTest(TestCase):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.storage, sender=self.p1)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'mint_OBJKT'
@@ -72,7 +72,7 @@ class BigMapInteractionTest(TestCase):
         """ Testing that swapping doesn't fail with default params """
 
         self.result = self.contract.swap(self.swap_params).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.storage, sender=self.p1)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
