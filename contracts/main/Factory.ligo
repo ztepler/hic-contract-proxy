@@ -42,12 +42,10 @@ function createProxy(const params : originationParams; var factoryStore : factor
     : (list(operation) * factoryStorage) is
 block {
 
-    (* Calculating total shares and participant count: *)
+    (* Calculating total shares: *)
     var totalShares : nat := 0n;
-    var participantCount : nat := 0n;
     for participantAddress -> participantShare in map params.shares block {
         totalShares := totalShares + participantShare;
-        participantCount := participantCount + 1n;
     };
 
     if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
@@ -62,7 +60,6 @@ block {
         totalShares = totalShares;
         hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
         coreParticipants = params.coreParticipants;
-        participantCount = participantCount;
     ];
 
     (* Making originate operation: *)

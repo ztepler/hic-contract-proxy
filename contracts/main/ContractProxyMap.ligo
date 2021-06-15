@@ -13,7 +13,13 @@ type action is
 | Collect of collectParams
 | Curate of curateParams
 | Default of unit
-(* TODO: Views that would allow to make signatures in V2 *)
+(* TODO: Views that would allow to make signatures in V2:
+    - is participant core
+    - is administrator
+    - participant shares
+    - total shares
+*)
+
 (* TODO: Transfer method to withdraw tokens from contract *)
 
 
@@ -24,10 +30,6 @@ type storage is record [
 
     (* shares is map of all participants with the shares that they would recieve *)
     shares : map(address, nat);
-
-    (* Count is useful to understand when it is last participant while
-        iterating over transactions: *)
-    participantCount : nat;
 
     (* the sum of the shares should be equal to totalShares *)
     totalShares : nat;
@@ -89,7 +91,7 @@ block {
 
     for participantAddress -> participantShare in map store.shares block {
         opNumber := opNumber + 1n;
-        const isLast : bool = opNumber = store.participantCount;
+        const isLast : bool = opNumber = Set.size(store.shares);
         const payoutAmount : tez = if isLast
             then Tezos.amount - allocatedPayouts
             else Tezos.amount * participantShare / store.totalShares;
