@@ -21,6 +21,8 @@ type action is
 *)
 
 (* TODO: Transfer method to withdraw tokens from contract *)
+(* TODO: Transfer admin rights method? Can be very useful if someone needs
+    transfer to DAO *)
 
 
 type storage is record [

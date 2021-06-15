@@ -15,7 +15,7 @@ def split_amount(amount, shares, last_address):
 
     # calculating amounts, int always rounds down:
     amounts = {
-        address: int(share*amount/total_shares)
+        address: share * amount // total_shares
         for address, share in shares.items() if address != last_address
     }
 
@@ -79,8 +79,8 @@ class MapInteractionTest(TestCase):
         self.total_incomings = 0
 
 
-    def _create_collab(self, sender):
-        result = self.factory.default(self.originate_params).interpret(
+    def _create_collab(self, sender, params):
+        result = self.factory.default(params).interpret(
             storage=self.factory_init, sender=sender)
         self.assertEqual(len(result.operations), 1)
 
@@ -169,7 +169,7 @@ class MapInteractionTest(TestCase):
         # Order means because one (last) operation takes dust:
         ops = list(reversed(ops))
 
-        shares = self.originate_params['shares']
+        shares = self.storage['shares']
         last_address = ops[-1]['destination']
         calc_amounts = split_amount(amount, shares, last_address)
 
@@ -187,7 +187,7 @@ class MapInteractionTest(TestCase):
 
     def test_interactions(self):
         # Factory test:
-        self._create_collab(self.admin)
+        self._create_collab(self.admin, self.originate_params)
 
         # Test mint call from admin succeed:
         self._mint_call(self.admin)
@@ -241,8 +241,20 @@ class MapInteractionTest(TestCase):
         # Default entrypoint tests with very big value (100 bln tez):
         self._default_call(self.tips, 10**17)
 
+        # Collab with very crazy big shares:
+        crazy_params = self.originate_params.copy()
+        crazy_params['shares'] = {
+            self.p1: 10**35,
+            self.p2: 10**35,
+            self.tips: 10**35
+        }
+
+        self._create_collab(self.admin, crazy_params)
+        self._default_call(self.tips, 10**17)
+
+        # Collab with 1 participant cant be created with only 1 share:
+
         # TODO: test contract creation from factory with another edgecase params:
-        # - test collab with 1 participant cant be created with only 1 share
         # - test that collab with 0 core cant be created
         # - test that maximum participants is limited
         # - 0 share for participant should not be allowed
