@@ -79,7 +79,7 @@
                      CAR ;
                      CDR ;
                      CAR ;
-                     CONTRACT %collect (pair (nat %hDAO_amount) (nat %objkt_id)) ;
+                     CONTRACT %curate (pair (nat %hDAO_amount) (nat %objkt_id)) ;
                      IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
                      PUSH mutez 0 ;
                      DIG 2 ;
