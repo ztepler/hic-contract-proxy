@@ -14,6 +14,8 @@ class MapInteractionTest(TestCase):
         self.p2 = 'tz1MdaJfWzP5pPx3gwPxfdLZTHW6js9havos'
         self.p3 = 'tz1RS9GoEXakf9iyBmSaheLMcakFRtzBXpWE'
 
+        self.admin = self.p1
+
         self.mint_params = {
             'address': 'KT1VRdyXdMb452GRnSz7tPFQVg96bq2XAmSN',
             'amount': 1,
@@ -43,11 +45,11 @@ class MapInteractionTest(TestCase):
         self.total_incomings = 0
 
 
-    def _mint_call(self):
+    def _mint_call(self, sender):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.init_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'mint_OBJKT'
@@ -56,65 +58,34 @@ class MapInteractionTest(TestCase):
         assert op_bytes == metadata
 
 
-    def _test_mint_call_without_admin_role(self):
-        """ Testing that calling mint from non-administrator address is not possible """
-
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self.result = self.contract.mint_OBJKT(self.mint_params).interpret(
-                storage=self.result.storage, sender=self.p2)
-
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-
-    def _swap_call(self):
+    def _swap_call(self, sender):
         """ Testing that swapping doesn't fail with default params """
 
         self.result = self.contract.swap(self.swap_params).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.init_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
 
 
-    def _swap_call_without_admin_role(self):
-        """ Testing that calling swap from non-administrator address is not possible """
-
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self.result = self.contract.swap(self.swap_params).interpret(
-                storage=self.result.storage, sender=self.p2)
-
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-
-    def _cancel_swap_call(self):
+    def _cancel_swap_call(self, sender):
         """ Testing that cancel swap doesn't fail with default params """
 
         some_swap_id = 42
         self.result = self.contract.cancel_swap(some_swap_id).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.init_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'cancel_swap'
         assert self.result.operations[0]['parameters']['value'] == {'int': '42'}
 
 
-    def _cancel_swap_call_without_admin_role(self):
-        """ Testing that calling cancel swap from non-administrator address is not possible """
-
-        some_swap_id = 42
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self.result = self.contract.cancel_swap(some_swap_id).interpret(
-                storage=self.result.storage, sender=self.p3)
-
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-
-    def _collect_call(self):
+    def _collect_call(self, sender):
         """ Testing that collect doesn't fail with default params """
 
         some_collect_params = {'objkt_amount': 1, 'swap_id': 42}
         self.result = self.contract.collect(some_collect_params).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.init_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'collect'
@@ -122,23 +93,12 @@ class MapInteractionTest(TestCase):
         assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '42'}
 
 
-    def _collect_call_without_admin_role(self):
-        """ Testing that calling collect from non-administrator address is not possible """
-
-        some_collect_params = {'objkt_amount': 1, 'swap_id': 42}
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self.result = self.contract.collect(some_collect_params).interpret(
-                storage=self.result.storage, sender=self.p3)
-
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-
-    def _curate_call(self):
+    def _curate_call(self, sender):
         """ Testing that curate doesn't fail with default params """
 
         curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
         self.result = self.contract.curate(curate_params).interpret(
-            storage=self.init_storage, sender=self.p1)
+            storage=self.init_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
@@ -146,25 +106,45 @@ class MapInteractionTest(TestCase):
         assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '100000'}
 
 
-    def _curate_call_without_admin_role(self):
-        """ Testing that calling curate from non-administrator address is not possible """
+    def test_interactions(self):
+        # Test mint call from admin succeed:
+        self._mint_call(self.admin)
 
-        curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
+        # Test mint call without admin role failed:
         with self.assertRaises(MichelsonRuntimeError) as cm:
-            self.result = self.contract.curate(curate_params).interpret(
-                storage=self.result.storage, sender=self.p3)
-
+            self._mint_call(self.p2)
         self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
+        # Test swap call from admin succeed:
+        self._swap_call(self.admin)
 
-    def test_interactions(self):
-        self._mint_call()
-        self._test_mint_call_without_admin_role()
-        self._swap_call()
-        self._swap_call_without_admin_role()
-        self._cancel_swap_call()
-        self._cancel_swap_call_without_admin_role()
-        self._collect_call()
-        self._collect_call_without_admin_role()
+        # Testing that calling swap from non-administrator address is not possible:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._swap_call(self.p2)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+        # Test cancel swap call from admin succeed:
+        self._cancel_swap_call(self.admin)
+
+        # Testing that calling cancel swap from non-administrator address is not possible:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._cancel_swap_call(self.p3)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+        # Test collect call from admin succeed:
+        self._collect_call(self.admin)
+
+        # Testing that calling collect from non-administrator address is not possible:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collect_call(self.p3)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+        # Test curate call from admin succeed:
+        self._curate_call(self.admin)
+
+        # Testing that curate call from non-administrator address is not possible:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._curate_call(self.p3)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
         # TODO: default entrypoint tests
