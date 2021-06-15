@@ -4,42 +4,11 @@
   storage (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) ;
   code { UNPAIR ;
          PUSH nat 0 ;
-         PUSH nat 0 ;
-         PAIR ;
          SWAP ;
          DUP ;
          DUG 2 ;
          CDR ;
-         ITER { SWAP ;
-                PAIR ;
-                DUP ;
-                CDR ;
-                CDR ;
-                SWAP ;
-                DUP ;
-                DUG 2 ;
-                CAR ;
-                CDR ;
-                ADD ;
-                PUSH nat 1 ;
-                DUP 3 ;
-                CAR ;
-                CAR ;
-                ADD ;
-                DUP 3 ;
-                CDR ;
-                DIG 2 ;
-                DIG 3 ;
-                CAR ;
-                CAR ;
-                PAIR ;
-                CDR ;
-                DIG 2 ;
-                PAIR ;
-                PAIR ;
-                CAR } ;
-         DUP ;
-         CDR ;
+         ITER { SWAP ; PAIR ; DUP ; CDR ; CDR ; SWAP ; CAR ; ADD } ;
          PUSH nat 0 ;
          SWAP ;
          DUP ;
@@ -47,11 +16,10 @@
          COMPARE ;
          EQ ;
          IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
-         DUP 3 ;
-         CDR ;
-         PAIR ;
          SWAP ;
-         CAR ;
+         DUP ;
+         DUG 2 ;
+         CDR ;
          DUP 4 ;
          CAR ;
          PAIR ;
@@ -79,10 +47,10 @@
                        (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))))) ;
              storage
                (pair (pair (pair (address %administrator) (set %coreParticipants address))
-                           (pair (address %hicetnuncMinterAddress) (nat %participantCount)))
-                     (pair (map %shares address nat) (nat %totalShares))) ;
+                           (pair (address %hicetnuncMinterAddress) (map %shares address nat)))
+                     (nat %totalShares)) ;
              code { LAMBDA
-                      (pair (pair (pair address (set address)) (pair address nat)) (pair (map address nat) nat))
+                      (pair (pair (pair address (set address)) (pair address (map address nat))) nat)
                       unit
                       { CAR ;
                         CAR ;
@@ -172,8 +140,9 @@
                                 SWAP ;
                                 DUP ;
                                 DUG 2 ;
-                                CDR ;
                                 CAR ;
+                                CDR ;
+                                CDR ;
                                 ITER { SWAP ;
                                        PAIR ;
                                        DUP ;
@@ -190,6 +159,7 @@
                                        CAR ;
                                        CDR ;
                                        CDR ;
+                                       SIZE ;
                                        SWAP ;
                                        DUP ;
                                        DUG 2 ;
@@ -197,7 +167,6 @@
                                        EQ ;
                                        IF { SWAP ; DUP ; DUG 2 ; AMOUNT ; SUB }
                                           { DUP 4 ;
-                                            CDR ;
                                             CDR ;
                                             DUP 4 ;
                                             CDR ;
