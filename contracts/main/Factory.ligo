@@ -29,20 +29,15 @@ type participantRec is record [
     isCore : bool;
 ]
 
-type originationParams is record [
-    (* administrator is originator of the contract, this is the only one who can call mint *)
-    administrator : address;
-
-    (* map of all participants with their shares and roles *)
-    participants : map(address, participantRec);
-]
+(* map of all participants with their shares and roles *)
+type originationParams is map(address, participantRec);
 
 
 type factoryAction is
 | Create_proxy of originationParams
 
 
-function createProxy(const params : originationParams; var factoryStore : factoryStorage)
+function createProxy(const participants : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
@@ -52,7 +47,7 @@ block {
     var totalShares : nat := 0n;
     var coreCount : nat := 0n;
 
-    for participantAddress -> participantRec in map params.participants block {
+    for participantAddress -> participantRec in map participants block {
         shares[participantAddress] := participantRec.share;
         totalShares := totalShares + participantRec.share;
 
@@ -73,7 +68,7 @@ block {
 
     (* Preparing initial storage: *)
     const initialStore : storage = record[
-        administrator = params.administrator;
+        administrator = Tezos.sender;
         shares = shares;
         totalShares = totalShares;
         hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;

@@ -55,12 +55,9 @@ class MapInteractionTest(TestCase):
         }
 
         self.originate_params = {
-            'administrator': self.admin,
-            'participants': {
-                self.p1:   {'share': 330, 'isCore': True},
-                self.p2:   {'share': 500, 'isCore': True},
-                self.tips: {'share': 170, 'isCore': False}
-            }
+            self.p1:   {'share': 330, 'isCore': True},
+            self.p2:   {'share': 500, 'isCore': True},
+            self.tips: {'share': 170, 'isCore': False}
         }
 
         self.swap_params = {
@@ -241,20 +238,24 @@ class MapInteractionTest(TestCase):
         self._default_call(self.tips, 10**17)
 
         # Collab with very crazy big shares:
-        crazy_params = self.originate_params.copy()
-        crazy_params['participants'] = {
+        crazy_params = {
             self.p1: {'share': 10**35, 'isCore': True},
             self.p2: {'share': 10**35, 'isCore': True},
             self.tips: {'share': 10**35, 'isCore': True}
         }
 
-        self._create_collab(self.admin, crazy_params)
+        self._create_collab(self.p2, crazy_params)
         self._default_call(self.tips, 10**17)
+
+        # Mint from admin address (now admin is p2):
+        self._mint_call(self.p2)
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._mint_call(self.admin)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
         # Collab with 1 participant can be created with only 1 share,
         # and we allow to have participants with 0 share (why not?):
-        single = self.originate_params.copy()
-        single['participants'] = {
+        single = {
             self.p1: {'share': 1, 'isCore': True},
             self.p2: {'share': 0, 'isCore': True},
         }
@@ -263,8 +264,7 @@ class MapInteractionTest(TestCase):
 
         # Collab can't be created with only 0 shares:
         with self.assertRaises(MichelsonRuntimeError) as cm:
-            twin = self.originate_params.copy()
-            twin['participants'] = {
+            twin = {
                 self.p1: {'share': 0, 'isCore': True},
                 self.p2: {'share': 0, 'isCore': True},
             }
@@ -274,8 +274,7 @@ class MapInteractionTest(TestCase):
 
         # Collab with zero-core can't be created:
         with self.assertRaises(MichelsonRuntimeError) as cm:
-            no_core = self.originate_params.copy()
-            no_core['participants'] = {
+            no_core = {
                 self.p1: {'share': 1, 'isCore': False},
                 self.p2: {'share': 1, 'isCore': False},
             }
