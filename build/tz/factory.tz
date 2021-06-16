@@ -1,6 +1,4 @@
-{ parameter
-    (pair (address %administrator)
-          (map %participants address (pair (bool %isCore) (nat %share)))) ;
+{ parameter (map address (pair (bool %isCore) (nat %share))) ;
   storage (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) ;
   code { UNPAIR ;
          PUSH nat 0 ;
@@ -11,9 +9,6 @@
          PAIR ;
          PAIR ;
          SWAP ;
-         DUP ;
-         DUG 2 ;
-         CDR ;
          ITER { SWAP ;
                 PAIR ;
                 DUP ;
@@ -140,14 +135,13 @@
          DUG 2 ;
          CDR ;
          CAR ;
-         DUP 5 ;
+         DUP 4 ;
          CAR ;
          PAIR ;
          DIG 2 ;
          CAR ;
          CDR ;
-         DIG 3 ;
-         CAR ;
+         SENDER ;
          PAIR ;
          PAIR ;
          PAIR ;
