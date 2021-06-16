@@ -21,16 +21,20 @@ type factoryStorage is record [
     hicetnuncMinterAddress : address;
 ]
 
+type participantRec is record [
+    (* share is the fraction that participant would receive from every sale *)
+    share : nat;
+
+    (* role isCore allow participant to sign as one of the creator *)
+    isCore : bool;
+]
 
 type originationParams is record [
     (* administrator is originator of the contract, this is the only one who can call mint *)
     administrator : address;
 
-    (* shares is map of all participants with the shares that they would recieve *)
-    shares : map(address, nat);
-
-    (* set of participants that should sign before contract can mint *)
-    coreParticipants : set(address);
+    (* map of all participants with their shares and roles *)
+    participants : map(address, participantRec);
 ]
 
 
@@ -42,13 +46,27 @@ function createProxy(const params : originationParams; var factoryStore : factor
     : (list(operation) * factoryStorage) is
 block {
 
-    (* Calculating total shares: *)
+    (* Calculating total shares and core participants: *)
+    var shares : map(address, nat) := map [];
+    var coreParticipants : set (address) := set [];
     var totalShares : nat := 0n;
-    for participantAddress -> participantShare in map params.shares block {
-        totalShares := totalShares + participantShare;
+    var coreCount : nat := 0n;
+
+    for participantAddress -> participantRec in map params.participants block {
+        shares[participantAddress] := participantRec.share;
+        totalShares := totalShares + participantRec.share;
+
+        if participantRec.isCore then
+        block {
+            coreParticipants := Set.add (participantAddress, coreParticipants);
+            coreCount := coreCount + 1n;
+        } else skip;
     };
 
     if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
+    else skip;
+
+    if coreCount = 0n then failwith("Collab contract should have at least one core")
     else skip;
 
     (* TODO: check how much participants it can handle and limit this count here *)
@@ -56,10 +74,10 @@ block {
     (* Preparing initial storage: *)
     const initialStore : storage = record[
         administrator = params.administrator;
-        shares = params.shares;
+        shares = shares;
         totalShares = totalShares;
         hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
-        coreParticipants = params.coreParticipants;
+        coreParticipants = coreParticipants;
     ];
 
     (* Making originate operation: *)

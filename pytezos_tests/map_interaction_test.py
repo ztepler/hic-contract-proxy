@@ -56,12 +56,11 @@ class MapInteractionTest(TestCase):
 
         self.originate_params = {
             'administrator': self.admin,
-            'shares': {
-                self.p1: 330,
-                self.p2: 500,
-                self.tips: 170
-            },
-            'coreParticipants': {self.p1, self.p2},
+            'participants': {
+                self.p1:   {'share': 330, 'isCore': True},
+                self.p2:   {'share': 500, 'isCore': True},
+                self.tips: {'share': 170, 'isCore': False}
+            }
         }
 
         self.swap_params = {
@@ -243,26 +242,47 @@ class MapInteractionTest(TestCase):
 
         # Collab with very crazy big shares:
         crazy_params = self.originate_params.copy()
-        crazy_params['shares'] = {
-            self.p1: 10**35,
-            self.p2: 10**35,
-            self.tips: 10**35
+        crazy_params['participants'] = {
+            self.p1: {'share': 10**35, 'isCore': True},
+            self.p2: {'share': 10**35, 'isCore': True},
+            self.tips: {'share': 10**35, 'isCore': True}
         }
 
         self._create_collab(self.admin, crazy_params)
         self._default_call(self.tips, 10**17)
 
-        # Collab with 1 participant cant be created with only 1 share:
+        # Collab with 1 participant can be created with only 1 share,
+        # and we allow to have participants with 0 share (why not?):
+        single = self.originate_params.copy()
+        single['participants'] = {
+            self.p1: {'share': 1, 'isCore': True},
+            self.p2: {'share': 0, 'isCore': True},
+        }
+        self._create_collab(self.admin, single)
+        self._default_call(self.tips, 1000)
 
-        # TODO: test contract creation from factory with another edgecase params:
-        # - test that collab with 0 core cant be created
-        # - test that maximum participants is limited
-        # - 0 share for participant should not be allowed
-        # - need to make MORE tests
+        # Collab can't be created with only 0 shares:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            twin = self.originate_params.copy()
+            twin['participants'] = {
+                self.p1: {'share': 0, 'isCore': True},
+                self.p2: {'share': 0, 'isCore': True},
+            }
+            self._create_collab(self.admin, twin)
+        msg = 'Sum of the shares should be more than 0n'
+        self.assertTrue(msg in str(cm.exception))
 
-        # TODO: maybe run this tests with different contracts created with
-        # different shares and participant count (starting with factory and
-        # then calling all tests)
+        # Collab with zero-core can't be created:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            no_core = self.originate_params.copy()
+            no_core['participants'] = {
+                self.p1: {'share': 1, 'isCore': False},
+                self.p2: {'share': 1, 'isCore': False},
+            }
+            self._create_collab(self.admin, no_core)
+        msg = 'Collab contract should have at least one core'
+        self.assertTrue(msg in str(cm.exception))
 
-        # TODO: test with very big share numbers
-        # TODO: maybe it is good to limit share numbers by some value
+        # TODO: Collab with too many participants can't be created:
+        # TODO: NEED TO TEST LIMIT
+        # TODO: need to make MORE tests
