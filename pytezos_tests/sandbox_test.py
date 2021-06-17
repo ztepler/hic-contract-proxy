@@ -36,18 +36,18 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         """ Deploys contract with given storage """
 
         # TODO: try to replace key with client.key:
-        opg = contract.using(shell=self.get_node_url(), key='bootstrap1')
+        opg = contract.using(shell=self.get_node_url(), key=client.key)
         opg = opg.originate(initial_storage=storage)
 
         return opg.fill().sign().inject()
 
 
-    def _deploy_factory(self, client):
+    def _deploy_factory(self, client, minter_address):
 
         factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_TZ))
         factory_init = {
             'originatedContracts': 0,
-            'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
+            'hicetnuncMinterAddress': minter_address
         }
 
         return self._deploy_contract(client, factory, factory_init)
@@ -70,8 +70,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         return contract
 
 
-    def _find_factory_by_hash(self, client, opg_hash):
-        """ Returns factory that was originated with opg_hash """
+    def _find_contract_by_hash(self, client, opg_hash):
+        """ Returns contract that was originated with opg_hash """
 
         op = client.shell.blocks['head':].find_operation(opg_hash)
         op_result = op['contents'][0]['metadata']['operation_result']
@@ -80,7 +80,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         return self._load_contract(client, address)
 
 
-    def _find_collab_by_hash(self, client, opg_hash):
+    def _find_contract_internal_by_hash(self, client, opg_hash):
         """ Returns collab that was originated with opg_hash """
 
         op = client.shell.blocks['head':].find_operation(opg_hash)
@@ -90,7 +90,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         return self._load_contract(client, address)
 
 
-    def setUp(self):
+    def _activate_accs(self):
         self.p1 = self.client.using(key='bootstrap1')
         self.p1.reveal()
 
@@ -100,20 +100,87 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.tips = self.client.using(key='bootstrap3')
         self.tips.reveal()
 
-        # TODO: deploy all h=n contracts in loop:
+        self.hic_admin = self.client.using(key='bootstrap4')
+        self.hic_admin.reveal()
+
+
+    def _deploy_hic_contracts(self, client):
+
         # Deploying OBJKTs:
+        storage = read_storage('objkts')
+        storage.update({'administrator': pkh(client)})
         opg = self._deploy_contract(
-            client=self.p1,
+            client=client,
+            contract=read_contract('objkts'),
+            storage=storage)
+
+        self.bake_block()
+        self.objkts = self._find_contract_by_hash(client, opg['hash'])
+
+        # Deploying hDAO:
+        opg = self._deploy_contract(
+            client=client,
             contract=read_contract('objkts'),
             storage=read_storage('objkts'))
 
         self.bake_block()
-        self.objkts = self._find_factory_by_hash(self.p1, opg['hash'])
+        self.hdao = self._find_contract_by_hash(client, opg['hash'])
+
+        # Deploying curate:
+        storage = read_storage('curate')
+        storage.update({
+            'manager': pkh(client) 
+        })
+
+        opg = self._deploy_contract(
+            client=client,
+            contract=read_contract('curate'),
+            storage=storage)
+
+        self.bake_block()
+        self.curate = self._find_contract_by_hash(client, opg['hash'])
+
+        # Deploying minter:
+        storage = read_storage('minter')
+        storage.update({
+            'curate': self.curate.address,
+            'hdao': self.hdao.address,
+            'objkt': self.objkts.address,
+            'manager': pkh(client) 
+        })
+        opg = self._deploy_contract(
+            client=client,
+            contract=read_contract('minter'),
+            storage=storage)
+
+        self.bake_block()
+        self.minter = self._find_contract_by_hash(client, opg['hash'])
+
+        # configure curate:
+        configuration = {
+            'fa2': self.hdao.address,
+            'protocol': self.minter.address
+        }
+        self.curate.configure(configuration).inject()
+        self.bake_block()
+    
+        # what does this genesis?:
+        self.minter.genesis().inject()
+        self.bake_block()
+
+        # configure objkts:
+        self.objkts.set_administrator(self.minter.address).inject()
+        self.bake_block()
+
+
+    def setUp(self):
+        self._activate_accs()
+        self._deploy_hic_contracts(self.hic_admin)
 
         # Deploying factory:
-        opg = self._deploy_factory(self.p1)
+        opg = self._deploy_factory(self.p1, self.minter.address)
         self.bake_block()
-        self.factory = self._find_factory_by_hash(self.p1, opg['hash'])
+        self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
         # Creating contract using proxy
         originate_params = {
@@ -124,14 +191,22 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         opg = self.factory.default(originate_params).inject()
         self.bake_block()
-        self.collab = self._find_collab_by_hash(self.p1, opg['hash'])
-        # result = self._find_call_result_by_hash(self.p1, opg['hash'])
-
-        # TODO: deploy h=n minter and other contracts?
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
 
 
     def test_withdraw_tokens(self):
         # 1. collab mints, then not admin withdraws: failure
+        mint_params = {
+            'address': self.collab.address,
+            'amount': 1,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 250
+        }
+
+        opg = self.collab.mint_OBJKT(mint_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
         # 2. collab mints, then admin withdraws: success
         # 3. someone mints, then not admin withdraws: failure
         # 4. someone mints, then admin withdraws: success
