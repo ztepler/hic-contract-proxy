@@ -103,6 +103,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.hic_admin = self.client.using(key='bootstrap4')
         self.hic_admin.reveal()
 
+        self.buyer = self.client.using(key='bootstrap5')
+        self.buyer.reveal()
+
 
     def _deploy_hic_contracts(self, client):
 
@@ -118,10 +121,12 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.objkts = self._find_contract_by_hash(client, opg['hash'])
 
         # Deploying hDAO:
+        storage = read_storage('objkts')
+        storage.update({'administrator': pkh(client)})
         opg = self._deploy_contract(
             client=client,
             contract=read_contract('objkts'),
-            storage=read_storage('objkts'))
+            storage=storage)
 
         self.bake_block()
         self.hdao = self._find_contract_by_hash(client, opg['hash'])
@@ -168,8 +173,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.minter.genesis().inject()
         self.bake_block()
 
-        # configure objkts:
+        # configure objkts and hdao:
         self.objkts.set_administrator(self.minter.address).inject()
+        self.hdao.set_administrator(self.minter.address).inject()
         self.bake_block()
 
 
@@ -194,11 +200,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
 
 
-    def test_withdraw_tokens(self):
-        # 1. collab mints, then not admin withdraws: failure
+    def test_mint_token(self):
+        # mint:
         mint_params = {
             'address': self.collab.address,
-            'amount': 1,
+            'amount': 10,
             'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
             'royalties': 250
         }
@@ -207,12 +213,54 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         result = self._find_call_result_by_hash(self.p1, opg['hash'])
 
+        # checking that mint is ok:
+        self.assertEqual(self.objkts.storage['all_tokens'](), 1)
+        self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 10)
+
+        # swap:
+        swap_params = {
+            'objkt_amount': 4,
+            'objkt_id': 0,
+            'xtz_per_objkt': 1_000_000,
+        }
+
+        swap_id = self.minter.storage['swap_id']()
+        opg = self.collab.swap(swap_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # collect:
+        collect_params = {
+            'objkt_amount': 3,
+            'swap_id': swap_id
+        }
+        opg = self.buyer.contract(self.minter.address).collect(
+            collect_params).with_amount(3_000_000).inject()
+
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # checking objkt holders:
+        self.assertEqual(self.objkts.storage['all_tokens'](), 1)
+        self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 6)
+        self.assertEqual(self.objkts.storage['ledger'][self.minter.address, 0](), 1)
+        self.assertEqual(self.objkts.storage['ledger'][pkh(self.buyer), 0](), 3)
+
+        # TODO: checking distribution:
+        pass
+
+
+    '''
+    def test_withdraw_token(self):
+        # Do I need to implement this? Would need to support FA2 only or FA1.2 too?
+
+        # 1. collab mints, then not admin withdraws: failure
         # 2. collab mints, then admin withdraws: success
         # 3. someone mints, then not admin withdraws: failure
         # 4. someone mints, then admin withdraws: success
         # withdraw zero tokens?
         pass
-
+    '''
 
     '''
     def test_created_contract_params(self):
