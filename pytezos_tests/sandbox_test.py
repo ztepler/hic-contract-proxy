@@ -108,45 +108,45 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
 
     def _deploy_hic_contracts(self, client):
-
+        # import pdb; pdb.set_trace()
         # Deploying OBJKTs:
-        storage = read_storage('objkts')
+        storage = read_storage('fa2_objkts')
         storage.update({'administrator': pkh(client)})
         opg = self._deploy_contract(
             client=client,
-            contract=read_contract('objkts'),
+            contract=read_contract('fa2_objkts'),
             storage=storage)
 
         self.bake_block()
         self.objkts = self._find_contract_by_hash(client, opg['hash'])
 
         # Deploying hDAO:
-        storage = read_storage('objkts')
+        storage = read_storage('fa2_hdao')
         storage.update({'administrator': pkh(client)})
         opg = self._deploy_contract(
             client=client,
-            contract=read_contract('objkts'),
+            contract=read_contract('fa2_hdao'),
             storage=storage)
 
         self.bake_block()
         self.hdao = self._find_contract_by_hash(client, opg['hash'])
 
         # Deploying curate:
-        storage = read_storage('curate')
+        storage = read_storage('curation')
         storage.update({
             'manager': pkh(client) 
         })
 
         opg = self._deploy_contract(
             client=client,
-            contract=read_contract('curate'),
+            contract=read_contract('curation'),
             storage=storage)
 
         self.bake_block()
         self.curate = self._find_contract_by_hash(client, opg['hash'])
 
-        # Deploying minter:
-        storage = read_storage('minter')
+        # Deploying objkt_swap:
+        storage = read_storage('objkt_swap')
         storage.update({
             'curate': self.curate.address,
             'hdao': self.hdao.address,
@@ -155,7 +155,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         })
         opg = self._deploy_contract(
             client=client,
-            contract=read_contract('minter'),
+            contract=read_contract('objkt_swap'),
             storage=storage)
 
         self.bake_block()
