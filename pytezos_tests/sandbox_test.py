@@ -108,7 +108,6 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
 
     def _deploy_hic_contracts(self, client):
-        # import pdb; pdb.set_trace()
         # Deploying OBJKTs:
         storage = read_storage('fa2_objkts')
         storage.update({'administrator': pkh(client)})
