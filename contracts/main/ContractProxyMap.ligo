@@ -6,6 +6,10 @@
 #include "../partials/general.ligo"
 
 
+(* Including sign interface *)
+#include "../partials/sign.ligo"
+
+
 type action is
 | Mint_OBJKT of mintParams
 | Swap of swapParams
@@ -13,11 +17,11 @@ type action is
 | Collect of collectParams
 | Curate of curateParams
 | Default of unit
-| Is_participant_core of address
-| Is_participant_administrator of address
-| Get_total_shares of unit
-| Get_participant_shares of address
-| Is_minted_hash of bytes
+| Is_core_participant of isParticipantParams
+| Is_participant_administrator of isParticipantParams
+| Get_total_shares of getTotalSharesParams
+| Get_participant_shares of getParticipantShares
+| Is_minted_hash of isMintedHashParams
 
 (* TODO: Transfer method to withdraw tokens from contract *)
 (* TODO: Transfer admin rights method? Can be very useful if someone needs
@@ -122,31 +126,32 @@ block {
 } with (operations, store)
 
 
-function isParticipantCore(var store : storage; var params : address) : (list(operation) * storage) is
+function isCoreParticipant(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
+block {
+    const isCore = store.coreParticipants contains params.participantAddress;
+    const returnOperation = Tezos.transaction(True, 0mutez, params.callback);
+} with (list[returnOperation], store)
+
+
+function isParticipantAdministrator(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
 block {
     skip;
 } with ((nil: list(operation)), store)
 
 
-function isParticipantAdministrator(var store : storage; var params : address) : (list(operation) * storage) is
+function getTotalShares(var store : storage; var params : getTotalSharesParams) : (list(operation) * storage) is
 block {
     skip;
 } with ((nil: list(operation)), store)
 
 
-function getTotalShares(var store : storage) : (list(operation) * storage) is
+function getParticipantShares(var store : storage; var params : getParticipantShares) : (list(operation) * storage) is
 block {
     skip;
 } with ((nil: list(operation)), store)
 
 
-function getParticipantShares(var store : storage; var params : address) : (list(operation) * storage) is
-block {
-    skip;
-} with ((nil: list(operation)), store)
-
-
-function isMintedHash(var store : storage; var params : bytes) : (list(operation) * storage) is
+function isMintedHash(var store : storage; var params : isMintedHashParams) : (list(operation) * storage) is
 block {
     skip;
 } with ((nil: list(operation)), store)
@@ -160,9 +165,9 @@ case params of
 | Collect(p) -> collect(store, p)
 | Curate(p) -> curate(store, p)
 | Default -> default(store)
-| Is_participant_core(p) -> isParticipantCore(store, p)
+| Is_core_participant(p) -> isCoreParticipant(store, p)
 | Is_participant_administrator(p) -> isParticipantAdministrator(store, p)
-| Get_total_shares -> getTotalShares(store)
+| Get_total_shares(p) -> getTotalShares(store, p)
 | Get_participant_shares(p) -> getParticipantShares(store, p)
 | Is_minted_hash(p) -> isMintedHash(store, p)
 end
