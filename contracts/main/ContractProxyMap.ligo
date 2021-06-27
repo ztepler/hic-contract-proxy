@@ -18,6 +18,7 @@ type action is
     - is administrator
     - participant shares
     - total shares
+    - are contract minted HASH?
 *)
 
 (* TODO: Transfer method to withdraw tokens from contract *)
@@ -42,6 +43,10 @@ type storage is record [
     (* set of participants that should sign and signs itself *)
     (* contract can call mint only when all core participant signed *)
     coreParticipants : set(address);
+
+    (* Bigmap with metadata of minted works, I decided not to use set because
+        it is possible that collab would have unlimited works *)
+    mints : big_map(bytes, unit);
 ]
 
 
@@ -53,6 +58,9 @@ function checkSenderIsAdmin(var store : storage) : unit is
 function mint_OBJKT(var store : storage; const params: mintParams) : (list(operation) * storage) is
 block {
     checkSenderIsAdmin(store);
+
+    (* Recording IPFS hash into store.mints: *)
+    store.mints := Big_map.add (params.metadata, Unit, store.mints);
     const callToHic = callMintOBJKT(store.hicetnuncMinterAddress, params);
 } with (list[callToHic], store)
 

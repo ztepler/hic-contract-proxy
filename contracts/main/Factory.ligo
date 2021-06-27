@@ -73,6 +73,7 @@ block {
         totalShares = totalShares;
         hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
         coreParticipants = coreParticipants;
+        mints = (big_map [] : big_map(bytes, unit));
     ];
 
     (* Making originate operation: *)
