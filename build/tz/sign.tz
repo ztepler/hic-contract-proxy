@@ -1,0 +1,7 @@
+{ parameter
+    (or (pair %is_signed (bytes %metadata) (address %participant))
+        (pair %sign (address %collabContract) (bytes %metadata))) ;
+  storage (big_map (pair address bytes) unit) ;
+  code { UNPAIR ;
+         IF_LEFT { DROP ; NIL operation ; PAIR } { DROP ; NIL operation ; PAIR } } }
+
