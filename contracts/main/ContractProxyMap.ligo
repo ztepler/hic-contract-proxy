@@ -13,13 +13,11 @@ type action is
 | Collect of collectParams
 | Curate of curateParams
 | Default of unit
-(* TODO: Views that would allow to make signatures in V2:
-    - is participant core
-    - is administrator
-    - participant shares
-    - total shares
-    - are contract minted HASH?
-*)
+| Is_participant_core of address
+| Is_participant_administrator of address
+| Get_total_shares of unit
+| Get_participant_shares of address
+| Is_minted_hash of bytes
 
 (* TODO: Transfer method to withdraw tokens from contract *)
 (* TODO: Transfer admin rights method? Can be very useful if someone needs
@@ -124,6 +122,36 @@ block {
 } with (operations, store)
 
 
+function isParticipantCore(var store : storage; var params : address) : (list(operation) * storage) is
+block {
+    skip;
+} with ((nil: list(operation)), store)
+
+
+function isParticipantAdministrator(var store : storage; var params : address) : (list(operation) * storage) is
+block {
+    skip;
+} with ((nil: list(operation)), store)
+
+
+function getTotalShares(var store : storage) : (list(operation) * storage) is
+block {
+    skip;
+} with ((nil: list(operation)), store)
+
+
+function getParticipantShares(var store : storage; var params : address) : (list(operation) * storage) is
+block {
+    skip;
+} with ((nil: list(operation)), store)
+
+
+function isMintedHash(var store : storage; var params : bytes) : (list(operation) * storage) is
+block {
+    skip;
+} with ((nil: list(operation)), store)
+
+
 function main (var params : action; var store : storage) : (list(operation) * storage) is
 case params of
 | Mint_OBJKT(p) -> mint_OBJKT(store, p)
@@ -132,5 +160,10 @@ case params of
 | Collect(p) -> collect(store, p)
 | Curate(p) -> curate(store, p)
 | Default -> default(store)
+| Is_participant_core(p) -> isParticipantCore(store, p)
+| Is_participant_administrator(p) -> isParticipantAdministrator(store, p)
+| Get_total_shares -> getTotalShares(store)
+| Get_participant_shares(p) -> getParticipantShares(store, p)
+| Is_minted_hash(p) -> isMintedHash(store, p)
 end
 
