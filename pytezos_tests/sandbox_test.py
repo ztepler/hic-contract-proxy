@@ -133,7 +133,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         # Deploying curate:
         storage = read_storage('curation')
         storage.update({
-            'manager': pkh(client) 
+            'manager': pkh(client)
         })
 
         opg = self._deploy_contract(
@@ -167,7 +167,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
         self.curate.configure(configuration).inject()
         self.bake_block()
-    
+
         # what does this genesis?:
         self.minter.genesis().inject()
         self.bake_block()
@@ -176,6 +176,32 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.objkts.set_administrator(self.minter.address).inject()
         self.hdao.set_administrator(self.minter.address).inject()
         self.bake_block()
+
+        # Deploying Marketplace:
+        storage = read_storage('marketplace')
+        storage.update({
+            'objkt': self.objkts.address,
+            'manager': pkh(client)
+        })
+        opg = self._deploy_contract(
+            client=client,
+            contract=read_contract('marketplace'),
+            storage=storage)
+
+        self.bake_block()
+        self.marketplace = self._find_contract_by_hash(client, opg['hash'])
+
+
+    def _add_operator(self, contract, owner_client, operator, token_id):
+        fa2_contract = owner_client.contract(contract.address)
+        update_operatiors_params = [{
+            'add_operator': {
+                'owner': pkh(owner_client),
+                'operator': operator,
+                'token_id': token_id}
+        }]
+
+        return fa2_contract.update_operators(update_operatiors_params).inject()
 
 
     def setUp(self):
@@ -187,6 +213,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
+
+    def test_mint_token(self):
         # Creating contract using proxy
         originate_params = {
             pkh(self.p1):   {'share': 330, 'isCore': True},
@@ -198,8 +226,6 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
 
-
-    def test_mint_token(self):
         # mint:
         mint_params = {
             'address': self.collab.address,
@@ -249,6 +275,86 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         pass
 
 
+    def test_marketplace_communication(self):
+
+        # mint:
+        mint_params = {
+            'address': pkh(self.p1),
+            'amount': 100,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 100
+        }
+
+        minter = self.p1.contract(self.minter.address)
+        opg = minter.mint_OBJKT(mint_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # update operators:
+        self._add_operator(self.objkts, self.p1, self.marketplace.address, 0)
+        self.bake_block()
+
+        # swap:
+        swap_params = {
+            'creator': pkh(self.p1),
+            'objkt_amount': 100,
+            'objkt_id': 0,
+            'royalties': 100,
+            'xtz_per_objkt': 1_000_000,
+        }
+
+        marketplace = self.p1.contract(self.marketplace.address)
+        swap_id = marketplace.storage['counter']()
+        opg = marketplace.swap(swap_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # collect:
+        collect_params = {
+            'objkt_amount': 1,
+            'swap_id': swap_id
+        }
+        opg = self.buyer.contract(self.marketplace.address).collect(
+            collect_params).with_amount(1_000_000).inject()
+
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        assert self.objkts.storage['ledger'][(pkh(self.buyer), 0)]() == 1
+
+        # reswap this one objkt with low price:
+        self._add_operator(self.objkts, self.buyer, self.marketplace.address, 0)
+        self.bake_block()
+
+        marketplace = self.buyer.contract(self.marketplace.address)
+        swap_id = marketplace.storage['counter']()
+
+        swap_params.update({
+            'objkt_amount': 1,
+            'xtz_per_objkt': 100
+        })
+        opg = marketplace.swap(swap_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # trying to buy with low-price swap but more that in the swap:
+        collect_params = {
+            'objkt_amount': 10,
+            'swap_id': swap_id
+        }
+
+        # This should raise error, because there are only 1 item in swap,
+        # but there are no error!:
+        opg = self.p2.contract(self.marketplace.address).collect(
+            collect_params).with_amount(10*100).inject()
+        self.bake_block()
+
+        # and p2 should not receive this 10 objkts:
+        assert self.objkts.storage['ledger'][(pkh(self.p2), 0)]() == 10
+
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+
+
     '''
     def test_withdraw_token(self):
         # Do I need to implement this? Would need to support FA2 only or FA1.2 too?
@@ -271,8 +377,22 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
     def test_reading_views(self):
         pass
         # TODO: test reading views from another contract
+    '''
 
     def test_signature_communications(self):
         pass
+        # NEED TO UNDERSTAND WHY THESE LINES ARE FAILING:
+        """
+        # Creating contract using proxy
+        originate_params = {
+            pkh(self.p1):   {'share': 330, 'isCore': True},
+            pkh(self.p2):   {'share': 500, 'isCore': True},
+            pkh(self.tips): {'share': 170, 'isCore': False}
+        }
+
+        opg = self.factory.default(originate_params).inject()
+        self.bake_block()
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+
         # TODO: test all signature contract communications
-    '''
+        """
