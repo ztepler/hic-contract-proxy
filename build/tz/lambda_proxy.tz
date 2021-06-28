@@ -1,0 +1,5 @@
+{ parameter (or (unit %default) (lambda %execute unit (list operation))) ;
+  storage (pair (address %factory) (nat %id)) ;
+  code { UNPAIR ;
+         IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } }
+
