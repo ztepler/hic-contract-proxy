@@ -1,9 +1,17 @@
 { parameter
     (or (or (or (or (nat %cancel_swap) (pair %collect (nat %objkt_amount) (nat %swap_id)))
                 (or (pair %curate (nat %hDAO_amount) (nat %objkt_id)) (unit %default)))
-            (or (or (address %get_participant_shares) (unit %get_total_shares))
-                (or (bytes %is_minted_hash) (address %is_participant_administrator))))
-        (or (or (address %is_participant_core)
+            (or (or (pair %get_participant_shares
+                       (contract %callback nat)
+                       (address %participantAddress))
+                    (contract %get_total_shares nat))
+                (or (pair %is_core_participant
+                       (contract %callback bool)
+                       (address %participantAddress))
+                    (pair %is_minted_hash (contract %callback bool) (bytes %metadata)))))
+        (or (or (pair %is_participant_administrator
+                   (contract %callback bool)
+                   (address %participantAddress))
                 (pair %mint_OBJKT
                    (pair (address %address) (nat %amount))
                    (pair (bytes %metadata) (nat %royalties))))
@@ -210,7 +218,25 @@
                  DROP ;
                  IF_LEFT
                    { IF_LEFT { DROP ; NIL operation ; PAIR } { DROP ; NIL operation ; PAIR } }
-                   { IF_LEFT { DROP ; NIL operation ; PAIR } { DROP ; NIL operation ; PAIR } } } }
+                   { IF_LEFT
+                       { DUP ;
+                         DUG 2 ;
+                         CAR ;
+                         PUSH mutez 0 ;
+                         DUP 3 ;
+                         CAR ;
+                         CAR ;
+                         CDR ;
+                         DIG 4 ;
+                         CDR ;
+                         MEM ;
+                         TRANSFER_TOKENS ;
+                         SWAP ;
+                         NIL operation ;
+                         DIG 2 ;
+                         CONS ;
+                         PAIR }
+                       { DROP ; NIL operation ; PAIR } } } }
            { IF_LEFT
                { IF_LEFT
                    { DIG 2 ; DROP 2 ; NIL operation ; PAIR }

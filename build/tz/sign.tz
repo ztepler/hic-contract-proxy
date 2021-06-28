@@ -1,7 +1,59 @@
 { parameter
-    (or (pair %is_signed (bytes %metadata) (address %participant))
-        (pair %sign (address %collabContract) (bytes %metadata))) ;
-  storage (big_map (pair address bytes) unit) ;
+    (or (or (bool %is_core_participant_callback) (bool %is_minted_hash_callback))
+        (or (pair %is_signed
+               (pair (contract %callback bool) (bytes %metadata))
+               (address %participant))
+            (pair %sign (address %collabContract) (bytes %metadata)))) ;
+  storage
+    (pair (pair (option %callContract address) (option %isCoreParticipant bool))
+          (big_map %signatures (pair address bytes) unit)) ;
   code { UNPAIR ;
-         IF_LEFT { DROP ; NIL operation ; PAIR } { DROP ; NIL operation ; PAIR } } }
+         IF_LEFT
+           { IF_LEFT
+               { DROP ; NIL operation ; PAIR }
+               { DROP ; UNPAIR ; CDR ; NONE address ; PAIR ; PAIR ; NIL operation ; PAIR } }
+           { IF_LEFT
+               { DROP ; NIL operation ; PAIR }
+               { DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 CONTRACT %is_core_participant
+                   (pair (contract %callback bool) (address %participantAddress)) ;
+                 IF_NONE { PUSH string "Collab have no core participant view" ; FAILWITH } {} ;
+                 SENDER ;
+                 SELF %is_core_participant_callback ;
+                 PAIR ;
+                 DUP 4 ;
+                 CAR ;
+                 CONTRACT %is_minted_hash (pair (contract %callback bool) (bytes %metadata)) ;
+                 IF_NONE { PUSH string "Collab have no minted hash view" ; FAILWITH } {} ;
+                 DUP 5 ;
+                 CDR ;
+                 SELF %is_minted_hash_callback ;
+                 PAIR ;
+                 NIL operation ;
+                 DIG 2 ;
+                 PUSH mutez 0 ;
+                 DIG 3 ;
+                 TRANSFER_TOKENS ;
+                 CONS ;
+                 DIG 2 ;
+                 PUSH mutez 0 ;
+                 DIG 3 ;
+                 TRANSFER_TOKENS ;
+                 CONS ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 DIG 2 ;
+                 CAR ;
+                 CDR ;
+                 DIG 3 ;
+                 CAR ;
+                 SOME ;
+                 PAIR ;
+                 PAIR ;
+                 SWAP ;
+                 PAIR } } } }
 
