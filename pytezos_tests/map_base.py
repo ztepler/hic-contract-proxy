@@ -37,6 +37,7 @@ class MapBaseCase(TestCase):
     def setUp(self):
         self.collab = ContractInterface.from_file(join(dirname(__file__), COLLAB_FN))
         self.factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_FN))
+        self.sign = ContractInterface.from_file(join(dirname(__file__), SIGN_FN))
 
         # Two core participants:
         self.p1 = 'tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ'
@@ -180,4 +181,42 @@ class MapBaseCase(TestCase):
         # Check all amounts equals
         self.assertEqual(calc_amounts, amounts)
 
+
+    def _call_view_entrypoint(self, entrypoint, params):
+        """ The returned operations from contract very similar for different
+            entrypoints, so it require similar checks: """
+
+        sign_callback, sign_entrypoint = params['callback'].split('%')
+
+        self.result = entrypoint(params).interpret(
+            storage=self.storage, sender=self.p1)
+
+        assert len(self.result.operations) == 1
+        op = self.result.operations[0]
+        self.assertEqual(op['parameters']['entrypoint'], sign_entrypoint)
+        self.assertEqual(op['destination'], sign_callback)
+
+        return op['parameters']['value']['prim'] == 'True'
+
+
+    def _is_core_participant_call(self, participant, sign_callback, sign_entrypoint):
+        """ Testing that is_core_participant call emits correct callback """
+
+        params = {
+            'participantAddress': participant,
+            'callback': sign_callback + '%' + sign_entrypoint
+        }
+
+        return self._call_view_entrypoint(self.collab.is_core_participant, params)
+
+
+    def _is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint):
+        """ Testing that is_minted_hash call emits correct callback """
+
+        params = {
+            'metadata': metadata,
+            'callback': sign_callback + '%' + sign_entrypoint
+        }
+
+        return self._call_view_entrypoint(self.collab.is_minted_hash, params)
 
