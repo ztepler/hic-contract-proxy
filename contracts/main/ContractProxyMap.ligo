@@ -129,7 +129,7 @@ block {
 function isCoreParticipant(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
 block {
     const isCore = store.coreParticipants contains params.participantAddress;
-    const returnOperation = Tezos.transaction(True, 0mutez, params.callback);
+    const returnOperation = Tezos.transaction(isCore, 0mutez, params.callback);
 } with (list[returnOperation], store)
 
 

@@ -85,7 +85,9 @@ block {
 function isCoreParticipantCallback(var store : storage; var isCoreParticipant : bool) is
 block {
     (* 1. Check that this is expected answer from collab contract that was called *)
-    (* 2. Record isCoreParticipant *)
+    (* 2. Record isCoreParticipant
+        // OR: run cascade call to the collab and check isMinted!
+        ^^ maybe this would be simple? *)
     skip;
 } with ((nil: list(operation)), store)
 
