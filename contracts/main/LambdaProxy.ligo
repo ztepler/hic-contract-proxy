@@ -1,6 +1,8 @@
 type executableCall is unit -> list(operation)
 type customParams is bytes
 
+(* TODO: make this call separate func and make it able to run mint
+    for example *)
 function callEmitter(const params : customParams) : executableCall is
 block {
     function call(const p : unit): list(operation) is

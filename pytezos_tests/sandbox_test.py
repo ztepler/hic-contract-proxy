@@ -7,7 +7,7 @@ from os.path import dirname, join
 import json
 
 
-FACTORY_TZ = '../build/tz/factory.tz'
+FACTORY_TZ = '../build/tz/lambda_factory.tz'
 CONTRACTS_DIR = 'contracts'
 
 def pkh(key):
@@ -214,6 +214,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
 
+    '''
     def test_mint_token(self):
         # Creating contract using proxy
         originate_params = {
@@ -273,7 +274,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # TODO: checking distribution:
         pass
-
+    '''
 
     def test_marketplace_communication(self):
 
@@ -354,6 +355,29 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         result = self._find_call_result_by_hash(self.p1, opg['hash'])
 
 
+    def test_lambda_proxy(self):
+
+        # Creating contract using proxy
+        originate_params = {
+            pkh(self.p1):   {'share': 330, 'isCore': True},
+            pkh(self.p2):   {'share': 500, 'isCore': True},
+            pkh(self.tips): {'share': 170, 'isCore': False}
+        }
+
+        opg = self.factory.create_proxy(originate_params).inject()
+        self.bake_block()
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+
+        # Calling execute:
+        execute_params = {
+            'lambdaName': 'test',
+            'params': '6969420420',
+            'proxy': self.collab.address
+        }
+
+        opg = self.factory.execute_proxy(execute_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
 
     '''
     def test_withdraw_token(self):
