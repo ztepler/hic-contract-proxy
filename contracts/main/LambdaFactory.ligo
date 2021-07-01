@@ -101,10 +101,45 @@ block {
 } with (list[origination.0], factoryStore)
 
 
+(* TODO: in ideal this should be lambda function that stored in factory 
+    under some name, currently this is function that emits mint
+
+    there are should be multiple funcs with same interface
+*)
+function callEmitter(
+    const factoryStore : factoryStorage;
+    const packedParams : customParams) : executableCall is
+
+block {
+
+    const paramsOption: option(mintParams) = Bytes.unpack(packedParams);
+    const params : mintParams = case paramsOption of
+    | None -> (failwith("Unpack failed") : mintParams)
+    | Some(p) -> p
+    end;
+
+    function callMint(const p : unit): list(operation) is
+    block {
+        const operations : list(operation) = nil;
+        const hicReceiver : contract(mintParams) =
+            case (Tezos.get_entrypoint_opt(
+                "%mint_OBJKT",
+                (factoryStore.hicetnuncMinterAddress : address)
+                ) : option(contract(mintParams))) of
+            | None -> (failwith("No minter found") : contract(mintParams))
+            | Some(con) -> con
+            end;
+
+        const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
+
+    } with operations
+} with callMint
+
+
 (* TODO: LambdaProxy call method *)
 function executeProxy(var params : executeParams; var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 block {
-    const call : executableCall = callEmitter(params.params);
+    const call : executableCall = callEmitter(factoryStore, params.params);
 
     const receiver : contract(executableCall) =
         case (Tezos.get_entrypoint_opt("%execute", params.proxy)

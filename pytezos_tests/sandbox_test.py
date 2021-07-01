@@ -8,6 +8,7 @@ import json
 
 
 FACTORY_TZ = '../build/tz/lambda_factory.tz'
+# PACKER_TZ = '../build/tz/packer.tz'
 CONTRACTS_DIR = 'contracts'
 
 def pkh(key):
@@ -213,6 +214,15 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
+        """
+        # Deploying packer (I feel this is temporal solution but who knows):
+        #    (it is just used to pack data)
+        packer = ContractInterface.from_file(join(dirname(__file__), PACKER_TZ))
+        opg = self._deploy_contract(self.p1, packer, 0)
+        self.bake_block()
+        self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
+        """
+
 
     '''
     def test_mint_token(self):
@@ -371,7 +381,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         # Calling execute:
         execute_params = {
             'lambdaName': 'test',
-            'params': '6969420420',
+            'params': '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803',
             'proxy': self.collab.address
         }
 
