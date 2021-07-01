@@ -158,11 +158,38 @@
              CAR ;
              CONS ;
              PAIR }
-           { CDR ;
+           { DUP ;
+             CAR ;
+             CDR ;
+             DUP 3 ;
+             SWAP ;
+             UNPACK
+               (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+             IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
+             PAIR ;
+             LAMBDA
+               (pair (pair (pair (pair address nat) (pair bytes nat)) (pair address nat)) unit)
+               (list operation)
+               { CAR ;
+                 UNPAIR ;
+                 SWAP ;
+                 CAR ;
+                 CONTRACT %mint_OBJKT
+                   (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DIG 2 ;
+                 TRANSFER_TOKENS ;
+                 DROP ;
+                 NIL operation } ;
+             SWAP ;
+             APPLY ;
+             SWAP ;
+             CDR ;
              CONTRACT %execute (lambda unit (list operation)) ;
              IF_NONE { PUSH string "No proxy found" ; FAILWITH } {} ;
              PUSH mutez 0 ;
-             LAMBDA unit (list operation) { DROP ; NIL operation } ;
+             DIG 2 ;
              TRANSFER_TOKENS ;
              SWAP ;
              NIL operation ;

@@ -1,0 +1,5 @@
+{ parameter
+    (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+  storage bytes ;
+  code { CAR ; PACK ; NIL operation ; PAIR } }
+
