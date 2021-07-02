@@ -22,20 +22,6 @@ type factoryData is record [
 ]
 
 
-type createCallType is (factoryData * customParams) -> executableCall
-
-
-type factoryStorage is record [
-    data : factoryData;
-
-    (* Collection of callable lambdas that could be added to contract: *)
-    lambdas : map(string, createCallType);
-]
-
-(* TODO: different contracts means that they can have different constructors,
-    so maybe it is good to convert this constuctor params in bytes too and
-    construction method in lambda too :)
-*)
 type participantRec is record [
     (* share is the fraction that participant would receive from every sale *)
     share : nat;
@@ -43,9 +29,33 @@ type participantRec is record [
     (* role isCore allow participant to sign as one of the creator *)
     isCore : bool;
 ]
+(* TODO: different contracts means that they can have different constructors,
+    so maybe it is good to convert this constuctor params in bytes too and
+    construction method in lambda too :)
+*)
+type participantsMap is map(address, participantRec);
+
+
+type createCallType is (factoryData * customParams) -> executableCall
+type originateContractType is (factoryData * participantsMap) -> (list(operation) * factoryData)
+
+
+type factoryStorage is record [
+    data : factoryData;
+
+    (* Collection of callable lambdas that could be added to contract: *)
+    lambdas : map(string, createCallType);
+    contracts : map(string, originateContractType);
+]
+
 
 (* map of all participants with their shares and roles *)
-type originationParams is map(address, participantRec);
+type originationParams is record [
+    contractName : string;
+
+    (* TODO: convert participants to bytes? *)
+    participants : participantsMap;
+]
 
 type executeParams is record [
     params : customParams;
@@ -58,74 +68,41 @@ type addLambdaParams is record [
     lambda : createCallType;
 ]
 
+type addContractParams is record [
+    name : string;
+    contract : originateContractType;
+]
+
 type factoryAction is
 | Create_proxy of originationParams
 | Execute_proxy of executeParams
 | Add_lambda of addLambdaParams
+| Add_contract of addContractParams
 (* TODO: add_lambda function method that saves lambda to storage *)
 (* TODO: Execute type can be record of params (bytes) + saved lambda name *)
 (*      and lambda need to know how to unpack bytes *)
 (* TODO: income entrypoint that would accept redirected defaults from collabs *)
 
-function createProxy(const participants : originationParams; var factoryStore : factoryStorage)
+function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
-    (* Calculating total shares and core participants: *)
-    var shares : map(address, nat) := map [];
-    var coreParticipants : set (address) := set [];
-    var totalShares : nat := 0n;
-    var coreCount : nat := 0n;
+    (* TODO: think about all this names too *)
+    const optionalOriginator = Map.find_opt(params.contractName, factoryStore.contracts);
+    const proxyOriginator : originateContractType = case optionalOriginator of
+    | Some(originator) -> originator
+    | None -> (failwith("Contract is not found") : originateContractType)
+    end;
 
-    for participantAddress -> participantRec in map participants block {
-        shares[participantAddress] := participantRec.share;
-        totalShares := totalShares + participantRec.share;
+    const operationAndData = proxyOriginator(factoryStore.data, params.participants);
+    (* TODO: the next code is hard to understand, maybe need to change the type
+        what proxyOriginator returned?
+        for example: one origination operation?
+            and move change data to this func? *)
+    const originatieOperations = operationAndData.0;
+    factoryStore.data := operationAndData.1;
 
-        if participantRec.isCore then
-        block {
-            coreParticipants := Set.add (participantAddress, coreParticipants);
-            coreCount := coreCount + 1n;
-        } else skip;
-    };
-
-    if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
-    else skip;
-
-    if coreCount = 0n then failwith("Collab contract should have at least one core")
-    else skip;
-
-    (* TODO: check how much participants it can handle and limit this count here *)
-
-    (* Preparing initial storage: *)
-    (* TODO: decide where this params should be:
-        a) in proxy-contract
-        b) in factory
-        c) for some contracts in factory (for that who returns id to redistribute)
-            and for some in proxy-contract
-    *)
-    (* TODO: move this to factory storage (if decided b or c)
-    const initialStore : storage = record[
-        administrator = Tezos.sender;
-        shares = shares;
-        totalShares = totalShares;
-        hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
-        coreParticipants = coreParticipants;
-        mints = (big_map [] : big_map(bytes, unit));
-    ];
-    *)
-    const initialStore : storage = record [
-        id = factoryStore.data.originatedContracts;
-        factory = Tezos.self_address;
-    ];
-
-    (* Making originate operation: *)
-    const origination : operation * address = createProxyFunc (
-        (None : option(key_hash)),
-        0tz,
-        initialStore);
-    factoryStore.data.originatedContracts := factoryStore.data.originatedContracts + 1n;
-
-} with (list[origination.0], factoryStore)
+} with (originatieOperations, factoryStore)
 
 
 function executeProxy(
@@ -160,9 +137,22 @@ function add_lambda(
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
+    (* TODO: check that called by factory admin *)
     (* TODO: should it check that this name is not existed or rewrite is good? *)
     factoryStore.lambdas[params.name] := params.lambda;
 } with ((nil : list(operation)), factoryStore)
+
+
+function add_contract(
+    const params : addContractParams;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    (* TODO: check that called by factory admin *)
+    (* TODO: should it check that this name is not existed or rewrite is good? *)
+    factoryStore.contracts[params.name] := params.contract;
+} with ((nil : list(operation)), factoryStore)
+
 
 (* TODO: default method from contract that receives values? 
     - or it is not required now?
@@ -178,4 +168,5 @@ case params of
 | Create_proxy(p) -> createProxy(p, factoryStore)
 | Execute_proxy(p) -> executeProxy(p, factoryStore)
 | Add_lambda(p) -> add_lambda(p, factoryStore)
+| Add_contract(p) -> add_contract(p, factoryStore)
 end

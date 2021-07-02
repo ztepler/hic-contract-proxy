@@ -8,7 +8,9 @@ import json
 
 
 FACTORY_TZ = '../build/tz/lambda_factory.tz'
-MINT_OBJKT_CALL_LAMBDA_TZ = '../build/tz/lambdas/hic_mint_OBJKT.tz'
+MINT_OBJKT_CALL_CODE = '../build/tz/lambdas/hic_mint_OBJKT.tz'
+CREATE_PROXY_CODE = '../build/tz/lambdas/create_proxy.tz'
+
 # PACKER_TZ = '../build/tz/packer.tz'
 CONTRACTS_DIR = 'contracts'
 
@@ -52,7 +54,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
                 'originatedContracts': 0,
                 'hicetnuncMinterAddress': minter_address,
             },
-            'lambdas': {}
+            'lambdas': {},
+            'contracts': {}
         }
 
         return self._deploy_contract(client, factory, factory_init)
@@ -370,21 +373,37 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
 
     def test_lambda_proxy(self):
+
+        # Adding contracts to factory:
+        create_proxy_lambda = open(
+            join(dirname(__file__), CREATE_PROXY_CODE)).read()
+
+        self.factory.add_contract({
+            'name': 'proxy_lambda_v1',
+            'contract': create_proxy_lambda
+        }).inject()
+        self.bake_block()
+
         # Adding lambdas to factory:
         mint_objkt_lambda = open(
-            join(dirname(__file__), MINT_OBJKT_CALL_LAMBDA_TZ)).read()
+            join(dirname(__file__), MINT_OBJKT_CALL_CODE)).read()
 
         self.factory.add_lambda({
-            'name': 'mint_objkt_lambda',
+            'name': 'hen_mint_objkt_v1',
             'lambda': mint_objkt_lambda
         }).inject()
         self.bake_block()
 
         # Creating contract using proxy
-        originate_params = {
+        participants = {
             pkh(self.p1):   {'share': 330, 'isCore': True},
             pkh(self.p2):   {'share': 500, 'isCore': True},
             pkh(self.tips): {'share': 170, 'isCore': False}
+        }
+
+        originate_params = {
+            'participants': participants,
+            'contractName': 'proxy_lambda_v1'
         }
 
         opg = self.factory.create_proxy(originate_params).inject()
@@ -393,7 +412,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # Calling execute:
         execute_params = {
-            'lambdaName': 'mint_objkt_lambda',
+            'lambdaName': 'hen_mint_objkt_v1',
             'params': '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803',
             'proxy': self.collab.address
         }
