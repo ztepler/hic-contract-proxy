@@ -1,93 +1,132 @@
-#include "ContractProxyMap.ligo"
+#include "../partials/coreTypes.ligo"
 
-
-type createProxyFuncType is (option(key_hash) * tez * storage) -> (operation * address)
-
-
-(* I did not find the way to create contract using Tezos.create_contract, so
-    I adapted and copypasted code with createProxyFunc from QuipuSwap factory:
-*)
-const createProxyFunc : createProxyFuncType =
-[%Michelson ( {| { UNPPAIIR ;
-                  CREATE_CONTRACT
-#include "../../build/tz/contract_proxy_map.tz"
-        ;
-          PAIR } |}
- : createProxyFuncType)];
-
-
-type factoryStorage is record [
+type factoryData is record [
     originatedContracts : nat;
     hicetnuncMinterAddress : address;
 ]
 
-type participantRec is record [
-    (* share is the fraction that participant would receive from every sale *)
-    share : nat;
+(* TODO: should this types be merged into one?
+    - they are very similar in type, but different in logic *)
+type createCallType is (factoryData * bytes) -> executableCall
+type originateContractType is (factoryData * bytes) -> operation
 
-    (* role isCore allow participant to sign as one of the creator *)
-    isCore : bool;
+
+type factoryStorage is record [
+    data : factoryData;
+
+    (* Collection of callable lambdas that could be added to contract: *)
+    lambdas : map(string, createCallType);
+    contracts : map(string, originateContractType);
 ]
 
-(* map of all participants with their shares and roles *)
-type originationParams is map(address, participantRec);
 
+type originationParams is record [
+    contractName : string;
+    params : bytes;
+]
+
+type executeParams is record [
+    lambdaName : string;
+    params : bytes;
+    proxy : address;
+]
+
+type addLambdaParams is record [
+    name : string;
+    lambda : createCallType;
+]
+
+type addContractParams is record [
+    name : string;
+    contract : originateContractType;
+]
 
 type factoryAction is
 | Create_proxy of originationParams
+| Execute_proxy of executeParams
+| Add_lambda of addLambdaParams
+| Add_contract of addContractParams
+(* TODO: income entrypoint that would accept redirected defaults from collabs *)
 
 
-function createProxy(const participants : originationParams; var factoryStore : factoryStorage)
+function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
-    (* Calculating total shares and core participants: *)
-    var shares : map(address, nat) := map [];
-    var coreParticipants : set (address) := set [];
-    var totalShares : nat := 0n;
-    var coreCount : nat := 0n;
+    (* TODO: think about all this names too *)
+    const optionalOriginator = Map.find_opt(params.contractName, factoryStore.contracts);
+    const proxyOriginator : originateContractType = case optionalOriginator of
+    | Some(originator) -> originator
+    | None -> (failwith("Contract is not found") : originateContractType)
+    end;
 
-    for participantAddress -> participantRec in map participants block {
-        shares[participantAddress] := participantRec.share;
-        totalShares := totalShares + participantRec.share;
+    const originateOperation = proxyOriginator(factoryStore.data, params.params);
+    factoryStore.data.originatedContracts := factoryStore.data.originatedContracts + 1n;
 
-        if participantRec.isCore then
-        block {
-            coreParticipants := Set.add (participantAddress, coreParticipants);
-            coreCount := coreCount + 1n;
-        } else skip;
-    };
+} with (list[originateOperation], factoryStore)
 
-    if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
-    else skip;
 
-    if coreCount = 0n then failwith("Collab contract should have at least one core")
-    else skip;
+function executeProxy(
+    const params : executeParams;
+    const factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
-    (* TODO: check how much participants it can handle and limit this count here *)
+block {
+    (* TODO: think about all this names *)
+    const optionalEmitter = Map.find_opt(params.lambdaName, factoryStore.lambdas);
+    const callEmitter : createCallType = case optionalEmitter of
+    | Some(emitter) -> emitter
+    | None -> (failwith("Lambda is not found") : createCallType)
+    end;
+    const call : executableCall = callEmitter(factoryStore.data, params.params);
 
-    (* Preparing initial storage: *)
-    const initialStore : storage = record[
-        administrator = Tezos.sender;
-        shares = shares;
-        totalShares = totalShares;
-        hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
-        coreParticipants = coreParticipants;
-        mints = (big_map [] : big_map(bytes, unit));
-    ];
+    (* TODO: should it check that params.proxy created by this factory? *)
+    const receiver : contract(executableCall) =
+        case (Tezos.get_entrypoint_opt("%execute", params.proxy)
+            : option(contract(executableCall))) of
+        | None -> (failwith("No proxy found") : contract(executableCall))
+        | Some(con) -> con
+        end;
 
-    (* Making originate operation: *)
-    const origination : operation * address = createProxyFunc (
-        (None : option(key_hash)),
-        0tz,
-        initialStore);
-    factoryStore.originatedContracts := factoryStore.originatedContracts + 1n;
+    const op : operation = Tezos.transaction(call, 0tez, receiver);
 
-} with (list[origination.0], factoryStore)
+} with (list[op], factoryStore)
 
+
+function add_lambda(
+    const params : addLambdaParams;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    (* TODO: check that called by factory admin *)
+    (* TODO: should it check that this name is not existed or rewrite is good? *)
+    factoryStore.lambdas[params.name] := params.lambda;
+} with ((nil : list(operation)), factoryStore)
+
+
+function add_contract(
+    const params : addContractParams;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    (* TODO: check that called by factory admin *)
+    (* TODO: should it check that this name is not existed or rewrite is good? *)
+    factoryStore.contracts[params.name] := params.contract;
+} with ((nil : list(operation)), factoryStore)
+
+
+(* TODO: default method from contract that receives values? 
+    - or it is not required now?
+    - maybe it is good to support contracts that does not distribute by itself, but
+        returns all xtz to the factory and then run there some logic (maybe with
+        bigmap distributions)
+*)
+(* TODO: method to add new executableCall *)
 
 function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 case params of
 | Create_proxy(p) -> createProxy(p, factoryStore)
+| Execute_proxy(p) -> executeProxy(p, factoryStore)
+| Add_lambda(p) -> add_lambda(p, factoryStore)
+| Add_contract(p) -> add_contract(p, factoryStore)
 end

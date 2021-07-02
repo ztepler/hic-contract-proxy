@@ -1,8 +1,8 @@
 from pytezos import MichelsonRuntimeError
-from map_base import MapBaseCase
+from hic_base import HicBaseCase
 
 
-class MapInteractionTest(MapBaseCase):
+class MapInteractionTest(HicBaseCase):
     def test_interactions(self):
         # Factory test:
         self._create_collab(self.admin, self.originate_params)

@@ -1,8 +1,8 @@
 from pytezos import MichelsonRuntimeError
-from map_base import MapBaseCase
+from hic_base import HicBaseCase
 
 
-class SignTest(MapBaseCase):
+class SignTest(HicBaseCase):
     def test_views(self):
         sign_kt = 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
         entrypoint = 'is_core_participant_callback'

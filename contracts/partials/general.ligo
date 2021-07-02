@@ -14,3 +14,8 @@ block {
 
     if isAllSigned then skip else failwith("Can't mint while proposal is not signed");
 } with unit
+
+
+function tezToNat(const value : tez) : nat is value / 1mutez
+function natToTez(const value : nat) : tez is value * 1mutez
+

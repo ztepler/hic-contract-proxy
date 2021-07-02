@@ -7,7 +7,7 @@ from os.path import dirname, join
 import json
 
 
-FACTORY_TZ = '../build/tz/lambda_factory.tz'
+FACTORY_TZ = '../build/tz/factory.tz'
 
 LAMBDA_CALLS = {
     'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz'
@@ -409,7 +409,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         # Packer is just helper contract that converts data to bytes:
-        packed_participants = self.packer.originate_hic_proxy(
+        packed_participants = self.packer.pack_originate_hic_proxy(
             participants).interpret().storage.hex()
 
         originate_params = {

@@ -1,4 +1,4 @@
-#include "../../main/LambdaFactory.ligo"
+#include "../../main/Factory.ligo"
 #include "../../main/HicProxy.ligo"
 
 

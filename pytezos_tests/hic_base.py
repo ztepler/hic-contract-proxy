@@ -3,9 +3,12 @@ from unittest import TestCase
 from os.path import dirname, join
 
 
-COLLAB_FN = '../build/tz/contract_proxy_map.tz'
+COLLAB_FN = '../build/tz/hic_proxy.tz'
 FACTORY_FN = '../build/tz/factory.tz'
 SIGN_FN = '../build/tz/sign.tz'
+PACKER_FN = '../build/tz/packer.tz'
+
+HIC_PROXY_CODE = '../build/tz/lambdas/originate/hic_proxy.tz'
 
 
 def split_amount(amount, shares, last_address):
@@ -32,12 +35,15 @@ def split_amount(amount, shares, last_address):
     return amounts
   
 
-class MapBaseCase(TestCase):
+class HicBaseCase(TestCase):
 
     def setUp(self):
         self.collab = ContractInterface.from_file(join(dirname(__file__), COLLAB_FN))
         self.factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_FN))
         self.sign = ContractInterface.from_file(join(dirname(__file__), SIGN_FN))
+        self.packer = ContractInterface.from_file(join(dirname(__file__), PACKER_FN))
+
+        hic_proxy_code = open(join(dirname(__file__), HIC_PROXY_CODE)).read()
 
         # Two core participants:
         self.p1 = 'tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ'
@@ -68,16 +74,32 @@ class MapBaseCase(TestCase):
         }
 
         self.factory_init = {
-            'originatedContracts': 0,
-            'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
+            'data': {
+                'originatedContracts': 0,
+                'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
+            },
+            'lambdas': {},
+            'contracts': {
+                'hic_contract': hic_proxy_code
+            }
         }
 
         self.result = None
         self.total_incomings = 0
 
 
-    def _create_collab(self, sender, params):
-        result = self.factory.default(params).interpret(
+    def _create_collab(self, sender, params, contract='hic_contract'):
+
+        # converting params to bytes:
+        params_bytes = self.packer.pack_originate_hic_proxy(
+            params).interpret().storage.hex()
+
+        create_params = {
+            'contractName': contract,
+            'params': params_bytes
+        }
+
+        result = self.factory.create_proxy(create_params).interpret(
             storage=self.factory_init, sender=sender)
         self.assertEqual(len(result.operations), 1)
 
@@ -103,7 +125,7 @@ class MapBaseCase(TestCase):
         self.assertEqual(op_bytes, metadata)
 
         self.assertEqual(operation['destination'],
-            self.factory_init['hicetnuncMinterAddress'])
+            self.factory_init['data']['hicetnuncMinterAddress'])
         self.assertEqual(operation['amount'], '0')
 
 

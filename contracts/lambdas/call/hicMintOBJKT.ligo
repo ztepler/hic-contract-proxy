@@ -1,4 +1,4 @@
-#include "../../main/LambdaFactory.ligo"
+#include "../../main/Factory.ligo"
 #include "../../partials/hicetnunc.ligo"
 
 (* TODO: in ideal this should be lambda function that stored in factory 
