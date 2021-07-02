@@ -423,6 +423,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # TODO: testing running lambda with name that does not exist failed
         # TODO: testing running lambda on proxy-contract not from factory failed
+        # TODO: testing that only admin can add lambda/contracts
+        # TODO: testing that ids are correctly updates
 
     '''
     def test_withdraw_token(self):

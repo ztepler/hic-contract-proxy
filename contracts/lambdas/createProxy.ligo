@@ -8,6 +8,8 @@
     I adapted and copypasted code with createProxyFunc from QuipuSwap factory:
 *)
 
+type createProxyFuncType is (option(key_hash) * tez * storage) -> (operation * address)
+
 const createProxyFunc : createProxyFuncType =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT
@@ -17,13 +19,7 @@ const createProxyFunc : createProxyFuncType =
  : createProxyFuncType)];
 
 
-(* TODO: do I need to convert this originationParams to bytes too? so it would
-    become the same type lambda as the hicMintOBJKT?
-        - looks like it anyway is not the same type, it does not
-            return executableCall
-*)
-function lambda(var data : factoryData; const participants : participantsMap)
-    : (list(operation) * factoryData) is
+function lambda(var data : factoryData; const participants : participantsMap) : operation is
 block {
 
     (* Calculating total shares and core participants: *)
@@ -78,6 +74,5 @@ block {
         (None : option(key_hash)),
         0tz,
         initialStore);
-    data.originatedContracts := data.originatedContracts + 1n;
 
-} with (list[origination.0], data)
+} with origination.0

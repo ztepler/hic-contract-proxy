@@ -1,21 +1,5 @@
 #include "LambdaProxy.ligo"
 
-
-type createProxyFuncType is (option(key_hash) * tez * storage) -> (operation * address)
-
-
-(* I did not find the way to create contract using Tezos.create_contract, so
-    I adapted and copypasted code with createProxyFunc from QuipuSwap factory:
-*)
-const createProxyFunc : createProxyFuncType =
-[%Michelson ( {| { UNPPAIIR ;
-                  CREATE_CONTRACT
-#include "../../build/tz/lambda_proxy.tz"
-        ;
-          PAIR } |}
- : createProxyFuncType)];
-
-
 type factoryData is record [
     originatedContracts : nat;
     hicetnuncMinterAddress : address;
@@ -37,7 +21,7 @@ type participantsMap is map(address, participantRec);
 
 
 type createCallType is (factoryData * customParams) -> executableCall
-type originateContractType is (factoryData * participantsMap) -> (list(operation) * factoryData)
+type originateContractType is (factoryData * participantsMap) -> operation
 
 
 type factoryStorage is record [
@@ -78,10 +62,8 @@ type factoryAction is
 | Execute_proxy of executeParams
 | Add_lambda of addLambdaParams
 | Add_contract of addContractParams
-(* TODO: add_lambda function method that saves lambda to storage *)
-(* TODO: Execute type can be record of params (bytes) + saved lambda name *)
-(*      and lambda need to know how to unpack bytes *)
 (* TODO: income entrypoint that would accept redirected defaults from collabs *)
+
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
@@ -94,15 +76,10 @@ block {
     | None -> (failwith("Contract is not found") : originateContractType)
     end;
 
-    const operationAndData = proxyOriginator(factoryStore.data, params.participants);
-    (* TODO: the next code is hard to understand, maybe need to change the type
-        what proxyOriginator returned?
-        for example: one origination operation?
-            and move change data to this func? *)
-    const originatieOperations = operationAndData.0;
-    factoryStore.data := operationAndData.1;
+    const originateOperation = proxyOriginator(factoryStore.data, params.participants);
+    factoryStore.data.originatedContracts := factoryStore.data.originatedContracts + 1n;
 
-} with (originatieOperations, factoryStore)
+} with (list[originateOperation], factoryStore)
 
 
 function executeProxy(
