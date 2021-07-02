@@ -14,7 +14,8 @@ LAMBDA_CALLS = {
 }
 
 LAMBDA_ORIGINATE = {
-    'hic_proxy': '../build/tz/lambdas/originate/hic_proxy.tz'
+    'hic_proxy': '../build/tz/lambdas/originate/hic_proxy.tz',
+    'basic_proxy': '../build/tz/lambdas/originate/basic_proxy.tz'
 }
 
 PACKER_TZ = '../build/tz/packer.tz'

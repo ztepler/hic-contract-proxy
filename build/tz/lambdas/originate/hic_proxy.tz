@@ -113,25 +113,40 @@
          CAR ;
          PAIR ;
          PAIR } ;
+  DUP ;
+  CDR ;
+  CDR ;
   PUSH nat 0 ;
   SWAP ;
   DUP ;
   DUG 2 ;
-  CDR ;
-  CDR ;
   COMPARE ;
   EQ ;
   IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
   PUSH nat 0 ;
-  SWAP ;
+  DUP 3 ;
   CAR ;
   CAR ;
   COMPARE ;
   EQ ;
   IF { PUSH string "Collab contract should have at least one core" ; FAILWITH }
      {} ;
+  SWAP ;
+  DUP ;
+  DUG 2 ;
   CDR ;
-  SELF_ADDRESS ;
+  CAR ;
+  PAIR ;
+  EMPTY_BIG_MAP bytes unit ;
+  DIG 3 ;
+  CAR ;
+  PAIR ;
+  DIG 2 ;
+  CAR ;
+  CDR ;
+  SENDER ;
+  PAIR ;
+  PAIR ;
   PAIR ;
   PUSH mutez 0 ;
   NONE key_hash ;
@@ -140,7 +155,10 @@
   { UNPAIR ; UNPAIR } ;
   CREATE_CONTRACT
     { parameter (or (unit %default) (lambda %execute unit (list operation))) ;
-      storage (pair (address %factory) (nat %id)) ;
+      storage
+        (pair (pair (pair (address %administrator) (set %coreParticipants address))
+                    (pair (address %hicetnuncMinterAddress) (big_map %mints bytes unit)))
+              (pair (map %shares address nat) (nat %totalShares))) ;
       code { UNPAIR ;
              IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } } ;
   PAIR ;

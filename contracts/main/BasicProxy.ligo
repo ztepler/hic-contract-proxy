@@ -4,9 +4,16 @@ type action is
 | Execute of executableCall
 | Default of unit
 
+
+type shares is map(address, nat);
+
+
 type storage is record [
     id : nat;
     factory : address;
+    administrator : address;
+    totalShares : nat;
+    shares : shares;
 ]
 
 function default(const store : storage) : (list(operation) * storage) is

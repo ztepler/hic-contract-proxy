@@ -1,0 +1,41 @@
+{ UNPAIR ;
+  SWAP ;
+  UNPACK (map address nat) ;
+  IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
+  PUSH nat 0 ;
+  SWAP ;
+  DUP ;
+  DUG 2 ;
+  ITER { SWAP ; PAIR ; DUP ; CDR ; CDR ; SWAP ; CAR ; ADD } ;
+  PUSH nat 0 ;
+  SWAP ;
+  DUP ;
+  DUG 2 ;
+  COMPARE ;
+  EQ ;
+  IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
+  SWAP ;
+  DIG 2 ;
+  CDR ;
+  PAIR ;
+  SELF_ADDRESS ;
+  SENDER ;
+  PAIR ;
+  PAIR ;
+  PAIR ;
+  PUSH mutez 0 ;
+  NONE key_hash ;
+  PAIR ;
+  PAIR ;
+  { UNPAIR ; UNPAIR } ;
+  CREATE_CONTRACT
+    { parameter (or (unit %default) (lambda %execute unit (list operation))) ;
+      storage
+        (pair (pair (pair (address %administrator) (address %factory))
+                    (pair (nat %id) (map %shares address nat)))
+              (nat %totalShares)) ;
+      code { UNPAIR ;
+             IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } } ;
+  PAIR ;
+  CAR }
+

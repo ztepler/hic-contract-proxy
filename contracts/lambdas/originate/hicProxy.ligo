@@ -1,5 +1,5 @@
 #include "../../main/LambdaFactory.ligo"
-#include "../../main/BasicProxy.ligo"
+#include "../../main/HicProxy.ligo"
 
 
 type participantRec is record [
@@ -21,7 +21,7 @@ type createProxyFuncType is (option(key_hash) * tez * storage) -> (operation * a
 const createProxyFunc : createProxyFuncType =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT
-#include "../../../build/tz/basic_proxy.tz"
+#include "../../../build/tz/hic_proxy.tz"
         ;
           PAIR } |}
  : createProxyFuncType)];
@@ -65,25 +65,14 @@ block {
     (* TODO: check how much participants it can handle and limit this count here *)
 
     (* Preparing initial storage: *)
-    (* TODO: decide where this params should be:
-        a) in proxy-contract
-        b) in factory
-        c) for some contracts in factory (for that who returns id to redistribute)
-            and for some in proxy-contract
-    *)
-    (* TODO: move this to factory storage (if decided b or c)
+
     const initialStore : storage = record[
         administrator = Tezos.sender;
         shares = shares;
         totalShares = totalShares;
-        hicetnuncMinterAddress = factoryStore.hicetnuncMinterAddress;
+        hicetnuncMinterAddress = data.hicetnuncMinterAddress;
         coreParticipants = coreParticipants;
         mints = (big_map [] : big_map(bytes, unit));
-    ];
-    *)
-    const initialStore : storage = record [
-        id = data.originatedContracts;
-        factory = Tezos.self_address;
     ];
 
     (* Making originate operation: *)
