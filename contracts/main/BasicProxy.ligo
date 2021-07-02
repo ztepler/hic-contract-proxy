@@ -1,7 +1,4 @@
-#include "../partials/hicetnunc.ligo"
-
-type executableCall is unit -> list(operation)
-
+#include "../partials/coreTypes.ligo"
 
 type action is
 | Execute of executableCall

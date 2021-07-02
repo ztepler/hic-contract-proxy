@@ -1,4 +1,5 @@
-#include "../main/LambdaFactory.ligo"
+#include "../../main/LambdaFactory.ligo"
+#include "../../partials/hicetnunc.ligo"
 
 (* TODO: in ideal this should be lambda function that stored in factory 
     under some name, currently this is function that emits mint

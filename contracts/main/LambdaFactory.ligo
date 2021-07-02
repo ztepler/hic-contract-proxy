@@ -1,4 +1,4 @@
-#include "LambdaProxy.ligo"
+#include "../partials/coreTypes.ligo"
 
 type factoryData is record [
     originatedContracts : nat;

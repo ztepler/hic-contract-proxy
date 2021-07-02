@@ -8,8 +8,14 @@ import json
 
 
 FACTORY_TZ = '../build/tz/lambda_factory.tz'
-MINT_OBJKT_CALL_CODE = '../build/tz/lambdas/hic_mint_OBJKT.tz'
-CREATE_PROXY_CODE = '../build/tz/lambdas/create_proxy.tz'
+
+LAMBDA_CALLS = {
+    'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz'
+}
+
+LAMBDA_ORIGINATE = {
+    'basic_proxy': '../build/tz/lambdas/originate/basic_proxy.tz'
+}
 
 # PACKER_TZ = '../build/tz/packer.tz'
 CONTRACTS_DIR = 'contracts'
@@ -375,24 +381,26 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
     def test_lambda_proxy(self):
 
         # Adding contracts to factory:
-        create_proxy_lambda = open(
-            join(dirname(__file__), CREATE_PROXY_CODE)).read()
+        for lambda_name, filename in LAMBDA_ORIGINATE.items():
+            originate_lambda = open(
+                join(dirname(__file__), filename)).read()
 
-        self.factory.add_contract({
-            'name': 'proxy_lambda_v1',
-            'contract': create_proxy_lambda
-        }).inject()
-        self.bake_block()
+            self.factory.add_contract({
+                'name': lambda_name,
+                'contract': originate_lambda
+            }).inject()
+            self.bake_block()
 
         # Adding lambdas to factory:
-        mint_objkt_lambda = open(
-            join(dirname(__file__), MINT_OBJKT_CALL_CODE)).read()
+        for lambda_name, filename in LAMBDA_CALLS.items():
+            call_lambda = open(
+                join(dirname(__file__), filename)).read()
 
-        self.factory.add_lambda({
-            'name': 'hen_mint_objkt_v1',
-            'lambda': mint_objkt_lambda
-        }).inject()
-        self.bake_block()
+            self.factory.add_lambda({
+                'name': lambda_name,
+                'lambda': call_lambda
+            }).inject()
+            self.bake_block()
 
         # Creating contract using proxy
         participants = {
@@ -403,7 +411,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         originate_params = {
             'participants': participants,
-            'contractName': 'proxy_lambda_v1'
+            'contractName': 'basic_proxy'
         }
 
         opg = self.factory.create_proxy(originate_params).inject()
@@ -412,7 +420,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # Calling execute:
         execute_params = {
-            'lambdaName': 'hen_mint_objkt_v1',
+            'lambdaName': 'hic_mint_OBJKT',
             'params': '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803',
             'proxy': self.collab.address
         }

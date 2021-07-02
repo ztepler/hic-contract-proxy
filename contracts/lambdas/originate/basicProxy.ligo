@@ -1,4 +1,5 @@
-#include "../main/LambdaFactory.ligo"
+#include "../../main/LambdaFactory.ligo"
+#include "../../main/BasicProxy.ligo"
 
 (* THOUGHTS: Looks like factory would be limited with the type of the storage of
     originated proxy. Maybe there are the way to overcome this limits, but this
@@ -13,7 +14,7 @@ type createProxyFuncType is (option(key_hash) * tez * storage) -> (operation * a
 const createProxyFunc : createProxyFuncType =
 [%Michelson ( {| { UNPPAIIR ;
                   CREATE_CONTRACT
-#include "../../build/tz/lambda_proxy.tz"
+#include "../../../build/tz/basic_proxy.tz"
         ;
           PAIR } |}
  : createProxyFuncType)];
