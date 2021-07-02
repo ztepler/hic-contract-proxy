@@ -1,13 +1,29 @@
 { parameter
-    (or (or (pair %add_lambda
+    (or (or (pair %add_contract
+               (lambda %contract
+                  (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))
+                        (map address (pair (bool %isCore) (nat %share))))
+                  (pair (list operation)
+                        (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))))
+               (string %name))
+            (pair %add_lambda
                (lambda %lambda
                   (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
                   (lambda unit (list operation)))
-               (string %name))
-            (map %create_proxy address (pair (bool %isCore) (nat %share))))
-        (pair %execute_proxy (pair (string %lambdaName) (bytes %params)) (address %proxy))) ;
+               (string %name)))
+        (or (pair %create_proxy
+               (string %contractName)
+               (map %participants address (pair (bool %isCore) (nat %share))))
+            (pair %execute_proxy (pair (string %lambdaName) (bytes %params)) (address %proxy)))) ;
   storage
-    (pair (pair %data (address %hicetnuncMinterAddress) (nat %originatedContracts))
+    (pair (pair (map %contracts
+                   string
+                   (lambda
+                      (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))
+                            (map address (pair (bool %isCore) (nat %share))))
+                      (pair (list operation)
+                            (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)))))
+                (pair %data (address %hicetnuncMinterAddress) (nat %originatedContracts)))
           (map %lambdas
              string
              (lambda
@@ -16,6 +32,28 @@
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
+               { SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 DIG 3 ;
+                 CAR ;
+                 CAR ;
+                 DUP 4 ;
+                 CAR ;
+                 DIG 4 ;
+                 CDR ;
+                 SWAP ;
+                 SOME ;
+                 SWAP ;
+                 UPDATE ;
+                 PAIR ;
+                 PAIR ;
+                 NIL operation ;
+                 PAIR }
                { SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -34,200 +72,73 @@
                  CAR ;
                  PAIR ;
                  NIL operation ;
-                 PAIR }
-               { PUSH nat 0 ;
-                 EMPTY_MAP address nat ;
-                 PAIR ;
-                 EMPTY_SET address ;
-                 PUSH nat 0 ;
-                 PAIR ;
-                 PAIR ;
+                 PAIR } }
+           { IF_LEFT
+               { SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 CAR ;
                  SWAP ;
-                 ITER { SWAP ;
-                        PAIR ;
-                        DUP ;
-                        CAR ;
-                        CAR ;
-                        CDR ;
-                        SWAP ;
-                        DUP ;
-                        DUG 2 ;
-                        CAR ;
-                        CAR ;
-                        CAR ;
-                        DUP 3 ;
-                        CDR ;
-                        CAR ;
-                        DUP 4 ;
-                        CDR ;
-                        CDR ;
-                        DUP 5 ;
-                        CDR ;
-                        DUP 6 ;
-                        CAR ;
-                        CDR ;
-                        CDR ;
-                        DUP 7 ;
-                        CAR ;
-                        CDR ;
-                        CAR ;
-                        DUP 4 ;
-                        CDR ;
-                        DUP 6 ;
-                        SWAP ;
-                        SOME ;
-                        SWAP ;
-                        UPDATE ;
-                        PAIR ;
-                        DUP 7 ;
-                        CAR ;
-                        CAR ;
-                        PAIR ;
-                        PAIR ;
-                        SWAP ;
-                        DUP ;
-                        DUG 2 ;
-                        CDR ;
-                        DIG 6 ;
-                        CAR ;
-                        CDR ;
-                        CDR ;
-                        ADD ;
-                        DIG 2 ;
-                        CAR ;
-                        IF { PUSH nat 1 ;
-                             DIG 4 ;
-                             ADD ;
-                             DIG 4 ;
-                             DIG 4 ;
-                             PUSH bool True ;
-                             SWAP ;
-                             UPDATE ;
-                             SWAP ;
-                             PAIR }
-                           { DIG 2 ; DROP ; DIG 3 ; DIG 3 ; PAIR } ;
-                        DUP 3 ;
-                        CDR ;
-                        DIG 2 ;
-                        DUP 4 ;
-                        CAR ;
-                        CDR ;
-                        CAR ;
-                        PAIR ;
-                        DIG 3 ;
-                        CAR ;
-                        CAR ;
-                        PAIR ;
-                        PAIR ;
-                        DUP ;
-                        CDR ;
-                        SWAP ;
-                        DUP ;
-                        DUG 2 ;
-                        CAR ;
-                        CDR ;
-                        DIG 2 ;
-                        CAR ;
-                        CAR ;
-                        CDR ;
-                        DUP 4 ;
-                        CAR ;
-                        PAIR ;
-                        PAIR ;
-                        PAIR ;
-                        DUP ;
-                        CAR ;
-                        CDR ;
-                        DIG 2 ;
-                        CDR ;
-                        DIG 2 ;
-                        CAR ;
-                        CAR ;
-                        CAR ;
-                        PAIR ;
-                        PAIR } ;
-                 PUSH nat 0 ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 GET ;
+                 IF_NONE { PUSH string "Contract is not found" ; FAILWITH } {} ;
+                 SWAP ;
+                 CDR ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 PAIR ;
+                 EXEC ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 CDR ;
-                 COMPARE ;
-                 EQ ;
-                 IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
-                 PUSH nat 0 ;
-                 SWAP ;
-                 CAR ;
-                 CAR ;
-                 COMPARE ;
-                 EQ ;
-                 IF { PUSH string "Collab contract should have at least one core" ; FAILWITH }
-                    {} ;
-                 DUP ;
-                 CAR ;
-                 CDR ;
-                 SELF_ADDRESS ;
-                 PAIR ;
-                 PUSH mutez 0 ;
-                 NONE key_hash ;
-                 PAIR ;
-                 PAIR ;
-                 UNPPAIIR ;
-                 CREATE_CONTRACT
-                   { parameter (or (unit %default) (lambda %execute unit (list operation))) ;
-                     storage (pair (address %factory) (nat %id)) ;
-                     code { UNPAIR ;
-                            IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } } ;
-                 PAIR ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 PUSH nat 1 ;
-                 DUP 4 ;
-                 CAR ;
-                 CDR ;
-                 ADD ;
                  DIG 3 ;
                  CAR ;
                  CAR ;
                  PAIR ;
                  PAIR ;
+                 SWAP ;
+                 CAR ;
+                 PAIR }
+               { SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 CAR ;
+                 GET ;
+                 IF_NONE { PUSH string "Lambda is not found" ; FAILWITH } {} ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 CDR ;
+                 DUP 4 ;
+                 CAR ;
+                 CDR ;
+                 PAIR ;
+                 EXEC ;
+                 SWAP ;
+                 CDR ;
+                 CONTRACT %execute (lambda unit (list operation)) ;
+                 IF_NONE { PUSH string "No proxy found" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DIG 2 ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
                  NIL operation ;
                  DIG 2 ;
-                 CAR ;
                  CONS ;
-                 PAIR } }
-           { SWAP ;
-             DUP ;
-             DUG 2 ;
-             CDR ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CAR ;
-             GET ;
-             IF_NONE { PUSH string "Lambda is not found" ; FAILWITH } {} ;
-             SWAP ;
-             DUP ;
-             DUG 2 ;
-             CAR ;
-             CDR ;
-             DUP 4 ;
-             CAR ;
-             PAIR ;
-             EXEC ;
-             SWAP ;
-             CDR ;
-             CONTRACT %execute (lambda unit (list operation)) ;
-             IF_NONE { PUSH string "No proxy found" ; FAILWITH } {} ;
-             PUSH mutez 0 ;
-             DIG 2 ;
-             TRANSFER_TOKENS ;
-             SWAP ;
-             NIL operation ;
-             DIG 2 ;
-             CONS ;
-             PAIR } } }
+                 PAIR } } } }
 
