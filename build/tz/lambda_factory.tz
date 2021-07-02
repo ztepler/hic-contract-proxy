@@ -3,8 +3,7 @@
                (lambda %contract
                   (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))
                         (map address (pair (bool %isCore) (nat %share))))
-                  (pair (list operation)
-                        (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))))
+                  operation)
                (string %name))
             (pair %add_lambda
                (lambda %lambda
@@ -21,8 +20,7 @@
                    (lambda
                       (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))
                             (map address (pair (bool %isCore) (nat %share))))
-                      (pair (list operation)
-                            (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)))))
+                      operation))
                 (pair %data (address %hicetnuncMinterAddress) (nat %originatedContracts)))
           (map %lambdas
              string
@@ -96,17 +94,25 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
+                 PUSH nat 1 ;
+                 DUP 4 ;
+                 CAR ;
                  CDR ;
+                 CDR ;
+                 ADD ;
+                 DUP 4 ;
+                 CAR ;
+                 CDR ;
+                 CAR ;
+                 PAIR ;
                  DIG 3 ;
                  CAR ;
                  CAR ;
                  PAIR ;
                  PAIR ;
-                 SWAP ;
-                 CAR ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
                  PAIR }
                { SWAP ;
                  DUP ;

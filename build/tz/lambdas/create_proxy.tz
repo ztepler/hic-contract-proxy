@@ -127,7 +127,6 @@
   EQ ;
   IF { PUSH string "Collab contract should have at least one core" ; FAILWITH }
      {} ;
-  DUP ;
   CDR ;
   SELF_ADDRESS ;
   PAIR ;
@@ -142,16 +141,5 @@
       code { UNPAIR ;
              IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } } ;
   PAIR ;
-  PUSH nat 1 ;
-  DUP 3 ;
-  CDR ;
-  ADD ;
-  DIG 2 ;
-  CAR ;
-  PAIR ;
-  NIL operation ;
-  DIG 2 ;
-  CAR ;
-  CONS ;
-  PAIR }
+  CAR }
 
