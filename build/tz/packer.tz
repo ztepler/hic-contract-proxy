@@ -1,5 +1,9 @@
 { parameter
-    (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+    (or (pair %mint_OBJKT
+           (pair (address %address) (nat %amount))
+           (pair (bytes %metadata) (nat %royalties)))
+        (map %originate_hic_proxy address (pair (bool %isCore) (nat %share)))) ;
   storage bytes ;
-  code { CAR ; PACK ; NIL operation ; PAIR } }
+  code { CAR ;
+         IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } } }
 

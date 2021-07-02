@@ -1,8 +1,7 @@
 { parameter
     (or (or (pair %add_contract
                (lambda %contract
-                  (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))
-                        (map address (pair (bool %isCore) (nat %share))))
+                  (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
                   operation)
                (string %name))
             (pair %add_lambda
@@ -10,16 +9,13 @@
                   (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
                   (lambda unit (list operation)))
                (string %name)))
-        (or (pair %create_proxy
-               (string %contractName)
-               (map %participants address (pair (bool %isCore) (nat %share))))
+        (or (pair %create_proxy (string %contractName) (bytes %params))
             (pair %execute_proxy (pair (string %lambdaName) (bytes %params)) (address %proxy)))) ;
   storage
     (pair (pair (map %contracts
                    string
                    (lambda
-                      (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts))
-                            (map address (pair (bool %isCore) (nat %share))))
+                      (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
                       operation))
                 (pair %data (address %hicetnuncMinterAddress) (nat %originatedContracts)))
           (map %lambdas

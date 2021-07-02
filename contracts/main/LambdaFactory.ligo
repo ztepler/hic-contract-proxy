@@ -5,22 +5,10 @@ type factoryData is record [
     hicetnuncMinterAddress : address;
 ]
 
-type participantRec is record [
-    (* share is the fraction that participant would receive from every sale *)
-    share : nat;
-
-    (* role isCore allow participant to sign as one of the creator *)
-    isCore : bool;
-]
-(* TODO: different contracts means that they can have different constructors,
-    so maybe it is good to convert this constuctor params in bytes too and
-    construction method in lambda too :)
-*)
-type participantsMap is map(address, participantRec);
-
-
+(* TODO: should this types be merged into one?
+    - they are very similar in type, but different in logic *)
 type createCallType is (factoryData * bytes) -> executableCall
-type originateContractType is (factoryData * participantsMap) -> operation
+type originateContractType is (factoryData * bytes) -> operation
 
 
 type factoryStorage is record [
@@ -32,18 +20,15 @@ type factoryStorage is record [
 ]
 
 
-(* map of all participants with their shares and roles *)
 type originationParams is record [
     contractName : string;
-
-    (* TODO: convert participants to bytes? *)
-    participants : participantsMap;
+    params : bytes;
 ]
 
 type executeParams is record [
+    lambdaName : string;
     params : bytes;
     proxy : address;
-    lambdaName : string;
 ]
 
 type addLambdaParams is record [
@@ -75,7 +60,7 @@ block {
     | None -> (failwith("Contract is not found") : originateContractType)
     end;
 
-    const originateOperation = proxyOriginator(factoryStore.data, params.participants);
+    const originateOperation = proxyOriginator(factoryStore.data, params.params);
     factoryStore.data.originatedContracts := factoryStore.data.originatedContracts + 1n;
 
 } with (list[originateOperation], factoryStore)

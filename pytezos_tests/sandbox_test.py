@@ -14,10 +14,10 @@ LAMBDA_CALLS = {
 }
 
 LAMBDA_ORIGINATE = {
-    'basic_proxy': '../build/tz/lambdas/originate/basic_proxy.tz'
+    'hic_proxy': '../build/tz/lambdas/originate/hic_proxy.tz'
 }
 
-# PACKER_TZ = '../build/tz/packer.tz'
+PACKER_TZ = '../build/tz/packer.tz'
 CONTRACTS_DIR = 'contracts'
 
 def pkh(key):
@@ -227,14 +227,12 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
-        """
         # Deploying packer (I feel this is temporal solution but who knows):
         #    (it is just used to pack data)
         packer = ContractInterface.from_file(join(dirname(__file__), PACKER_TZ))
         opg = self._deploy_contract(self.p1, packer, 0)
         self.bake_block()
         self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
-        """
 
 
     '''
@@ -409,9 +407,13 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             pkh(self.tips): {'share': 170, 'isCore': False}
         }
 
+        # Packer is just helper contract that converts data to bytes:
+        packed_participants = self.packer.originate_hic_proxy(
+            participants).interpret().storage.hex()
+
         originate_params = {
-            'participants': participants,
-            'contractName': 'basic_proxy'
+            'contractName': 'hic_proxy',
+            'params': packed_participants
         }
 
         opg = self.factory.create_proxy(originate_params).inject()

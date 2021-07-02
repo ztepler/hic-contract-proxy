@@ -1,4 +1,7 @@
 { UNPAIR ;
+  SWAP ;
+  UNPACK (map address (pair (bool %isCore) (nat %share))) ;
+  IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
   PUSH nat 0 ;
   EMPTY_MAP address nat ;
   PAIR ;
@@ -6,7 +9,7 @@
   PUSH nat 0 ;
   PAIR ;
   PAIR ;
-  DIG 2 ;
+  SWAP ;
   ITER { SWAP ;
          PAIR ;
          DUP ;
