@@ -5,7 +5,6 @@ type factoryData is record [
     hicetnuncMinterAddress : address;
 ]
 
-
 type participantRec is record [
     (* share is the fraction that participant would receive from every sale *)
     share : nat;
@@ -20,7 +19,7 @@ type participantRec is record [
 type participantsMap is map(address, participantRec);
 
 
-type createCallType is (factoryData * customParams) -> executableCall
+type createCallType is (factoryData * bytes) -> executableCall
 type originateContractType is (factoryData * participantsMap) -> operation
 
 
@@ -42,7 +41,7 @@ type originationParams is record [
 ]
 
 type executeParams is record [
-    params : customParams;
+    params : bytes;
     proxy : address;
     lambdaName : string;
 ]
@@ -95,7 +94,6 @@ block {
     end;
     const call : executableCall = callEmitter(factoryStore.data, params.params);
 
-    (* TODO: load executableCall from storage *)
     (* TODO: should it check that params.proxy created by this factory? *)
     const receiver : contract(executableCall) =
         case (Tezos.get_entrypoint_opt("%execute", params.proxy)

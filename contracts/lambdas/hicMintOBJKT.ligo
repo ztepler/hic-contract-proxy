@@ -7,7 +7,7 @@
 *)
 function lambda(
     const factoryData : factoryData;
-    const packedParams : customParams) : executableCall is
+    const packedParams : bytes) : executableCall is
 
 block {
 

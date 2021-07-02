@@ -1,7 +1,6 @@
 #include "../partials/hicetnunc.ligo"
 
 type executableCall is unit -> list(operation)
-type customParams is bytes
 
 
 type action is
