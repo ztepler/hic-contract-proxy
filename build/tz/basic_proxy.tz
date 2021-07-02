@@ -1,8 +1,7 @@
 { parameter (or (unit %default) (lambda %execute unit (list operation))) ;
   storage
-    (pair (pair (pair (address %administrator) (address %factory))
-                (pair (nat %id) (map %shares address nat)))
-          (nat %totalShares)) ;
+    (pair (pair (address %administrator) (address %factory))
+          (pair (map %shares address nat) (nat %totalShares))) ;
   code { UNPAIR ;
          IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } }
 

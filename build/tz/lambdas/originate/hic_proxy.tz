@@ -139,7 +139,7 @@
   PAIR ;
   EMPTY_BIG_MAP bytes unit ;
   DIG 3 ;
-  CAR ;
+  CDR ;
   PAIR ;
   DIG 2 ;
   CAR ;
@@ -470,5 +470,12 @@
                          CONS ;
                          PAIR } } } } } ;
   PAIR ;
-  CAR }
+  DUP ;
+  CAR ;
+  PUSH string "hic_proxy" ;
+  PACK ;
+  DIG 2 ;
+  CDR ;
+  PAIR ;
+  PAIR }
 

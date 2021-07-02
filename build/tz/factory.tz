@@ -1,12 +1,12 @@
 { parameter
     (or (or (pair %add_contract
                (lambda %contract
-                  (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
-                  operation)
+                  (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
+                  (pair (pair (address %address) (bytes %metadata)) (operation %operation)))
                (string %name))
             (pair %add_lambda
                (lambda %lambda
-                  (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
+                  (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
                   (lambda unit (list operation)))
                (string %name)))
         (or (pair %create_proxy (string %contractName) (bytes %params))
@@ -15,14 +15,15 @@
     (pair (pair (map %contracts
                    string
                    (lambda
-                      (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
-                      operation))
-                (pair %data (address %hicetnuncMinterAddress) (nat %originatedContracts)))
-          (map %lambdas
-             string
-             (lambda
-                (pair (pair (address %hicetnuncMinterAddress) (nat %originatedContracts)) bytes)
-                (lambda unit (list operation))))) ;
+                      (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
+                      (pair (pair (address %address) (bytes %metadata)) (operation %operation))))
+                (pair %data (string %anotherRecord) (address %hicetnuncMinterAddress)))
+          (pair (map %lambdas
+                   string
+                   (lambda
+                      (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
+                      (lambda unit (list operation))))
+                (big_map %originatedContracts address bytes))) ;
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
@@ -52,16 +53,19 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
+                 CDR ;
+                 DUP 3 ;
+                 CDR ;
                  CAR ;
-                 DIG 2 ;
+                 DUP 3 ;
+                 CAR ;
+                 DIG 3 ;
                  CDR ;
                  SWAP ;
                  SOME ;
                  SWAP ;
                  UPDATE ;
+                 PAIR ;
                  SWAP ;
                  CAR ;
                  PAIR ;
@@ -90,30 +94,36 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 PUSH nat 1 ;
-                 DUP 4 ;
+                 CDR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
                  CAR ;
                  CDR ;
-                 CDR ;
-                 ADD ;
-                 DUP 4 ;
+                 DUP 3 ;
                  CAR ;
+                 CAR ;
+                 SWAP ;
+                 SOME ;
+                 SWAP ;
+                 UPDATE ;
+                 DUP 3 ;
                  CDR ;
                  CAR ;
                  PAIR ;
-                 DIG 3 ;
+                 DIG 2 ;
                  CAR ;
-                 CAR ;
-                 PAIR ;
                  PAIR ;
                  NIL operation ;
                  DIG 2 ;
+                 CDR ;
                  CONS ;
                  PAIR }
                { SWAP ;
                  DUP ;
                  DUG 2 ;
                  CDR ;
+                 CAR ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;

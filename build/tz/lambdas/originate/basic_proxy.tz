@@ -1,5 +1,4 @@
-{ UNPAIR ;
-  SWAP ;
+{ CDR ;
   UNPACK (map address nat) ;
   IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
   PUSH nat 0 ;
@@ -15,12 +14,9 @@
   EQ ;
   IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
   SWAP ;
-  DIG 2 ;
-  CDR ;
   PAIR ;
   SELF_ADDRESS ;
   SENDER ;
-  PAIR ;
   PAIR ;
   PAIR ;
   PUSH mutez 0 ;
@@ -31,11 +27,17 @@
   CREATE_CONTRACT
     { parameter (or (unit %default) (lambda %execute unit (list operation))) ;
       storage
-        (pair (pair (pair (address %administrator) (address %factory))
-                    (pair (nat %id) (map %shares address nat)))
-              (nat %totalShares)) ;
+        (pair (pair (address %administrator) (address %factory))
+              (pair (map %shares address nat) (nat %totalShares))) ;
       code { UNPAIR ;
              IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } } ;
   PAIR ;
-  CAR }
+  DUP ;
+  CAR ;
+  PUSH string "basic_proxy" ;
+  PACK ;
+  DIG 2 ;
+  CDR ;
+  PAIR ;
+  PAIR }
 
