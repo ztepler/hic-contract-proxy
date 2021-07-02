@@ -429,6 +429,10 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'proxy': self.collab.address
         }
 
+        # Checking that factory have address of new created collab in their ledger:
+        metadata = self.factory.storage['originatedContracts'][self.collab.address]()
+        self.assertTrue('hic_proxy' in metadata.decode())
+
         opg = self.factory.execute_proxy(execute_params).inject()
         self.bake_block()
         result = self._find_call_result_by_hash(self.p1, opg['hash'])
