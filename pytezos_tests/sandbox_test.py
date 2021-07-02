@@ -58,11 +58,12 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_TZ))
         factory_init = {
             'data': {
-                'originatedContracts': 0,
                 'hicetnuncMinterAddress': minter_address,
+                'anotherRecord': '',
             },
             'lambdas': {},
-            'contracts': {}
+            'contracts': {},
+            'originatedContracts': {},
         }
 
         return self._deploy_contract(client, factory, factory_init)

@@ -1,14 +1,17 @@
 #include "../partials/coreTypes.ligo"
 
 type factoryData is record [
-    originatedContracts : nat;
+    (* TODO: move this minter address to specific origination of hic proxy *)
     hicetnuncMinterAddress : address;
+
+    (* TODO: temporal solution to make this factoryData record *)
+    anotherRecord : string;
 ]
 
 (* TODO: should this types be merged into one?
     - they are very similar in type, but different in logic *)
 type createCallType is (factoryData * bytes) -> executableCall
-type originateContractType is (factoryData * bytes) -> operation
+type originateContractType is (factoryData * bytes) -> originationResult
 
 
 type factoryStorage is record [
@@ -17,12 +20,16 @@ type factoryStorage is record [
     (* Collection of callable lambdas that could be added to contract: *)
     lambdas : map(string, createCallType);
     contracts : map(string, originateContractType);
+
+    (* Ledger with all originated contracts and their params *)
+    originatedContracts : big_map(address, bytes);
 ]
 
 
 type originationParams is record [
     contractName : string;
     params : bytes;
+    (* TODO: add context with some data, in example h=n minter address? *)
 ]
 
 type executeParams is record [
@@ -60,10 +67,12 @@ block {
     | None -> (failwith("Contract is not found") : originateContractType)
     end;
 
-    const originateOperation = proxyOriginator(factoryStore.data, params.params);
-    factoryStore.data.originatedContracts := factoryStore.data.originatedContracts + 1n;
+    const result : originationResult = proxyOriginator(
+        factoryStore.data, params.params);
 
-} with (list[originateOperation], factoryStore)
+    factoryStore.originatedContracts[result.address] := result.metadata;
+
+} with (list[result.operation], factoryStore)
 
 
 function executeProxy(

@@ -19,7 +19,7 @@ const createProxyFunc : createProxyFuncType =
 
 function lambda(
     const data : factoryData;
-    const packedParams : bytes) : operation is
+    const packedParams : bytes) : originationResult is
 
 block {
 
@@ -42,7 +42,6 @@ block {
     (* Preparing initial storage: *)
 
     const initialStore : storage = record [
-        id = data.originatedContracts;
         factory = Tezos.self_address;
         administrator = Tezos.sender;
         totalShares = totalShares;
@@ -55,4 +54,10 @@ block {
         0tz,
         initialStore);
 
-} with origination.0
+    const result : originationResult = record [
+        operation = origination.0;
+        address = origination.1;
+        metadata = Bytes.pack("basic_proxy")
+    ];
+
+} with result

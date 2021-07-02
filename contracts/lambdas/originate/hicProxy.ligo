@@ -29,7 +29,7 @@ const createProxyFunc : createProxyFuncType =
 
 function lambda(
     const data : factoryData;
-    const packedParams : bytes) : operation is
+    const packedParams : bytes) : originationResult is
 
 block {
 
@@ -66,7 +66,7 @@ block {
 
     (* Preparing initial storage: *)
 
-    const initialStore : storage = record[
+    const initialStore : storage = record [
         administrator = Tezos.sender;
         shares = shares;
         totalShares = totalShares;
@@ -81,4 +81,10 @@ block {
         0tz,
         initialStore);
 
-} with origination.0
+    const result : originationResult = record [
+        operation = origination.0;
+        address = origination.1;
+        metadata = Bytes.pack("hic_proxy");
+    ];
+
+} with result

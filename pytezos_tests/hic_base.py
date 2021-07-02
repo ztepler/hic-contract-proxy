@@ -75,13 +75,14 @@ class HicBaseCase(TestCase):
 
         self.factory_init = {
             'data': {
-                'originatedContracts': 0,
-                'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
+                'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
+                'anotherRecord': '',
             },
             'lambdas': {},
             'contracts': {
                 'hic_contract': hic_proxy_code
-            }
+            },
+            'originatedContracts': {},
         }
 
         self.result = None

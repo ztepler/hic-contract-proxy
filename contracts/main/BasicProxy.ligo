@@ -9,7 +9,6 @@ type shares is map(address, nat);
 
 
 type storage is record [
-    id : nat;
     factory : address;
     administrator : address;
     totalShares : nat;
