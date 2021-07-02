@@ -107,6 +107,7 @@ class HicBaseCase(TestCase):
         self.assertTrue(operation['kind'] == 'origination')
         self.collab.storage_from_micheline(operation['script']['storage'])
         self.storage = self.collab.storage()
+        self.assertTrue(self.collab.storage()['administrator'] == sender)
 
 
     def _mint_call(self, sender):
