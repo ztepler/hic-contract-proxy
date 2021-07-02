@@ -16,11 +16,26 @@ const createProxyFunc : createProxyFuncType =
  : createProxyFuncType)];
 
 
-type factoryStorage is record [
+type factoryData is record [
     originatedContracts : nat;
     hicetnuncMinterAddress : address;
 ]
 
+
+type createCallType is (factoryData * customParams) -> executableCall
+
+
+type factoryStorage is record [
+    data : factoryData;
+
+    (* Collection of callable lambdas that could be added to contract: *)
+    lambdas : map(string, createCallType);
+]
+
+(* TODO: different contracts means that they can have different constructors,
+    so maybe it is good to convert this constuctor params in bytes too and
+    construction method in lambda too :)
+*)
 type participantRec is record [
     (* share is the fraction that participant would receive from every sale *)
     share : nat;
@@ -38,9 +53,15 @@ type executeParams is record [
     lambdaName : string;
 ]
 
+type addLambdaParams is record [
+    name : string;
+    lambda : createCallType;
+]
+
 type factoryAction is
 | Create_proxy of originationParams
 | Execute_proxy of executeParams
+| Add_lambda of addLambdaParams
 (* TODO: add_lambda function method that saves lambda to storage *)
 (* TODO: Execute type can be record of params (bytes) + saved lambda name *)
 (*      and lambda need to know how to unpack bytes *)
@@ -76,7 +97,13 @@ block {
     (* TODO: check how much participants it can handle and limit this count here *)
 
     (* Preparing initial storage: *)
-    (* TODO: move this to factory storage
+    (* TODO: decide where this params should be:
+        a) in proxy-contract
+        b) in factory
+        c) for some contracts in factory (for that who returns id to redistribute)
+            and for some in proxy-contract
+    *)
+    (* TODO: move this to factory storage (if decided b or c)
     const initialStore : storage = record[
         administrator = Tezos.sender;
         shares = shares;
@@ -87,7 +114,7 @@ block {
     ];
     *)
     const initialStore : storage = record [
-        id = 0n;
+        id = factoryStore.data.originatedContracts;
         factory = Tezos.self_address;
     ];
 
@@ -96,51 +123,26 @@ block {
         (None : option(key_hash)),
         0tz,
         initialStore);
-    factoryStore.originatedContracts := factoryStore.originatedContracts + 1n;
+    factoryStore.data.originatedContracts := factoryStore.data.originatedContracts + 1n;
 
 } with (list[origination.0], factoryStore)
 
 
-(* TODO: in ideal this should be lambda function that stored in factory 
-    under some name, currently this is function that emits mint
-
-    there are should be multiple funcs with same interface
-*)
-function callEmitter(
-    const factoryStore : factoryStorage;
-    const packedParams : customParams) : executableCall is
+function executeProxy(
+    const params : executeParams;
+    const factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
-
-    const paramsOption: option(mintParams) = Bytes.unpack(packedParams);
-    const params : mintParams = case paramsOption of
-    | None -> (failwith("Unpack failed") : mintParams)
-    | Some(p) -> p
+    (* TODO: think about all this names *)
+    const optionalEmitter = Map.find_opt(params.lambdaName, factoryStore.lambdas);
+    const callEmitter : createCallType = case optionalEmitter of
+    | Some(emitter) -> emitter
+    | None -> (failwith("Lambda is not found") : createCallType)
     end;
+    const call : executableCall = callEmitter(factoryStore.data, params.params);
 
-    function callMint(const p : unit): list(operation) is
-    block {
-        const operations : list(operation) = nil;
-        const hicReceiver : contract(mintParams) =
-            case (Tezos.get_entrypoint_opt(
-                "%mint_OBJKT",
-                (factoryStore.hicetnuncMinterAddress : address)
-                ) : option(contract(mintParams))) of
-            | None -> (failwith("No minter found") : contract(mintParams))
-            | Some(con) -> con
-            end;
-
-        const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
-
-    } with operations
-} with callMint
-
-
-(* TODO: LambdaProxy call method *)
-function executeProxy(var params : executeParams; var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
-block {
-    const call : executableCall = callEmitter(factoryStore, params.params);
-
+    (* TODO: load executableCall from storage *)
+    (* TODO: should it check that params.proxy created by this factory? *)
     const receiver : contract(executableCall) =
         case (Tezos.get_entrypoint_opt("%execute", params.proxy)
             : option(contract(executableCall))) of
@@ -152,11 +154,28 @@ block {
 
 } with (list[op], factoryStore)
 
-(* TODO: default method *)
+
+function add_lambda(
+    const params : addLambdaParams;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    (* TODO: should it check that this name is not existed or rewrite is good? *)
+    factoryStore.lambdas[params.name] := params.lambda;
+} with ((nil : list(operation)), factoryStore)
+
+(* TODO: default method from contract that receives values? 
+    - or it is not required now?
+    - maybe it is good to support contracts that does not distribute by itself, but
+        returns all xtz to the factory and then run there some logic (maybe with
+        bigmap distributions)
+*)
+(* TODO: method to add new executableCall *)
 
 function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 case params of
 | Create_proxy(p) -> createProxy(p, factoryStore)
 | Execute_proxy(p) -> executeProxy(p, factoryStore)
+| Add_lambda(p) -> add_lambda(p, factoryStore)
 end

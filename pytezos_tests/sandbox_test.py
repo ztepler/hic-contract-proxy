@@ -8,6 +8,7 @@ import json
 
 
 FACTORY_TZ = '../build/tz/lambda_factory.tz'
+MINT_OBJKT_CALL_LAMBDA_TZ = '../build/tz/lambdas/hic_mint_OBJKT.tz'
 # PACKER_TZ = '../build/tz/packer.tz'
 CONTRACTS_DIR = 'contracts'
 
@@ -47,8 +48,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_TZ))
         factory_init = {
-            'originatedContracts': 0,
-            'hicetnuncMinterAddress': minter_address
+            'data': {
+                'originatedContracts': 0,
+                'hicetnuncMinterAddress': minter_address,
+            },
+            'lambdas': {}
         }
 
         return self._deploy_contract(client, factory, factory_init)
@@ -366,6 +370,15 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
 
     def test_lambda_proxy(self):
+        # Adding lambdas to factory:
+        mint_objkt_lambda = open(
+            join(dirname(__file__), MINT_OBJKT_CALL_LAMBDA_TZ)).read()
+
+        self.factory.add_lambda({
+            'name': 'mint_objkt_lambda',
+            'lambda': mint_objkt_lambda
+        }).inject()
+        self.bake_block()
 
         # Creating contract using proxy
         originate_params = {
@@ -380,7 +393,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # Calling execute:
         execute_params = {
-            'lambdaName': 'test',
+            'lambdaName': 'mint_objkt_lambda',
             'params': '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803',
             'proxy': self.collab.address
         }
@@ -388,6 +401,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = self.factory.execute_proxy(execute_params).inject()
         self.bake_block()
         result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # TODO: testing running lambda with name that does not exist failed
+        # TODO: testing running lambda on proxy-contract not from factory failed
 
     '''
     def test_withdraw_token(self):
