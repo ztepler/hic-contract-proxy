@@ -72,7 +72,7 @@ block {
         totalShares = totalShares;
         hicetnuncMinterAddress = data.hicetnuncMinterAddress;
         coreParticipants = coreParticipants;
-        mints = (big_map [] : big_map(bytes, unit));
+        mints = (map [] : map(bytes, unit));
     ];
 
     (* Making originate operation: *)

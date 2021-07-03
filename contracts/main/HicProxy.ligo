@@ -53,7 +53,9 @@ type storage is record [
 
     (* Bigmap with metadata of minted works, I decided not to use set because
         it is possible that collab would have unlimited works *)
-    mints : big_map(bytes, unit);
+    mints : map(bytes, unit);
+    (* -- replacing big_map with map to test if this is the problem why contract
+        creation is failing *)
 ]
 
 function execute(const call : executableCall; const store : storage)
@@ -75,7 +77,7 @@ block {
     checkSenderIsAdmin(store);
 
     (* Recording IPFS hash into store.mints: *)
-    store.mints := Big_map.add (params.metadata, Unit, store.mints);
+    store.mints := Map.add (params.metadata, Unit, store.mints);
     const callToHic = callMintOBJKT(store.hicetnuncMinterAddress, params);
 } with (list[callToHic], store)
 
