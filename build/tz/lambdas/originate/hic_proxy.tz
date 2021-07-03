@@ -137,7 +137,7 @@
   CDR ;
   CAR ;
   PAIR ;
-  EMPTY_BIG_MAP bytes unit ;
+  EMPTY_MAP bytes unit ;
   DIG 3 ;
   CDR ;
   PAIR ;
@@ -175,10 +175,10 @@
                     (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt)))))) ;
       storage
         (pair (pair (pair (address %administrator) (set %coreParticipants address))
-                    (pair (address %hicetnuncMinterAddress) (big_map %mints bytes unit)))
+                    (pair (address %hicetnuncMinterAddress) (map %mints bytes unit)))
               (pair (map %shares address nat) (nat %totalShares))) ;
       code { LAMBDA
-               (pair (pair (pair address (set address)) (pair address (big_map bytes unit)))
+               (pair (pair (pair address (set address)) (pair address (map bytes unit)))
                      (pair (map address nat) nat))
                unit
                { CAR ;
