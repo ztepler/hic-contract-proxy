@@ -229,6 +229,29 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
+
+        # Adding contracts to the factory:
+        for lambda_name, filename in LAMBDA_ORIGINATE.items():
+            originate_lambda = open(
+                join(dirname(__file__), filename)).read()
+
+            self.factory.add_contract({
+                'name': lambda_name,
+                'contract': originate_lambda
+            }).inject()
+            self.bake_block()
+
+        # Adding lambdas to the factory:
+        for lambda_name, filename in LAMBDA_CALLS.items():
+            call_lambda = open(
+                join(dirname(__file__), filename)).read()
+
+            self.factory.add_lambda({
+                'name': lambda_name,
+                'lambda': call_lambda
+            }).inject()
+            self.bake_block()
+
         # Deploying packer (I feel this is temporal solution but who knows):
         #    (it is just used to pack data)
         packer = ContractInterface.from_file(join(dirname(__file__), PACKER_TZ))
@@ -237,16 +260,25 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
 
 
-    '''
     def test_mint_token(self):
+
         # Creating contract using proxy
-        originate_params = {
+        participants = {
             pkh(self.p1):   {'share': 330, 'isCore': True},
             pkh(self.p2):   {'share': 500, 'isCore': True},
             pkh(self.tips): {'share': 170, 'isCore': False}
         }
 
-        opg = self.factory.default(originate_params).inject()
+        # Packer is just helper contract that converts data to bytes:
+        packed_participants = self.packer.pack_originate_hic_proxy(
+            participants).interpret().storage.hex()
+
+        originate_params = {
+            'contractName': 'hic_proxy',
+            'params': packed_participants
+        }
+
+        opg = self.factory.create_proxy(originate_params).inject()
         self.bake_block()
         self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
 
@@ -297,9 +329,10 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # TODO: checking distribution:
         pass
-    '''
+
 
     def test_marketplace_communication(self):
+        # TODO: replace with new marketlace and new test
 
         # mint:
         mint_params = {
@@ -380,28 +413,6 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
     def test_lambda_proxy(self):
 
-        # Adding contracts to factory:
-        for lambda_name, filename in LAMBDA_ORIGINATE.items():
-            originate_lambda = open(
-                join(dirname(__file__), filename)).read()
-
-            self.factory.add_contract({
-                'name': lambda_name,
-                'contract': originate_lambda
-            }).inject()
-            self.bake_block()
-
-        # Adding lambdas to factory:
-        for lambda_name, filename in LAMBDA_CALLS.items():
-            call_lambda = open(
-                join(dirname(__file__), filename)).read()
-
-            self.factory.add_lambda({
-                'name': lambda_name,
-                'lambda': call_lambda
-            }).inject()
-            self.bake_block()
-
         # Creating contract using proxy
         participants = {
             pkh(self.p1):   {'share': 330, 'isCore': True},
@@ -436,6 +447,15 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = self.factory.execute_proxy(execute_params).inject()
         self.bake_block()
         result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # creating another one collab with the same params:
+        originate_params = {
+            'contractName': 'hic_proxy',
+            'params': packed_participants
+        }
+
+        opg = self.factory.create_proxy(originate_params).inject()
+        self.bake_block()
 
         # TODO: testing running lambda with name that does not exist failed
         # TODO: testing running lambda on proxy-contract not from factory failed
