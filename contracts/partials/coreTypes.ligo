@@ -1,4 +1,4 @@
-type executableCall is unit -> list(operation)
+type executableCall is bytes -> list(operation)
 
 type originationResult is record [
     operation : operation;

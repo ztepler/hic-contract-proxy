@@ -10,7 +10,7 @@ type factoryData is record [
 
 (* TODO: should this types be merged into one?
     - they are very similar in type, but different in logic *)
-type createCallType is (factoryData * bytes) -> executableCall
+type callEmitterType is (factoryData * bytes) -> executableCall
 type originateContractType is (factoryData * bytes) -> originationResult
 
 
@@ -18,7 +18,7 @@ type factoryStorage is record [
     data : factoryData;
 
     (* Collection of callable lambdas that could be added to contract: *)
-    lambdas : map(string, createCallType);
+    lambdas : map(string, callEmitterType);
     contracts : map(string, originateContractType);
 
     (* Ledger with all originated contracts and their params *)
@@ -40,7 +40,7 @@ type executeParams is record [
 
 type addLambdaParams is record [
     name : string;
-    lambda : createCallType;
+    lambda : callEmitterType;
 ]
 
 type addContractParams is record [
@@ -81,10 +81,11 @@ function executeProxy(
 
 block {
     (* TODO: think about all this names *)
+    (* TODO: need to check that the one who calls this have rights if it is required *)
     const optionalEmitter = Map.find_opt(params.lambdaName, factoryStore.lambdas);
-    const callEmitter : createCallType = case optionalEmitter of
+    const callEmitter : callEmitterType = case optionalEmitter of
     | Some(emitter) -> emitter
-    | None -> (failwith("Lambda is not found") : createCallType)
+    | None -> (failwith("Lambda is not found") : callEmitterType)
     end;
     const call : executableCall = callEmitter(factoryStore.data, params.params);
 
