@@ -1,7 +1,27 @@
-{ parameter (or (unit %default) (lambda %execute unit (list operation))) ;
+{ parameter
+    (or (unit %default)
+        (lambda %execute
+           (pair (pair (address %administrator) (address %factory))
+                 (pair (map %shares address nat) (nat %totalShares)))
+           (list operation))) ;
   storage
     (pair (pair (address %administrator) (address %factory))
           (pair (map %shares address nat) (nat %totalShares))) ;
   code { UNPAIR ;
-         IF_LEFT { DROP ; NIL operation ; PAIR } { PUSH unit Unit ; EXEC ; PAIR } } }
+         IF_LEFT
+           { DROP ; NIL operation ; PAIR }
+           { SWAP ;
+             DUP ;
+             DUG 2 ;
+             CAR ;
+             CAR ;
+             SENDER ;
+             COMPARE ;
+             EQ ;
+             IF {} { PUSH string "Entrypoint can call only administrator" ; FAILWITH } ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             EXEC ;
+             PAIR } } }
 

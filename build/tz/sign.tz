@@ -1,59 +1,39 @@
 { parameter
-    (or (or (bool %is_core_participant_callback) (bool %is_minted_hash_callback))
-        (or (pair %is_signed
-               (pair (contract %callback bool) (bytes %metadata))
-               (address %participant))
-            (pair %sign (address %collabContract) (bytes %metadata)))) ;
-  storage
-    (pair (pair (option %callContract address) (option %isCoreParticipant bool))
-          (big_map %signatures (pair address bytes) unit)) ;
+    (or (or (pair %is_signed (pair (contract %callback bool) (nat %id)) (address %participant))
+            (nat %sign))
+        (nat %unsign)) ;
+  storage (big_map (pair address nat) unit) ;
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
-               { DROP ; NIL operation ; PAIR }
-               { DROP ; UNPAIR ; CDR ; NONE address ; PAIR ; PAIR ; NIL operation ; PAIR } }
-           { IF_LEFT
-               { DROP ; NIL operation ; PAIR }
                { DUP ;
                  DUG 2 ;
                  CAR ;
-                 CONTRACT %is_core_participant
-                   (pair (contract %callback bool) (address %participantAddress)) ;
-                 IF_NONE { PUSH string "Collab have no core participant view" ; FAILWITH } {} ;
-                 SENDER ;
-                 SELF %is_core_participant_callback ;
-                 PAIR ;
-                 DUP 4 ;
                  CAR ;
-                 CONTRACT %is_minted_hash (pair (contract %callback bool) (bytes %metadata)) ;
-                 IF_NONE { PUSH string "Collab have no minted hash view" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DUP 3 ;
                  DUP 5 ;
+                 CAR ;
                  CDR ;
-                 SELF %is_minted_hash_callback ;
+                 DIG 5 ;
+                 CDR ;
                  PAIR ;
+                 GET ;
+                 IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                 TRANSFER_TOKENS ;
+                 DROP ;
                  NIL operation ;
-                 DIG 2 ;
-                 PUSH mutez 0 ;
-                 DIG 3 ;
-                 TRANSFER_TOKENS ;
-                 CONS ;
-                 DIG 2 ;
-                 PUSH mutez 0 ;
-                 DIG 3 ;
-                 TRANSFER_TOKENS ;
-                 CONS ;
+                 PAIR }
+               { SENDER ;
+                 PAIR ;
                  SWAP ;
-                 DUP ;
-                 DUG 2 ;
-                 CDR ;
+                 PUSH unit Unit ;
                  DIG 2 ;
-                 CAR ;
-                 CDR ;
-                 DIG 3 ;
-                 CAR ;
+                 SWAP ;
                  SOME ;
-                 PAIR ;
-                 PAIR ;
                  SWAP ;
-                 PAIR } } } }
+                 UPDATE ;
+                 NIL operation ;
+                 PAIR } }
+           { SENDER ; PAIR ; NONE unit ; SWAP ; UPDATE ; NIL operation ; PAIR } } }
 

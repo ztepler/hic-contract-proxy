@@ -1,29 +1,25 @@
 { parameter
     (or (or (pair %add_contract
                (lambda %contract
-                  (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
+                  (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
+                              (pair (address %registryAddress) (address %tokenAddress)))
+                        bytes)
                   (pair (pair (address %address) (bytes %metadata)) (operation %operation)))
                (string %name))
-            (pair %add_lambda
-               (lambda %lambda
-                  (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
-                  (lambda unit (list operation)))
-               (string %name)))
-        (or (pair %create_proxy (string %contractName) (bytes %params))
-            (pair %execute_proxy (pair (string %lambdaName) (bytes %params)) (address %proxy)))) ;
+            (pair %create_proxy (string %contractName) (bytes %params)))
+        (address %is_originated_contract)) ;
   storage
     (pair (pair (map %contracts
                    string
                    (lambda
-                      (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
+                      (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
+                                  (pair (address %registryAddress) (address %tokenAddress)))
+                            bytes)
                       (pair (pair (address %address) (bytes %metadata)) (operation %operation))))
-                (pair %data (string %anotherRecord) (address %hicetnuncMinterAddress)))
-          (pair (map %lambdas
-                   string
-                   (lambda
-                      (pair (pair (string %anotherRecord) (address %hicetnuncMinterAddress)) bytes)
-                      (lambda unit (list operation))))
-                (big_map %originatedContracts address bytes))) ;
+                (pair %data
+                   (pair (address %marketplaceAddress) (address %minterAddress))
+                   (pair (address %registryAddress) (address %tokenAddress))))
+          (big_map %originatedContracts address bytes)) ;
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
@@ -52,29 +48,6 @@
                { SWAP ;
                  DUP ;
                  DUG 2 ;
-                 CDR ;
-                 CDR ;
-                 DUP 3 ;
-                 CDR ;
-                 CAR ;
-                 DUP 3 ;
-                 CAR ;
-                 DIG 3 ;
-                 CDR ;
-                 SWAP ;
-                 SOME ;
-                 SWAP ;
-                 UPDATE ;
-                 PAIR ;
-                 SWAP ;
-                 CAR ;
-                 PAIR ;
-                 NIL operation ;
-                 PAIR } }
-           { IF_LEFT
-               { SWAP ;
-                 DUP ;
-                 DUG 2 ;
                  CAR ;
                  CAR ;
                  SWAP ;
@@ -94,7 +67,6 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 CDR ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -107,10 +79,6 @@
                  SOME ;
                  SWAP ;
                  UPDATE ;
-                 DUP 3 ;
-                 CDR ;
-                 CAR ;
-                 PAIR ;
                  DIG 2 ;
                  CAR ;
                  PAIR ;
@@ -118,39 +86,6 @@
                  DIG 2 ;
                  CDR ;
                  CONS ;
-                 PAIR }
-               { SWAP ;
-                 DUP ;
-                 DUG 2 ;
-                 CDR ;
-                 CAR ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
-                 CAR ;
-                 CAR ;
-                 GET ;
-                 IF_NONE { PUSH string "Lambda is not found" ; FAILWITH } {} ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
-                 CAR ;
-                 CDR ;
-                 DUP 4 ;
-                 CAR ;
-                 CDR ;
-                 PAIR ;
-                 EXEC ;
-                 SWAP ;
-                 CDR ;
-                 CONTRACT %execute (lambda unit (list operation)) ;
-                 IF_NONE { PUSH string "No proxy found" ; FAILWITH } {} ;
-                 PUSH mutez 0 ;
-                 DIG 2 ;
-                 TRANSFER_TOKENS ;
-                 SWAP ;
-                 NIL operation ;
-                 DIG 2 ;
-                 CONS ;
-                 PAIR } } } }
+                 PAIR } }
+           { DROP ; NIL operation ; PAIR } } }
 

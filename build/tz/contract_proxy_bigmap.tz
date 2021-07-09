@@ -3,7 +3,9 @@
             (pair %mint_OBJKT
                (pair (address %address) (nat %amount))
                (pair (bytes %metadata) (nat %royalties))))
-        (or (pair %swap (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt)))
+        (or (pair %swap
+               (pair (address %creator) (nat %objkt_amount))
+               (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))
             (unit %withdraw))) ;
   storage
     (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
@@ -57,8 +59,9 @@
                  CDR ;
                  CAR ;
                  CONTRACT %swap
-                   (pair (nat %objkt_amount) (pair (nat %objkt_id) (mutez %xtz_per_objkt))) ;
-                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                   (pair (pair (address %creator) (nat %objkt_amount))
+                         (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt)))) ;
+                 IF_NONE { PUSH string "No marketplace found" ; FAILWITH } {} ;
                  PUSH mutez 0 ;
                  DIG 2 ;
                  TRANSFER_TOKENS ;

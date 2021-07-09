@@ -3,22 +3,18 @@
   UNPACK
     (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
   IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
-  PAIR ;
-  LAMBDA
-    (pair (pair (pair (pair address nat) (pair bytes nat)) (pair string address)) unit)
-    (list operation)
-    { CAR ;
-      UNPAIR ;
-      SWAP ;
-      CDR ;
-      CONTRACT %mint_OBJKT
-        (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
-      IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
-      PUSH mutez 0 ;
-      DIG 2 ;
-      TRANSFER_TOKENS ;
-      DROP ;
-      NIL operation } ;
   SWAP ;
-  APPLY }
+  CAR ;
+  CDR ;
+  CAR ;
+  CAR ;
+  CONTRACT %mint_OBJKT
+    (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
+  IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+  PUSH mutez 0 ;
+  DIG 2 ;
+  TRANSFER_TOKENS ;
+  NIL operation ;
+  SWAP ;
+  CONS }
 
