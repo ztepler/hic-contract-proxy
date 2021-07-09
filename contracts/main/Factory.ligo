@@ -2,23 +2,17 @@
 
 type factoryData is record [
     (* TODO: move this minter address to specific origination of hic proxy *)
-    hicetnuncMinterAddress : address;
-
-    (* TODO: temporal solution to make this factoryData record *)
-    anotherRecord : string;
+    minterAddress : address;
+    marketplaceAddress : address;
+    registryAddress : address;
 ]
 
-(* TODO: should this types be merged into one?
-    - they are very similar in type, but different in logic *)
-type callEmitterType is (factoryData * bytes) -> executableCall
 type originateContractType is (factoryData * bytes) -> originationResult
 
 
 type factoryStorage is record [
     data : factoryData;
 
-    (* Collection of callable lambdas that could be added to contract: *)
-    lambdas : map(string, callEmitterType);
     contracts : map(string, originateContractType);
 
     (* Ledger with all originated contracts and their params *)
@@ -32,16 +26,6 @@ type originationParams is record [
     (* TODO: add context with some data, in example h=n minter address? *)
 ]
 
-type executeParams is record [
-    lambdaName : string;
-    params : bytes;
-    proxy : address;
-]
-
-type addLambdaParams is record [
-    name : string;
-    lambda : callEmitterType;
-]
 
 type addContractParams is record [
     name : string;
@@ -50,16 +34,15 @@ type addContractParams is record [
 
 type factoryAction is
 | Create_proxy of originationParams
-| Execute_proxy of executeParams
-| Add_lambda of addLambdaParams
 | Add_contract of addContractParams
-(* TODO: income entrypoint that would accept redirected defaults from collabs *)
+| Is_originated_contract of address
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
+    (* TODO: check if factory is paused or not *)
     (* TODO: think about all this names too *)
     const optionalOriginator = Map.find_opt(params.contractName, factoryStore.contracts);
     const proxyOriginator : originateContractType = case optionalOriginator of
@@ -75,45 +58,7 @@ block {
 } with (list[result.operation], factoryStore)
 
 
-function executeProxy(
-    const params : executeParams;
-    const factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
-
-block {
-    (* TODO: think about all this names *)
-    (* TODO: need to check that the one who calls this have rights if it is required *)
-    const optionalEmitter = Map.find_opt(params.lambdaName, factoryStore.lambdas);
-    const callEmitter : callEmitterType = case optionalEmitter of
-    | Some(emitter) -> emitter
-    | None -> (failwith("Lambda is not found") : callEmitterType)
-    end;
-    const call : executableCall = callEmitter(factoryStore.data, params.params);
-
-    (* TODO: should it check that params.proxy created by this factory? *)
-    const receiver : contract(executableCall) =
-        case (Tezos.get_entrypoint_opt("%execute", params.proxy)
-            : option(contract(executableCall))) of
-        | None -> (failwith("No proxy found") : contract(executableCall))
-        | Some(con) -> con
-        end;
-
-    const op : operation = Tezos.transaction(call, 0tez, receiver);
-
-} with (list[op], factoryStore)
-
-
-function add_lambda(
-    const params : addLambdaParams;
-    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
-
-block {
-    (* TODO: check that called by factory admin *)
-    (* TODO: should it check that this name is not existed or rewrite is good? *)
-    factoryStore.lambdas[params.name] := params.lambda;
-} with ((nil : list(operation)), factoryStore)
-
-
-function add_contract(
+function addContract(
     const params : addContractParams;
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
@@ -124,19 +69,20 @@ block {
 } with ((nil : list(operation)), factoryStore)
 
 
-(* TODO: default method from contract that receives values? 
-    - or it is not required now?
-    - maybe it is good to support contracts that does not distribute by itself, but
-        returns all xtz to the factory and then run there some logic (maybe with
-        bigmap distributions)
-*)
-(* TODO: method to add new executableCall *)
+function isOriginatedContract(
+    const contractAddress : address;
+    var factoryStore : factoryStorage) is
+
+block {
+    (* TODO: implement this view *)
+    skip;
+} with ((nil : list(operation)), factoryStore)
+
 
 function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 case params of
 | Create_proxy(p) -> createProxy(p, factoryStore)
-| Execute_proxy(p) -> executeProxy(p, factoryStore)
-| Add_lambda(p) -> add_lambda(p, factoryStore)
-| Add_contract(p) -> add_contract(p, factoryStore)
+| Add_contract(p) -> addContract(p, factoryStore)
+| Is_originated_contract(p) -> isOriginatedContract(p, factoryStore)
 end

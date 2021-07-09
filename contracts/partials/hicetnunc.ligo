@@ -7,28 +7,35 @@ type mintParams is record [
 ]
 
 
-(* This is params that used in h=n swap call *)
+(* This is params that used in h=n marketplace swap call *)
 type swapParams is michelson_pair(
-    nat, "objkt_amount",
-    michelson_pair(nat, "objkt_id", tez, "xtz_per_objkt"),
-"")
+    michelson_pair(address, "creator", nat, "objkt_amount"), "",
+    michelson_pair(
+        nat, "objkt_id",
+        michelson_pair(nat, "royalties", tez, "xtz_per_objkt"),
+        ""
+    ), "")
 
 
 (* This is params that used in h=n cancel_swap call *)
 type cancelSwapParams is nat
 
 
-(* This is params that used in h=n collect call *)
-type collectParams is record [
-    objkt_amount : nat;
-    swap_id : nat
-]
+(* This is params that used in h=n marketplace collect call *)
+type collectParams is nat
 
 
 (* This is params that used in h=n curate call *)
 type curateParams is record [
     hDAO_amount : nat;
     objkt_id : nat
+]
+
+
+(* Params used in SUBJKT *)
+type registryParams is record [
+    metadata : bytes;
+    subjkt : bytes;
 ]
 
 
@@ -53,12 +60,12 @@ block {
 
 
 (* This function used to redirect swap call to hic et nunc swap entrypoint *)
-function callSwap(var minterAddress : address; var params : swapParams) : operation is
+function callSwap(var marketplaceAddress : address; var params : swapParams) : operation is
 block {
     const hicReceiver : contract(swapParams) =
-        case (Tezos.get_entrypoint_opt("%swap", minterAddress)
+        case (Tezos.get_entrypoint_opt("%swap", marketplaceAddress)
             : option(contract(swapParams))) of
-        | None -> (failwith("No minter found") : contract(swapParams))
+        | None -> (failwith("No marketplace found") : contract(swapParams))
         | Some(con) -> con
         end;
 
@@ -68,12 +75,12 @@ block {
 
 
 (* This function used to redirect cancel swap call to hic et nunc cancel_swap entrypoint *)
-function callCancelSwap(var minterAddress : address; var params : cancelSwapParams) : operation is
+function callCancelSwap(var marketplaceAddress : address; var params : cancelSwapParams) : operation is
 block {
     const hicReceiver : contract(cancelSwapParams) =
-        case (Tezos.get_entrypoint_opt("%cancel_swap", minterAddress)
+        case (Tezos.get_entrypoint_opt("%cancel_swap", marketplaceAddress)
             : option(contract(cancelSwapParams))) of
-        | None -> (failwith("No minter found") : contract(cancelSwapParams))
+        | None -> (failwith("No marketplace found") : contract(cancelSwapParams))
         | Some(con) -> con
         end;
 
@@ -83,12 +90,12 @@ block {
 
 
 (* This function used to redirect collect call to hic et nunc collect entrypoint *)
-function callCollect(var minterAddress : address; var params : collectParams) : operation is
+function callCollect(var marketplaceAddress : address; var params : collectParams) : operation is
 block {
     const hicReceiver : contract(collectParams) =
-        case (Tezos.get_entrypoint_opt("%collect", minterAddress)
+        case (Tezos.get_entrypoint_opt("%collect", marketplaceAddress)
             : option(contract(collectParams))) of
-        | None -> (failwith("No minter found") : contract(collectParams))
+        | None -> (failwith("No marketplace found") : contract(collectParams))
         | Some(con) -> con
         end;
 

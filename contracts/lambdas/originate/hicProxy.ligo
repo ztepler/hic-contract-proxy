@@ -68,11 +68,13 @@ block {
 
     const initialStore : storage = record [
         administrator = Tezos.sender;
+        proposedAdministrator = (None : option(address));
         shares = shares;
         totalShares = totalShares;
-        hicetnuncMinterAddress = data.hicetnuncMinterAddress;
+        minterAddress = data.minterAddress;
+        marketplaceAddress = data.marketplaceAddress;
         coreParticipants = coreParticipants;
-        mints = (map [] : map(bytes, unit));
+        isPaused = False;
     ];
 
     (* Making originate operation: *)
