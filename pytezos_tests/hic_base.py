@@ -71,14 +71,17 @@ class HicBaseCase(TestCase):
             'objkt_amount': 1,
             'objkt_id': 30000,
             'xtz_per_objkt': 10_000_000,
+            'creator': self.p1,
+            'royalties': 100
         }
 
         self.factory_init = {
             'data': {
-                'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
-                'anotherRecord': '',
+                'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
+                'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
+                'registryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
+                'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
             },
-            'lambdas': {},
             'contracts': {
                 'hic_contract': hic_proxy_code
             },
@@ -127,7 +130,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(op_bytes, metadata)
 
         self.assertEqual(operation['destination'],
-            self.factory_init['data']['hicetnuncMinterAddress'])
+            self.factory_init['data']['minterAddress'])
         self.assertEqual(operation['amount'], '0')
 
 
@@ -139,6 +142,7 @@ class HicBaseCase(TestCase):
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
+        # TODO: check that call goes to marketplaceAddress
 
 
     def _cancel_swap_call(self, sender):
@@ -151,19 +155,20 @@ class HicBaseCase(TestCase):
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'cancel_swap'
         assert self.result.operations[0]['parameters']['value'] == {'int': '42'}
+        # TODO: check that call goes to marketplaceAddress
 
 
     def _collect_call(self, sender):
         """ Testing that collect doesn't fail with default params """
 
-        some_collect_params = {'objkt_amount': 1, 'swap_id': 42}
-        self.result = self.collab.collect(some_collect_params).interpret(
+        some_swap_id = 42
+        self.result = self.collab.collect(some_swap_id).interpret(
             storage=self.storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'collect'
-        assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '1'}
-        assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '42'}
+        assert self.result.operations[0]['parameters']['value']['int'] == '42'
+        # TODO: check that call goes to marketplaceAddress
 
 
     def _curate_call(self, sender):
@@ -177,6 +182,21 @@ class HicBaseCase(TestCase):
         assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
         assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '100'}
         assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '100000'}
+        # TODO: check that call goes to ?
+
+
+    def _registry_call(self, sender):
+        # TODO: implement this
+        pass
+
+
+    def _unregistry_call(self, sender):
+        # TODO: implement this
+        pass
+
+        # TODO: test update manager
+        # TODO: test pause
+        # TODO: test views
 
 
     def _default_call(self, sender, amount):
