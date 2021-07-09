@@ -11,6 +11,10 @@
 (* Including sign interface *)
 #include "../partials/sign.ligo"
 
+
+(* FA2 interface *)
+#include "../partials/fa2.ligo"
+
 (* TODO: import BasicProxy and its calls or move this calls into some core file? *)
 
 
@@ -27,6 +31,9 @@ type storage is record [
     (* the sum of the shares should be equal to totalShares *)
     totalShares : nat;
 
+    (* hicetnunc fa2 token address *)
+    tokenAddress : address;
+
     (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
     minterAddress : address;
 
@@ -40,11 +47,17 @@ type storage is record [
     isPaused : bool;
 ]
 
-type executableCall is storage -> list(operation)
+type executableCall is storage*bytes -> list(operation)
+
+
+type executeParams is record [
+    lambda : executableCall;
+    packedParams : bytes;
+]
 
 
 type action is
-| Execute of executableCall
+| Execute of executeParams
 | Default of unit
 | Mint_OBJKT of mintParams
 | Swap of swapParams
@@ -53,6 +66,7 @@ type action is
 | Curate of curateParams
 | Registry of registryParams
 | Unregistry of unit
+| Update_operators of updateOperatorsParam
 | Is_core_participant of isParticipantParams
 | Is_participant_administrator of isParticipantParams
 | Get_total_shares of getTotalSharesParams
@@ -69,13 +83,14 @@ function checkSenderIsAdmin(var store : storage) : unit is
     else failwith("Entrypoint can call only administrator");
 
 
-function execute(const call : executableCall; const store : storage)
+function execute(const params : executeParams; const store : storage)
     : (list(operation) * storage) is
 
 block {
     (* TODO: check contract.isPaused is False *)
     checkSenderIsAdmin(store);
-    const operations : list(operation) = call(store);
+    const operations : list(operation) =
+        params.lambda(store, params.packedParams);
 } with (operations, store)
 
 
@@ -205,6 +220,13 @@ block {
 } with ((nil: list(operation)), store)
 
 
+function updateOperators(var store : storage; var params : updateOperatorsParam) : (list(operation) * storage) is
+block {
+    checkSenderIsAdmin(store);
+    const callToHic = callUpdateOperators(store.tokenAddress, params);
+} with (list[callToHic], store)
+
+
 function main (const params : action; const store : storage) : (list(operation) * storage) is
 case params of
 | Execute(call) -> execute(call, store)
@@ -223,4 +245,5 @@ case params of
 | Registry(p) -> registry(store, p)
 | Unregistry -> unregistry(store)
 | Trigger_pause -> triggerPause(store)
+| Update_operators(p) -> updateOperators(store, p)
 end

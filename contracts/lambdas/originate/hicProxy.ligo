@@ -73,6 +73,7 @@ block {
         totalShares = totalShares;
         minterAddress = data.minterAddress;
         marketplaceAddress = data.marketplaceAddress;
+        tokenAddress = data.tokenAddress;
         coreParticipants = coreParticipants;
         isPaused = False;
     ];

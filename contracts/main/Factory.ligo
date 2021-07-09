@@ -5,6 +5,7 @@ type factoryData is record [
     minterAddress : address;
     marketplaceAddress : address;
     registryAddress : address;
+    tokenAddress : address;
 ]
 
 type originateContractType is (factoryData * bytes) -> originationResult
