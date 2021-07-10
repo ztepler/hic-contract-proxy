@@ -10,6 +10,11 @@ type factoryAction is
 | Accept_ownership of unit
 
 
+function checkSenderIsAdmin(var factoryStore : factoryStorage) : unit is
+    if (Tezos.sender = factoryStore.administrator) then unit
+    else failwith("Entrypoint can call only administrator");
+
+
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
@@ -66,17 +71,26 @@ block {
 } with (list[returnOperation], factoryStore)
 
 
-function updateAdmin(var factoryStore : factoryStorage; var newAdmin : address) : (list(operation) * factoryStorage) is
+function updateAdmin(var factoryStore : factoryStorage; const newAdmin : address) : (list(operation) * factoryStorage) is
 block {
-    (* TODO: record proposed manager to storage *)
-    skip;
+    checkSenderIsAdmin(factoryStore);
+    factoryStore.proposedAdministrator := Some(newAdmin);
 } with ((nil: list(operation)), factoryStore)
 
 
 function acceptOwnership(var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 block {
-    (* TODO: check that Tezos sender === proposed manager and change it *)
-    skip;
+    const proposedAdministrator : address = case factoryStore.proposedAdministrator of
+    | Some(proposed) -> proposed
+    | None -> (failwith("Not proposed admin") : address)
+    end;
+
+    if Tezos.sender = proposedAdministrator then
+    block {
+        factoryStore.administrator := proposedAdministrator;
+        factoryStore.proposedAdministrator := (None : option(address));
+    } else failwith("Not proposed admin")
+
 } with ((nil: list(operation)), factoryStore)
 
 
