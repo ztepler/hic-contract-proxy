@@ -41,9 +41,9 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_curate(self.admin, amount=100),
             # lambda: self._collab_registry(self.admin, amount=100),
             # lambda: self._collab_unregistry(self.admin, amount=100),
-            lambda: self._collab_is_core_participant_call(self.admin, amount=100),
+            lambda: self._collab_is_core_participant(self.admin, amount=100),
             # lambda: self._collab_update_operators(self.admin, amount=100),
-            # lambda: self._collab_is_administrator_call(self.admin, amount=100),
+            # lambda: self._collab_is_administrator(self.admin, amount=100),
             # lambda: self._collab_get_total_shares(amount=100),
             # lambda: self._collab_get_participant_shares(self.admin, amount=100),
             # lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
@@ -59,11 +59,11 @@ class MapInteractionTest(HicBaseCase):
     def _test_views(self):
 
         # is_core_participant test, True case:
-        result = self._collab_is_core_participant_call(self.p1)
+        result = self._collab_is_core_participant(self.p1)
         self.assertTrue(result)
 
         # is_core_participant test, False case:
-        result = self._collab_is_core_participant_call(self.tips)
+        result = self._collab_is_core_participant(self.tips)
         self.assertFalse(result)
 
         # is_administrator test:

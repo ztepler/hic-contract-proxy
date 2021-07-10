@@ -338,7 +338,7 @@ class HicBaseCase(TestCase):
         return op['parameters']['value']['prim'] == 'True'
 
 
-    def _collab_is_core_participant_call(
+    def _collab_is_core_participant(
             self, participant, callback=None,
             entrypoint='random_entry', amount=0):
         """ Testing that is_core_participant call emits correct callback """
@@ -362,7 +362,7 @@ class HicBaseCase(TestCase):
         pass
 
 
-    def _collab_is_administrator_call(
+    def _collab_is_administrator(
             self, participant, callback=None,
             entrypoint='random_entry', amount=0):
         """ Testing that is_administrator call emits correct callback """

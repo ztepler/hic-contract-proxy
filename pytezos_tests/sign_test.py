@@ -10,12 +10,12 @@ class SignTest(HicBaseCase):
         self._factory_create_proxy(self.admin, self.originate_params)
 
         # p1 is core participant, so result should be True:
-        result = self._collab_is_core_participant_call(
+        result = self._collab_is_core_participant(
             self.p1, callback=sign_kt, entrypoint=entrypoint)
         self.assertTrue(result)
 
         # tips is not core participant, so result should be False:
-        result = self._collab_is_core_participant_call(
+        result = self._collab_is_core_participant(
             self.tips, callback=sign_kt, entrypoint=entrypoint)
         self.assertFalse(result)
 
