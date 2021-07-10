@@ -39,6 +39,16 @@
                       (pair (map %shares address nat) (address %tokenAddress))))
           (nat %totalShares)) ;
   code { LAMBDA
+           unit
+           unit
+           { DROP ;
+             PUSH mutez 0 ;
+             AMOUNT ;
+             COMPARE ;
+             EQ ;
+             IF { UNIT }
+                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+         LAMBDA
            (pair (pair (pair (pair address (set address)) (pair bool address))
                        (pair (pair address (option address)) (pair (map address nat) address)))
                  nat)
@@ -52,16 +62,6 @@
              EQ ;
              IF { UNIT }
                 { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
-         LAMBDA
-           unit
-           unit
-           { DROP ;
-             PUSH mutez 0 ;
-             AMOUNT ;
-             COMPARE ;
-             EQ ;
-             IF { UNIT }
-                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
          DIG 2 ;
          UNPAIR ;
          IF_LEFT
@@ -70,7 +70,7 @@
                    { IF_LEFT
                        { IF_LEFT
                            { DROP ;
-                             DIG 2 ;
+                             SWAP ;
                              DROP ;
                              PUSH unit Unit ;
                              DIG 2 ;
@@ -81,7 +81,7 @@
                              PAIR }
                            { SWAP ;
                              PUSH unit Unit ;
-                             DIG 3 ;
+                             DIG 4 ;
                              SWAP ;
                              EXEC ;
                              DROP ;
@@ -109,7 +109,7 @@
                        { IF_LEFT
                            { SWAP ;
                              PUSH unit Unit ;
-                             DIG 3 ;
+                             DIG 4 ;
                              SWAP ;
                              EXEC ;
                              DROP ;
@@ -136,7 +136,7 @@
                              PAIR }
                            { SWAP ;
                              PUSH unit Unit ;
-                             DIG 3 ;
+                             DIG 4 ;
                              SWAP ;
                              EXEC ;
                              DROP ;
@@ -162,7 +162,7 @@
                              CONS ;
                              PAIR } } }
                    { IF_LEFT
-                       { DIG 2 ;
+                       { DIG 3 ;
                          DROP ;
                          IF_LEFT
                            { DROP ;
@@ -296,7 +296,7 @@
                              SWAP ;
                              EXEC ;
                              PAIR } }
-                       { DIG 3 ;
+                       { DIG 2 ;
                          DROP ;
                          IF_LEFT
                            { DROP ;
@@ -317,7 +317,7 @@
                              PAIR } } } }
                { IF_LEFT
                    { IF_LEFT
-                       { DIG 3 ;
+                       { DIG 2 ;
                          DROP ;
                          IF_LEFT
                            { DROP ;
@@ -356,7 +356,7 @@
                        { IF_LEFT
                            { SWAP ;
                              PUSH unit Unit ;
-                             DIG 3 ;
+                             DIG 4 ;
                              SWAP ;
                              EXEC ;
                              DROP ;
@@ -382,7 +382,7 @@
                              DIG 2 ;
                              CONS ;
                              PAIR }
-                           { DIG 3 ;
+                           { DIG 2 ;
                              DROP 2 ;
                              PUSH unit Unit ;
                              DIG 2 ;
@@ -395,7 +395,7 @@
                        { IF_LEFT
                            { SWAP ;
                              PUSH unit Unit ;
-                             DIG 3 ;
+                             DIG 4 ;
                              SWAP ;
                              EXEC ;
                              DROP ;
@@ -423,7 +423,7 @@
                              CONS ;
                              PAIR }
                            { DROP ;
-                             DIG 2 ;
+                             SWAP ;
                              DROP ;
                              PUSH unit Unit ;
                              DIG 2 ;
@@ -432,7 +432,7 @@
                              DROP ;
                              NIL operation ;
                              PAIR } }
-                       { DIG 3 ;
+                       { DIG 2 ;
                          DROP ;
                          IF_LEFT
                            { DROP ;
@@ -453,7 +453,7 @@
                              PAIR } } } } }
            { SWAP ;
              PUSH unit Unit ;
-             DIG 3 ;
+             DIG 4 ;
              SWAP ;
              EXEC ;
              DROP ;

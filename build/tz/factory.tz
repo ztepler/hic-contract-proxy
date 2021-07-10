@@ -27,6 +27,16 @@
                       bytes)
                 (pair (pair (address %address) (bytes %metadata)) (operation %operation))))) ;
   code { LAMBDA
+           unit
+           unit
+           { DROP ;
+             PUSH mutez 0 ;
+             AMOUNT ;
+             COMPARE ;
+             EQ ;
+             IF { UNIT }
+                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+         LAMBDA
            (pair (pair (pair address (pair (pair address address) (pair address address)))
                        (pair (big_map address bytes) (option address)))
                  (map string
@@ -42,23 +52,13 @@
              EQ ;
              IF { UNIT }
                 { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
-         LAMBDA
-           unit
-           unit
-           { DROP ;
-             PUSH mutez 0 ;
-             AMOUNT ;
-             COMPARE ;
-             EQ ;
-             IF { UNIT }
-                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
          DIG 2 ;
          UNPAIR ;
          IF_LEFT
            { IF_LEFT
                { IF_LEFT
                    { DROP ;
-                     DIG 2 ;
+                     SWAP ;
                      DROP ;
                      PUSH unit Unit ;
                      DIG 2 ;
@@ -106,7 +106,7 @@
                      NIL operation ;
                      PAIR }
                    { PUSH unit Unit ;
-                     DIG 3 ;
+                     DIG 4 ;
                      SWAP ;
                      EXEC ;
                      DROP ;
@@ -136,7 +136,7 @@
                      PAIR ;
                      NIL operation ;
                      PAIR } }
-               { DIG 3 ;
+               { DIG 2 ;
                  DROP ;
                  IF_LEFT
                    { PUSH unit Unit ;
@@ -219,7 +219,7 @@
                      PAIR } } }
            { IF_LEFT
                { PUSH unit Unit ;
-                 DIG 3 ;
+                 DIG 4 ;
                  SWAP ;
                  EXEC ;
                  DROP ;
@@ -247,7 +247,7 @@
                  PAIR }
                { SWAP ;
                  PUSH unit Unit ;
-                 DIG 3 ;
+                 DIG 4 ;
                  SWAP ;
                  EXEC ;
                  DROP ;
