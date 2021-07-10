@@ -68,7 +68,7 @@ type action is
 | Unregistry of unit
 | Update_operators of updateOperatorsParam
 | Is_core_participant of isParticipantParams
-| Is_participant_administrator of isParticipantParams
+| Is_administrator of isParticipantParams
 | Get_total_shares of getTotalSharesParams
 | Get_participant_shares of getParticipantShares
 | Update_manager of address
@@ -237,7 +237,7 @@ case params of
 | Curate(p) -> curate(store, p)
 | Default -> default(store)
 | Is_core_participant(p) -> isCoreParticipant(store, p)
-| Is_participant_administrator(p) -> isParticipantAdministrator(store, p)
+| Is_administrator(p) -> isParticipantAdministrator(store, p)
 | Get_total_shares(p) -> getTotalShares(store, p)
 | Get_participant_shares(p) -> getParticipantShares(store, p)
 | Update_manager(p) -> updateManager(store, p)

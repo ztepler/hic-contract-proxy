@@ -181,10 +181,8 @@
                                (contract %callback nat)
                                (address %participantAddress))
                             (contract %get_total_shares nat))))
-                (or (or (or (pair %is_core_participant
-                               (contract %callback bool)
-                               (address %participantAddress))
-                            (pair %is_participant_administrator
+                (or (or (or (pair %is_administrator (contract %callback bool) (address %participantAddress))
+                            (pair %is_core_participant
                                (contract %callback bool)
                                (address %participantAddress)))
                         (or (pair %mint_OBJKT
@@ -435,6 +433,7 @@
                            { DIG 2 ;
                              DROP ;
                              IF_LEFT
+                               { DROP ; NIL operation ; PAIR }
                                { DUP ;
                                  DUG 2 ;
                                  CAR ;
@@ -452,8 +451,7 @@
                                  NIL operation ;
                                  DIG 2 ;
                                  CONS ;
-                                 PAIR }
-                               { DROP ; NIL operation ; PAIR } }
+                                 PAIR } }
                            { IF_LEFT
                                { SWAP ;
                                  DUP ;
