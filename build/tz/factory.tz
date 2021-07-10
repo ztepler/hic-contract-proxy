@@ -1,25 +1,25 @@
 { parameter
-    (or (or (pair %add_contract
-               (lambda %contract
+    (or (or (pair %add_template
+               (string %name)
+               (lambda %originateFunc
                   (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
                               (pair (address %registryAddress) (address %tokenAddress)))
                         bytes)
-                  (pair (pair (address %address) (bytes %metadata)) (operation %operation)))
-               (string %name))
-            (pair %create_proxy (string %contractName) (bytes %params)))
-        (address %is_originated_contract)) ;
+                  (pair (pair (address %address) (bytes %metadata)) (operation %operation))))
+            (pair %create_proxy (bytes %params) (string %templateName)))
+        (or (address %is_originated_contract) (string %remove_template))) ;
   storage
-    (pair (pair (map %contracts
-                   string
-                   (lambda
-                      (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
-                                  (pair (address %registryAddress) (address %tokenAddress)))
-                            bytes)
-                      (pair (pair (address %address) (bytes %metadata)) (operation %operation))))
-                (pair %data
+    (pair (pair (pair %data
                    (pair (address %marketplaceAddress) (address %minterAddress))
-                   (pair (address %registryAddress) (address %tokenAddress))))
-          (big_map %originatedContracts address bytes)) ;
+                   (pair (address %registryAddress) (address %tokenAddress)))
+                (big_map %originatedContracts address bytes))
+          (map %templates
+             string
+             (lambda
+                (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
+                            (pair (address %registryAddress) (address %tokenAddress)))
+                      bytes)
+                (pair (pair (address %address) (bytes %metadata)) (operation %operation))))) ;
   code { UNPAIR ;
          IF_LEFT
            { IF_LEFT
@@ -27,65 +27,80 @@
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 DUP 3 ;
-                 CAR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
                  CDR ;
-                 DIG 3 ;
+                 DIG 2 ;
                  CAR ;
-                 CAR ;
-                 DUP 4 ;
-                 CAR ;
-                 DIG 4 ;
-                 CDR ;
                  SWAP ;
                  SOME ;
                  SWAP ;
                  UPDATE ;
-                 PAIR ;
+                 SWAP ;
+                 CAR ;
                  PAIR ;
                  NIL operation ;
                  PAIR }
                { SWAP ;
                  DUP ;
                  DUG 2 ;
-                 CAR ;
-                 CAR ;
+                 CDR ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
-                 CAR ;
-                 GET ;
-                 IF_NONE { PUSH string "Contract is not found" ; FAILWITH } {} ;
-                 SWAP ;
                  CDR ;
+                 GET ;
+                 IF_NONE { PUSH string "Template is not found" ; FAILWITH } {} ;
+                 SWAP ;
+                 CAR ;
                  DUP 3 ;
                  CAR ;
-                 CDR ;
+                 CAR ;
                  PAIR ;
                  EXEC ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
                  CDR ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
+                 DUP 3 ;
                  CAR ;
                  CDR ;
                  DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 DUP 4 ;
                  CAR ;
                  CAR ;
                  SWAP ;
                  SOME ;
                  SWAP ;
                  UPDATE ;
-                 DIG 2 ;
+                 DIG 3 ;
                  CAR ;
+                 CAR ;
+                 PAIR ;
                  PAIR ;
                  NIL operation ;
                  DIG 2 ;
                  CDR ;
                  CONS ;
                  PAIR } }
-           { DROP ; NIL operation ; PAIR } } }
+           { IF_LEFT
+               { DROP ; NIL operation ; PAIR }
+               { SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CDR ;
+                 SWAP ;
+                 NONE (lambda
+                         (pair (pair (pair address address) (pair address address)) bytes)
+                         (pair (pair address bytes) operation)) ;
+                 SWAP ;
+                 UPDATE ;
+                 SWAP ;
+                 CAR ;
+                 PAIR ;
+                 NIL operation ;
+                 PAIR } } } }
 
