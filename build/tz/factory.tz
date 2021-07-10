@@ -42,13 +42,28 @@
              EQ ;
              IF { UNIT }
                 { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
-         SWAP ;
+         LAMBDA
+           unit
+           unit
+           { DROP ;
+             PUSH mutez 0 ;
+             AMOUNT ;
+             COMPARE ;
+             EQ ;
+             IF { UNIT }
+                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+         DIG 2 ;
          UNPAIR ;
          IF_LEFT
            { IF_LEFT
                { IF_LEFT
                    { DROP ;
+                     DIG 2 ;
+                     DROP ;
+                     PUSH unit Unit ;
+                     DIG 2 ;
                      SWAP ;
+                     EXEC ;
                      DROP ;
                      DUP ;
                      CAR ;
@@ -90,7 +105,12 @@
                         { DROP ; PUSH string "Not proposed admin" ; FAILWITH } ;
                      NIL operation ;
                      PAIR }
-                   { SWAP ;
+                   { PUSH unit Unit ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
                      DUP ;
                      DUG 2 ;
                      DIG 3 ;
@@ -116,10 +136,15 @@
                      PAIR ;
                      NIL operation ;
                      PAIR } }
-               { DIG 2 ;
+               { DIG 3 ;
                  DROP ;
                  IF_LEFT
-                   { SWAP ;
+                   { PUSH unit Unit ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
                      DUP ;
                      DUG 2 ;
                      CDR ;
@@ -170,7 +195,12 @@
                      CDR ;
                      CONS ;
                      PAIR }
-                   { DUP ;
+                   { PUSH unit Unit ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     DUP ;
                      CAR ;
                      PUSH mutez 0 ;
                      DUP 4 ;
@@ -188,7 +218,12 @@
                      CONS ;
                      PAIR } } }
            { IF_LEFT
-               { SWAP ;
+               { PUSH unit Unit ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
+                 SWAP ;
                  DUP ;
                  DUG 2 ;
                  DIG 3 ;
@@ -211,6 +246,11 @@
                  NIL operation ;
                  PAIR }
                { SWAP ;
+                 PUSH unit Unit ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
                  DUP ;
                  DIG 3 ;
                  SWAP ;
