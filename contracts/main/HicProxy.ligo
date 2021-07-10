@@ -40,6 +40,9 @@ type storage is record [
     (* address of the Hic Et Nunc marketplace *)
     marketplaceAddress : address;
 
+    (* address of the Hic Et Nunc registry *)
+    registryAddress : address;
+
     (* set of participants that should sign and signs itself *)
     (* contract can call mint only when all core participant signed *)
     coreParticipants : set(address);
@@ -229,10 +232,9 @@ block {
 
 function registry(var store : storage; var params : registryParams) : (list(operation) * storage) is
 block {
-    (* TODO: make call to h=n SUBJKT *)
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
-} with ((nil: list(operation)), store)
+    const callToHic = callRegistry(store.registryAddress, params);
+} with (list[callToHic], store)
 
 
 function unregistry(var store : storage) : (list(operation) * storage) is

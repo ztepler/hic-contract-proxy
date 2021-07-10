@@ -74,6 +74,7 @@ block {
         minterAddress = data.minterAddress;
         marketplaceAddress = data.marketplaceAddress;
         tokenAddress = data.tokenAddress;
+        registryAddress = data.registryAddress;
         coreParticipants = coreParticipants;
         isPaused = False;
     ];
