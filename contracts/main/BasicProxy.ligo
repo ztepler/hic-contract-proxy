@@ -1,4 +1,4 @@
-#include "../partials/coreTypes.ligo"
+#include "../partials/factoryTypes.ligo"
 
 
 type shares is map(address, nat);

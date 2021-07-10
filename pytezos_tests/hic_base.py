@@ -86,6 +86,8 @@ class HicBaseCase(TestCase):
                 'hic_contract': hic_proxy_code
             },
             'originatedContracts': {},
+            'administrator': self.admin,
+            'proposedAdministrator': None
         }
 
         self.result = None

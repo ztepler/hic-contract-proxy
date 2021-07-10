@@ -1,4 +1,4 @@
-#include "../partials/coreTypes.ligo"
+#include "../partials/factoryTypes.ligo"
 
 (* Including hic et nunc interface: *)
 #include "../partials/hicetnunc.ligo"
@@ -71,7 +71,7 @@ type action is
 | Is_administrator of isParticipantParams
 | Get_total_shares of getTotalSharesParams
 | Get_participant_shares of getParticipantShares
-| Update_manager of address
+| Update_admin of address
 | Accept_ownership of unit
 | Trigger_pause of unit
 
@@ -185,7 +185,7 @@ block {
 } with ((nil: list(operation)), store)
 
 
-function updateManager(var store : storage; var newManager : address) : (list(operation) * storage) is
+function updateAdmin(var store : storage; var newAdmin : address) : (list(operation) * storage) is
 block {
     (* TODO: record proposed manager to storage *)
     skip;
@@ -240,7 +240,7 @@ case params of
 | Is_administrator(p) -> isParticipantAdministrator(store, p)
 | Get_total_shares(p) -> getTotalShares(store, p)
 | Get_participant_shares(p) -> getParticipantShares(store, p)
-| Update_manager(p) -> updateManager(store, p)
+| Update_admin(p) -> updateAdmin(store, p)
 | Accept_ownership -> acceptOwnership(store)
 | Registry(p) -> registry(store, p)
 | Unregistry -> unregistry(store)

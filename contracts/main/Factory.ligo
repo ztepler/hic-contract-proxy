@@ -1,47 +1,4 @@
-#include "../partials/coreTypes.ligo"
-
-(* TODO: need to decide: is it better to have all this data inside factory or
-    it is better to have them inside bytes that transfered when contract originated? *)
-type factoryData is record [
-    minterAddress : address;
-    marketplaceAddress : address;
-    registryAddress : address;
-    tokenAddress : address;
-]
-
-type originateContractFunc is (factoryData * bytes) -> originationResult
-
-
-type factoryStorage is record [
-    data : factoryData;
-
-    templates : map(string, originateContractFunc);
-
-    (* Ledger with all originated contracts and their params *)
-    originatedContracts : big_map(address, bytes);
-]
-
-
-type originationParams is record [
-    templateName : string;
-    params : bytes;
-    (* TODO: add context with some data, in example h=n minter address? *)
-]
-
-
-type addTemplateParams is record [
-    name : string;
-    originateFunc : originateContractFunc;
-]
-
-
-type isOriginatedResponse is bool
-
-
-type isOriginatedParams is record [
-    contractAddress: address;
-    callback: contract(isOriginatedResponse)
-]
+#include "../partials/factoryTypes.ligo"
 
 
 type factoryAction is
@@ -49,13 +6,14 @@ type factoryAction is
 | Add_template of addTemplateParams
 | Remove_template of string
 | Is_originated_contract of isOriginatedParams
+| Update_admin of address
+| Accept_ownership of unit
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
-    (* TODO: think about all this names too *)
     const optionalOriginator = Map.find_opt(params.templateName, factoryStore.templates);
     const proxyOriginator : originateContractFunc = case optionalOriginator of
     | Some(originator) -> originator
@@ -108,6 +66,20 @@ block {
 } with (list[returnOperation], factoryStore)
 
 
+function updateAdmin(var factoryStore : factoryStorage; var newAdmin : address) : (list(operation) * factoryStorage) is
+block {
+    (* TODO: record proposed manager to storage *)
+    skip;
+} with ((nil: list(operation)), factoryStore)
+
+
+function acceptOwnership(var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+block {
+    (* TODO: check that Tezos sender === proposed manager and change it *)
+    skip;
+} with ((nil: list(operation)), factoryStore)
+
+
 function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 case params of
@@ -115,4 +87,6 @@ case params of
 | Add_template(p) -> addTemplate(p, factoryStore)
 | Remove_template(p) -> removeTemplate(p, factoryStore)
 | Is_originated_contract(p) -> isOriginatedContract(p, factoryStore)
+| Update_admin(p) -> updateAdmin(factoryStore, p)
+| Accept_ownership -> acceptOwnership(factoryStore)
 end

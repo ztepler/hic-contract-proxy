@@ -68,6 +68,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             },
             'templates': {},
             'originatedContracts': {},
+            'administrator': pkh(client),
+            'proposedAdministrator': None
         }
 
         return self._deploy_contract(client, factory, factory_init)
