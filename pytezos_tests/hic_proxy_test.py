@@ -45,9 +45,9 @@ class MapInteractionTest(HicBaseCase):
             # lambda: self._collab_update_operators(self.admin, amount=100),
             lambda: self._collab_is_administrator(self.admin, amount=100),
             lambda: self._collab_get_total_shares(amount=100),
-            # lambda: self._collab_get_participant_shares(self.admin, amount=100),
-            # lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
-            # lambda: self._collab_accept_ownership(self.admin, amount=100),
+            lambda: self._collab_get_participant_shares(self.admin, amount=100),
+            lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
+            lambda: self._collab_accept_ownership(self.admin, amount=100),
             # lambda: self._collab_trigger_pause(self.admin, amount=100),
         ]
 
