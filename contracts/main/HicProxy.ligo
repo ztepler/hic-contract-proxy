@@ -86,13 +86,18 @@ function checkSenderIsAdmin(var store : storage) : unit is
     else failwith("Entrypoint can call only administrator");
 
 
+function checkIsNotPaused(var store : storage) : unit is
+    if store.isPaused then failwith("Contract is paused")
+    else unit;
+
+
 function execute(const params : executeParams; const store : storage)
     : (list(operation) * storage) is
 
 block {
-    (* TODO: check contract.isPaused is False *)
     (* This is the only entrypoint (besides default) that allows tez in *)
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const operations : list(operation) =
         params.lambda(store, params.packedParams);
 } with (operations, store)
@@ -102,8 +107,7 @@ function mint_OBJKT(var store : storage; const params: mintParams) : (list(opera
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    (* TODO: check if contract is paused or not *)
-
+    checkIsNotPaused(store);
     const callToHic = callMintOBJKT(store.minterAddress, params);
 } with (list[callToHic], store)
 
@@ -112,6 +116,7 @@ function swap(var store : storage; var params : swapParams) : (list(operation) *
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
 
@@ -120,6 +125,7 @@ function cancelSwap(var store : storage; var params : cancelSwapParams) : (list(
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callCancelSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
 
@@ -128,6 +134,7 @@ function collect(var store : storage; var params : collectParams) : (list(operat
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callCollect(store.marketplaceAddress, params);
 } with (list[callToHic], store)
 
@@ -136,6 +143,7 @@ function curate(var store : storage; var params : curateParams) : (list(operatio
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callCurate(store.minterAddress, params);
 } with (list[callToHic], store)
 
@@ -172,7 +180,6 @@ block {
 function isCoreParticipant(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-
     const isCore = store.coreParticipants contains params.participantAddress;
     const returnOperation = Tezos.transaction(isCore, 0mutez, params.callback);
 } with (list[returnOperation], store)
@@ -234,6 +241,7 @@ function registry(var store : storage; var params : registryParams) : (list(oper
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callRegistry(store.registryAddress, params);
 } with (list[callToHic], store)
 
@@ -242,16 +250,16 @@ function unregistry(var store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callUnregistry(store.registryAddress);
 } with (list[callToHic], store)
 
 
 function triggerPause(var store : storage) : (list(operation) * storage) is
 block {
-    (* TODO: set contract.isPaused to the opposite *)
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    (* TODO: not implemented *)
+    store.isPaused := not store.isPaused;
 } with ((nil: list(operation)), store)
 
 
@@ -259,6 +267,7 @@ function updateOperators(var store : storage; var params : updateOperatorsParam)
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
     const callToHic = callUpdateOperators(store.tokenAddress, params);
 } with (list[callToHic], store)
 
