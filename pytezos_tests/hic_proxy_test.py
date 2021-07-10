@@ -74,9 +74,9 @@ class MapInteractionTest(HicBaseCase):
         result = self._collab_is_administrator(self.tips)
         self.assertFalse(result)
 
-        # get_total_shares test, True case:
-
-        # get_total_shares test, False case:
+        # get_total_shares test:
+        result = self._collab_get_total_shares(self.admin)
+        self.assertEqual(result, self.collab_storage['totalShares'])
 
         # get_participant_shares test, True case:
 
@@ -86,6 +86,9 @@ class MapInteractionTest(HicBaseCase):
     def test_interactions(self):
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
+
+        # Running views test before any contract updates:
+        self._test_views()
 
         # Test mint call from admin succeed:
         self._collab_mint(self.admin)
@@ -185,6 +188,8 @@ class MapInteractionTest(HicBaseCase):
         self.assertTrue(msg in str(cm.exception))
 
         self._test_no_tez_entrypoints()
+
+        # Running views again for collab with 1 participant:
         self._test_views()
 
         # TODO: test that only admin can call:

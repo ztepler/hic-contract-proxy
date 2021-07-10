@@ -164,11 +164,15 @@ class HicBaseCase(TestCase):
             'callback': callback + '%' + entrypoint
         }
 
-        return self._call_view_entrypoint(
+        result = self._call_view_entrypoint(
             self.factory.is_originated_contract,
             params,
             self.factory_storage,
+            callback,
+            entrypoint,
             amount=amount)
+
+        return result.operations[0]['parameters']['value']['prim'] == 'True'
 
 
     def _factory_update_admin(self, sender, proposed_admin, amount=0):
@@ -319,13 +323,14 @@ class HicBaseCase(TestCase):
         self.assertEqual(calc_amounts, amounts)
 
 
-    def _call_view_entrypoint(self, entrypoint, params, storage, amount=0):
+    def _call_view_entrypoint(
+            self, entrypoint, params, storage, callback,
+            entrypoint_name, amount=0):
         """ The returned operations from contract very similar for different
             entrypoints, so it require similar checks: """
 
         # Works for factory & collabs both, this is why storage parameter
         # transfered. TODO: Maybe it would be better to use attrib name?
-        callback, entrypoint_name = params['callback'].split('%')
 
         self.result = entrypoint(params).interpret(
             storage=storage, sender=self.p1, amount=amount)
@@ -335,7 +340,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(op['parameters']['entrypoint'], entrypoint_name)
         self.assertEqual(op['destination'], callback)
 
-        return op['parameters']['value']['prim'] == 'True'
+        return self.result
 
 
     def _collab_is_core_participant(
@@ -350,11 +355,15 @@ class HicBaseCase(TestCase):
             'callback': callback + '%' + entrypoint
         }
 
-        return self._call_view_entrypoint(
+        result = self._call_view_entrypoint(
             self.collab.is_core_participant,
             params,
             self.collab_storage,
+            callback,
+            entrypoint,
             amount=amount)
+
+        return result.operations[0]['parameters']['value']['prim'] == 'True'
 
 
     def _collab_update_operators(self, sender, amount=0):
@@ -374,11 +383,15 @@ class HicBaseCase(TestCase):
             'callback': callback + '%' + entrypoint
         }
 
-        return self._call_view_entrypoint(
+        result = self._call_view_entrypoint(
             self.collab.is_administrator,
             params,
             self.collab_storage,
+            callback,
+            entrypoint,
             amount=amount)
+
+        return result.operations[0]['parameters']['value']['prim'] == 'True'
 
 
     def _collab_get_total_shares(
@@ -387,9 +400,17 @@ class HicBaseCase(TestCase):
         """ Testing that get_total_shares call emits correct callback """
 
         callback = callback or self.random_contract_address
+        params = callback + '%' + entrypoint
 
-        # TODO: not implemented
-        pass
+        result = self._call_view_entrypoint(
+            self.collab.get_total_shares,
+            params,
+            self.collab_storage,
+            callback,
+            entrypoint,
+            amount=amount)
+
+        return int(result.operations[0]['parameters']['value']['int'])
 
 
     def _collab_get_participant_shares(
