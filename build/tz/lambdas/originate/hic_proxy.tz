@@ -726,7 +726,20 @@
                                  SWAP ;
                                  EXEC ;
                                  DROP ;
+                                 DUP ;
+                                 CAR ;
+                                 CDR ;
+                                 CDR ;
+                                 CAR ;
+                                 CONTRACT %unregistry unit ;
+                                 IF_NONE { PUSH string "No registry found" ; FAILWITH } {} ;
+                                 PUSH mutez 0 ;
+                                 PUSH unit Unit ;
+                                 TRANSFER_TOKENS ;
+                                 SWAP ;
                                  NIL operation ;
+                                 DIG 2 ;
+                                 CONS ;
                                  PAIR }
                                { SWAP ;
                                  PUSH unit Unit ;
