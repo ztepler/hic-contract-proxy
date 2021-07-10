@@ -30,7 +30,47 @@
          IF_LEFT
            { IF_LEFT
                { IF_LEFT
-                   { DROP ; NIL operation ; PAIR }
+                   { DROP ;
+                     DUP ;
+                     CAR ;
+                     CDR ;
+                     CDR ;
+                     IF_NONE { PUSH string "Not proposed admin" ; FAILWITH } {} ;
+                     DUP ;
+                     SENDER ;
+                     COMPARE ;
+                     EQ ;
+                     IF { SWAP ;
+                          DUP ;
+                          DUG 2 ;
+                          CDR ;
+                          DUP 3 ;
+                          CAR ;
+                          CDR ;
+                          DIG 3 ;
+                          CAR ;
+                          CAR ;
+                          CDR ;
+                          DIG 3 ;
+                          PAIR ;
+                          PAIR ;
+                          PAIR ;
+                          DUP ;
+                          CDR ;
+                          NONE address ;
+                          DUP 3 ;
+                          CAR ;
+                          CDR ;
+                          CAR ;
+                          PAIR ;
+                          DIG 2 ;
+                          CAR ;
+                          CAR ;
+                          PAIR ;
+                          PAIR }
+                        { DROP ; PUSH string "Not proposed admin" ; FAILWITH } ;
+                     NIL operation ;
+                     PAIR }
                    { SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -135,5 +175,29 @@
                  PAIR ;
                  NIL operation ;
                  PAIR }
-               { DROP ; NIL operation ; PAIR } } } }
+               { SWAP ;
+                 DUP ;
+                 CAR ;
+                 CAR ;
+                 CAR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF {} { PUSH string "Entrypoint can call only administrator" ; FAILWITH } ;
+                 DUP ;
+                 CDR ;
+                 DIG 2 ;
+                 SOME ;
+                 DUP 3 ;
+                 CAR ;
+                 CDR ;
+                 CAR ;
+                 PAIR ;
+                 DIG 2 ;
+                 CAR ;
+                 CAR ;
+                 PAIR ;
+                 PAIR ;
+                 NIL operation ;
+                 PAIR } } } }
 
