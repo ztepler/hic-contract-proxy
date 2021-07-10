@@ -83,11 +83,17 @@ function checkSenderIsAdmin(var store : storage) : unit is
     else failwith("Entrypoint can call only administrator");
 
 
+function checkNoAmount(const p : unit) : unit is
+    if (Tezos.amount = 0tez) then unit
+    else failwith("This entrypoint should not receive tez");
+
+
 function execute(const params : executeParams; const store : storage)
     : (list(operation) * storage) is
 
 block {
     (* TODO: check contract.isPaused is False *)
+    (* This is the only entrypoint (besides default) that allows tez in *)
     checkSenderIsAdmin(store);
     const operations : list(operation) =
         params.lambda(store, params.packedParams);
@@ -96,6 +102,7 @@ block {
 
 function mint_OBJKT(var store : storage; const params: mintParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(store);
     (* TODO: check if contract is paused or not *)
 
@@ -105,6 +112,7 @@ block {
 
 function swap(var store : storage; var params : swapParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(store);
     const callToHic = callSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
@@ -112,6 +120,7 @@ block {
 
 function cancelSwap(var store : storage; var params : cancelSwapParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(store);
     const callToHic = callCancelSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
@@ -119,6 +128,7 @@ block {
 
 function collect(var store : storage; var params : collectParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(store);
     const callToHic = callCollect(store.marketplaceAddress, params);
 } with (list[callToHic], store)
@@ -126,6 +136,7 @@ block {
 
 function curate(var store : storage; var params : curateParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(store);
     const callToHic = callCurate(store.minterAddress, params);
 } with (list[callToHic], store)
@@ -162,6 +173,8 @@ block {
 
 function isCoreParticipant(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
+
     const isCore = store.coreParticipants contains params.participantAddress;
     const returnOperation = Tezos.transaction(isCore, 0mutez, params.callback);
 } with (list[returnOperation], store)
@@ -169,59 +182,66 @@ block {
 
 function isParticipantAdministrator(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
 block {
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function getTotalShares(var store : storage; var params : getTotalSharesParams) : (list(operation) * storage) is
 block {
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function getParticipantShares(var store : storage; var params : getParticipantShares) : (list(operation) * storage) is
 block {
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function updateAdmin(var store : storage; var newAdmin : address) : (list(operation) * storage) is
 block {
-    (* TODO: record proposed manager to storage *)
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function acceptOwnership(var store : storage) : (list(operation) * storage) is
 block {
-    (* TODO: check that Tezos sender === proposed manager and change it *)
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function registry(var store : storage; var params : registryParams) : (list(operation) * storage) is
 block {
     (* TODO: make call to h=n SUBJKT *)
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function unregistry(var store : storage) : (list(operation) * storage) is
 block {
     (* TODO: make call to h=n SUBJKT *)
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function triggerPause(var store : storage) : (list(operation) * storage) is
 block {
     (* TODO: set contract.isPaused to the opposite *)
-    skip;
+    checkNoAmount(Unit);
+    (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
 
 function updateOperators(var store : storage; var params : updateOperatorsParam) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(store);
     const callToHic = callUpdateOperators(store.tokenAddress, params);
 } with (list[callToHic], store)
