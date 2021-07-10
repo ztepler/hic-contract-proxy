@@ -214,8 +214,15 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.marketplace = self._find_contract_by_hash(client, opg['hash'])
 
         # Deploying registry
-        # TODO: !!^^
-        self.registry = self.marketplace
+        storage = read_storage('subjkt')
+        storage.update({'manager': pkh(client)})
+        opg = self._deploy_contract(
+            client=client,
+            contract=read_contract('subjkt'),
+            storage=storage)
+
+        self.bake_block()
+        self.registry = self._find_contract_by_hash(client, opg['hash'])
 
 
     def _add_operator(self, contract, owner_client, owner, operator, token_id):
