@@ -104,6 +104,30 @@ class MapInteractionTest(HicBaseCase):
         msg = 'Collab contract should have at least one core'
         self.assertTrue(msg in str(cm.exception))
 
+        # Checking that entrypoints is not allow to send any tez:
+        calls = [
+            lambda: self._collab_mint_call(self.admin, amount=100),
+            lambda: self._collab_swap_call(self.admin, amount=100),
+            lambda: self._collab_cancel_swap_call(self.admin, amount=100),
+            lambda: self._collab_collect_call(self.admin, amount=100),
+            lambda: self._collab_curate_call(self.admin, amount=100),
+            # lambda: self._collab_registry_call(self.admin, amount=100),
+            # lambda: self._collab_unregistry_call(self.admin, amount=100),
+            lambda: self._collab_is_core_participant_call(self.admin, amount=100),
+            # lambda: self._collab_update_operators(self.admin, amount=100),
+            # lambda: self._collab_is_administrator_call(self.admin, amount=100),
+            # lambda: self._collab_get_total_shares(amount=100),
+            # lambda: self._collab_get_participant_shares(self.admin, amount=100),
+            # lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
+            # lambda: self._collab_accept_ownership(self.admin, amount=100),
+            # lambda: self._collab_trigger_pause(self.admin, amount=100),
+        ]
+
+        for call in calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+
         # TODO: Collab with too many participants can't be created:
         # TODO: NEED TO TEST LIMIT
         # TODO: need to make MORE tests

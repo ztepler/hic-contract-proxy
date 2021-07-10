@@ -42,6 +42,12 @@ def split_amount(amount, shares, last_address):
 # ? It would be good to make them independent, but I want to support all
 # this self.assert* methods, so I don't know how to make it good
 
+# MAYBE: all this _factory / _sign should go to the BaseCase, so it would
+# be possible to have different base cases for different collabs:
+# - HicBaseCase for HicProxy & Bigmap one,
+# - BasicBaseCase for BasicProxy
+# etc
+
 class HicBaseCase(TestCase):
 
     def setUp(self):
@@ -99,6 +105,8 @@ class HicBaseCase(TestCase):
 
         self.result = None
         self.total_incomings = 0
+
+        self.random_contract_address = 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
 
 
     def _factory_create_proxy(self, sender, params, contract='hic_contract', amount=0):
@@ -164,6 +172,7 @@ class HicBaseCase(TestCase):
         result = self.factory.update_admin(proposed_admin).interpret(
             storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
+        # TODO: implement some checks?
 
 
     def _factory_accept_ownership(self, sender, amount=0):
@@ -171,6 +180,7 @@ class HicBaseCase(TestCase):
         result = self.factory.accept_ownership().interpret(
             storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
+        # TODO: implement some checks?
 
 
     def _collab_mint_call(self, sender, amount=0):
@@ -305,8 +315,11 @@ class HicBaseCase(TestCase):
 
 
     def _collab_is_core_participant_call(
-            self, participant, sign_callback, sign_entrypoint, amount=0):
+            self, participant, sign_callback=None,
+            sign_entrypoint='random_entry', amount=0):
         """ Testing that is_core_participant call emits correct callback """
+
+        sign_callback = sign_callback or self.random_contract_address
 
         params = {
             'participantAddress': participant,
@@ -320,6 +333,75 @@ class HicBaseCase(TestCase):
             amount=amount)
 
 
+    def _collab_update_operators(self, sender, amount=0):
+        # TODO: not implemented
+        pass
+
+
+    def _collab_is_administrator_call(
+            self, participant, sign_callback=None,
+            sign_entrypoint='random_entry', amount=0):
+        """ Testing that is_administrator call emits correct callback """
+
+        sign_callback = sign_callback or self.random_contract_address
+
+        # TODO: not implemented
+        pass
+
+
+    def _collab_get_total_shares(
+            self, sign_callback=None,
+            sign_entrypoint='random_entry', amount=0):
+        """ Testing that get_total_shares call emits correct callback """
+
+        sign_callback = sign_callback or self.random_contract_address
+
+        # TODO: not implemented
+        pass
+
+
+    def _collab_get_participant_shares(
+            self, participant, sign_callback=None,
+            sign_entrypoint='random_entry', amount=0):
+        """ Testing that get_participant_shares call emits correct callback """
+
+        sign_callback = sign_callback or self.random_contract_address
+
+        # TODO: not implemented
+        pass
+
+
+    def _collab_update_admin(self, sender, proposed_admin, amount=0):
+
+        '''
+        result = self.factory.update_admin(proposed_admin).interpret(
+            storage=self.factory_storage, sender=sender, amount=amount)
+        self.factory_storage = result.storage
+        '''
+        pass
+        # TODO: not implemented
+        # TODO: implement some checks?
+
+
+    def _collab_accept_ownership(self, sender, amount=0):
+
+        '''
+        result = self.factory.accept_ownership().interpret(
+            storage=self.factory_storage, sender=sender, amount=amount)
+        self.factory_storage = result.storage
+        '''
+        pass
+        # TODO: not implemented
+        # TODO: implement some checks?
+
+
+    def _collab_trigger_pause(self, sender, amount=0):
+
+        # TODO: not implemented
+        pass
+
+
+    ''' THIS METHOD IS NOT IMPLEMENTED (and looks like it would not be)
     def _collab_is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint, amount=0):
         """ Testing that is_minted_hash call emits correct callback """
 
@@ -330,4 +412,5 @@ class HicBaseCase(TestCase):
 
         return self._call_view_entrypoint(
             self.collab.is_minted_hash, params, self.collab_storage, amount=amount)
+    '''
 
