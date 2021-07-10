@@ -377,25 +377,17 @@ class HicBaseCase(TestCase):
 
     def _collab_update_admin(self, sender, proposed_admin, amount=0):
 
-        '''
-        result = self.factory.update_admin(proposed_admin).interpret(
-            storage=self.factory_storage, sender=sender, amount=amount)
-        self.factory_storage = result.storage
-        '''
-        pass
-        # TODO: not implemented
+        result = self.collab.update_admin(proposed_admin).interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+        self.collab_storage = result.storage
         # TODO: implement some checks?
 
 
     def _collab_accept_ownership(self, sender, amount=0):
 
-        '''
-        result = self.factory.accept_ownership().interpret(
-            storage=self.factory_storage, sender=sender, amount=amount)
-        self.factory_storage = result.storage
-        '''
-        pass
-        # TODO: not implemented
+        result = self.collab.accept_ownership().interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+        self.collab_storage = result.storage
         # TODO: implement some checks?
 
 
