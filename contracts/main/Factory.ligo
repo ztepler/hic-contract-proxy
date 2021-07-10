@@ -10,15 +10,21 @@ type factoryAction is
 | Accept_ownership of unit
 
 
-function checkSenderIsAdmin(var factoryStore : factoryStorage) : unit is
+function checkSenderIsAdmin(const factoryStore : factoryStorage) : unit is
     if (Tezos.sender = factoryStore.administrator) then unit
     else failwith("Entrypoint can call only administrator");
+
+
+function checkNoAmount(const p : unit) : unit is
+    if (Tezos.amount = 0tez) then unit
+    else failwith("This entrypoint should not receive tez");
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 block {
 
+    checkNoAmount(Unit);
     const optionalOriginator = Map.find_opt(params.templateName, factoryStore.templates);
     const proxyOriginator : originateContractFunc = case optionalOriginator of
     | Some(originator) -> originator
@@ -38,6 +44,7 @@ function addTemplate(
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(factoryStore);
     (* Rewriting contract with the same name is allowed: *)
     factoryStore.templates[params.name] := params.originateFunc;
@@ -49,6 +56,7 @@ function removeTemplate(
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(factoryStore);
     factoryStore.templates := Big_map.remove(templateName, factoryStore.templates);
 } with ((nil : list(operation)), factoryStore)
@@ -60,7 +68,7 @@ function isOriginatedContract(
     var factoryStore : factoryStorage) is
 
 block {
-    (* TODO: check that this operation did not received any tez *)
+    checkNoAmount(Unit);
     const isOriginatedOption = Big_map.find_opt(params.contractAddress, factoryStore.originatedContracts);
     const isOriginated : bool = case isOriginatedOption of
     | Some(metadata) -> True
@@ -73,6 +81,7 @@ block {
 
 function updateAdmin(var factoryStore : factoryStorage; const newAdmin : address) : (list(operation) * factoryStorage) is
 block {
+    checkNoAmount(Unit);
     checkSenderIsAdmin(factoryStore);
     factoryStore.proposedAdministrator := Some(newAdmin);
 } with ((nil: list(operation)), factoryStore)
@@ -80,6 +89,8 @@ block {
 
 function acceptOwnership(var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 block {
+    checkNoAmount(Unit);
+
     const proposedAdministrator : address = case factoryStore.proposedAdministrator of
     | Some(proposed) -> proposed
     | None -> (failwith("Not proposed admin") : address)
