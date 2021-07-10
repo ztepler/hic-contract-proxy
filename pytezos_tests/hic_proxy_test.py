@@ -31,6 +31,36 @@ class MapInteractionTest(HicBaseCase):
         self._collab_accept_ownership(self.tips)
 
 
+    def _test_no_tez_entrypoints(self):
+        # Checking that entrypoints is not allow to send any tez:
+        calls = [
+            lambda: self._collab_mint(self.admin, amount=100),
+            lambda: self._collab_swap(self.admin, amount=100),
+            lambda: self._collab_cancel_swap(self.admin, amount=100),
+            lambda: self._collab_collect(self.admin, amount=100),
+            lambda: self._collab_curate(self.admin, amount=100),
+            # lambda: self._collab_registry(self.admin, amount=100),
+            # lambda: self._collab_unregistry(self.admin, amount=100),
+            lambda: self._collab_is_core_participant_call(self.admin, amount=100),
+            # lambda: self._collab_update_operators(self.admin, amount=100),
+            # lambda: self._collab_is_administrator_call(self.admin, amount=100),
+            # lambda: self._collab_get_total_shares(amount=100),
+            # lambda: self._collab_get_participant_shares(self.admin, amount=100),
+            # lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
+            # lambda: self._collab_accept_ownership(self.admin, amount=100),
+            # lambda: self._collab_trigger_pause(self.admin, amount=100),
+        ]
+
+        for call in calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+
+    def _test_views(self):
+        # TODO: not implemented
+        pass
+
+
     def test_interactions(self):
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
@@ -132,29 +162,8 @@ class MapInteractionTest(HicBaseCase):
         msg = 'Collab contract should have at least one core'
         self.assertTrue(msg in str(cm.exception))
 
-        # Checking that entrypoints is not allow to send any tez:
-        calls = [
-            lambda: self._collab_mint(self.admin, amount=100),
-            lambda: self._collab_swap(self.admin, amount=100),
-            lambda: self._collab_cancel_swap(self.admin, amount=100),
-            lambda: self._collab_collect(self.admin, amount=100),
-            lambda: self._collab_curate(self.admin, amount=100),
-            # lambda: self._collab_registry(self.admin, amount=100),
-            # lambda: self._collab_unregistry(self.admin, amount=100),
-            lambda: self._collab_is_core_participant_call(self.admin, amount=100),
-            # lambda: self._collab_update_operators(self.admin, amount=100),
-            # lambda: self._collab_is_administrator_call(self.admin, amount=100),
-            # lambda: self._collab_get_total_shares(amount=100),
-            # lambda: self._collab_get_participant_shares(self.admin, amount=100),
-            # lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
-            # lambda: self._collab_accept_ownership(self.admin, amount=100),
-            # lambda: self._collab_trigger_pause(self.admin, amount=100),
-        ]
-
-        for call in calls:
-            with self.assertRaises(MichelsonRuntimeError) as cm:
-                call()
-            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+        self._test_no_tez_entrypoints()
+        self._test_views()
 
         # TODO: test that only admin can call:
         # - registry
