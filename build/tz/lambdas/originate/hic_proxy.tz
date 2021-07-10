@@ -134,7 +134,13 @@
   DUP 3 ;
   CDR ;
   CDR ;
-  DUP 3 ;
+  PAIR ;
+  SWAP ;
+  DUP ;
+  DUG 2 ;
+  CDR ;
+  CAR ;
+  DUP 4 ;
   CDR ;
   CAR ;
   PAIR ;
@@ -172,8 +178,8 @@
                                   (pair (pair (pair (pair (pair (address %administrator) (set %coreParticipants address))
                                                           (pair (bool %isPaused) (address %marketplaceAddress)))
                                                     (pair (pair (address %minterAddress) (option %proposedAdministrator address))
-                                                          (pair (map %shares address nat) (address %tokenAddress))))
-                                              (nat %totalShares))
+                                                          (pair (address %registryAddress) (map %shares address nat))))
+                                              (pair (address %tokenAddress) (nat %totalShares)))
                                         bytes)
                                   (list operation))
                                (bytes %packedParams)))
@@ -201,8 +207,8 @@
         (pair (pair (pair (pair (address %administrator) (set %coreParticipants address))
                           (pair (bool %isPaused) (address %marketplaceAddress)))
                     (pair (pair (address %minterAddress) (option %proposedAdministrator address))
-                          (pair (map %shares address nat) (address %tokenAddress))))
-              (nat %totalShares)) ;
+                          (pair (address %registryAddress) (map %shares address nat))))
+              (pair (address %tokenAddress) (nat %totalShares))) ;
       code { LAMBDA
                unit
                unit
@@ -215,8 +221,8 @@
                     { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
              LAMBDA
                (pair (pair (pair (pair address (set address)) (pair bool address))
-                           (pair (pair address (option address)) (pair (map address nat) address)))
-                     nat)
+                           (pair (pair address (option address)) (pair address (map address nat))))
+                     (pair address nat))
                unit
                { CAR ;
                  CAR ;
@@ -397,7 +403,7 @@
                                  CAR ;
                                  CDR ;
                                  CDR ;
-                                 CAR ;
+                                 CDR ;
                                  ITER { SWAP ;
                                         PAIR ;
                                         DUP ;
@@ -419,7 +425,7 @@
                                         CAR ;
                                         CDR ;
                                         CDR ;
-                                        CAR ;
+                                        CDR ;
                                         SIZE ;
                                         SWAP ;
                                         DUP ;
@@ -428,6 +434,7 @@
                                         EQ ;
                                         IF { DUP 3 ; AMOUNT ; SUB }
                                            { DUP 5 ;
+                                             CDR ;
                                              CDR ;
                                              DUP 5 ;
                                              CDR ;
@@ -532,7 +539,7 @@
                                  CAR ;
                                  CDR ;
                                  CDR ;
-                                 CAR ;
+                                 CDR ;
                                  DIG 4 ;
                                  CDR ;
                                  GET ;
@@ -552,6 +559,7 @@
                                  SWAP ;
                                  PUSH mutez 0 ;
                                  DUP 3 ;
+                                 CDR ;
                                  CDR ;
                                  TRANSFER_TOKENS ;
                                  SWAP ;
@@ -645,13 +653,28 @@
                                  CONS ;
                                  PAIR }
                                { DIG 2 ;
-                                 DROP 2 ;
+                                 DROP ;
+                                 SWAP ;
                                  PUSH unit Unit ;
-                                 DIG 2 ;
+                                 DIG 3 ;
                                  SWAP ;
                                  EXEC ;
                                  DROP ;
+                                 DUP ;
+                                 DUG 2 ;
+                                 CAR ;
+                                 CDR ;
+                                 CDR ;
+                                 CAR ;
+                                 CONTRACT %registry (pair (bytes %metadata) (bytes %subjkt)) ;
+                                 IF_NONE { PUSH string "No registry found" ; FAILWITH } {} ;
+                                 PUSH mutez 0 ;
+                                 DIG 2 ;
+                                 TRANSFER_TOKENS ;
+                                 SWAP ;
                                  NIL operation ;
+                                 DIG 2 ;
+                                 CONS ;
                                  PAIR } } }
                        { IF_LEFT
                            { IF_LEFT
@@ -753,10 +776,8 @@
                  DROP ;
                  DUP ;
                  DUG 2 ;
+                 CDR ;
                  CAR ;
-                 CDR ;
-                 CDR ;
-                 CDR ;
                  CONTRACT %update_operators
                    (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                              (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
