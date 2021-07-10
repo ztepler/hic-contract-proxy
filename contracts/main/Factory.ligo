@@ -1,20 +1,21 @@
 #include "../partials/coreTypes.ligo"
 
+(* TODO: need to decide: is it better to have all this data inside factory or
+    it is better to have them inside bytes that transfered when contract originated? *)
 type factoryData is record [
-    (* TODO: move this minter address to specific origination of hic proxy *)
     minterAddress : address;
     marketplaceAddress : address;
     registryAddress : address;
     tokenAddress : address;
 ]
 
-type originateContractType is (factoryData * bytes) -> originationResult
+type originateContractFunc is (factoryData * bytes) -> originationResult
 
 
 type factoryStorage is record [
     data : factoryData;
 
-    contracts : map(string, originateContractType);
+    templates : map(string, originateContractFunc);
 
     (* Ledger with all originated contracts and their params *)
     originatedContracts : big_map(address, bytes);
@@ -22,20 +23,21 @@ type factoryStorage is record [
 
 
 type originationParams is record [
-    contractName : string;
+    templateName : string;
     params : bytes;
     (* TODO: add context with some data, in example h=n minter address? *)
 ]
 
 
-type addContractParams is record [
+type addTemplateParams is record [
     name : string;
-    contract : originateContractType;
+    originateFunc : originateContractFunc;
 ]
 
 type factoryAction is
 | Create_proxy of originationParams
-| Add_contract of addContractParams
+| Add_template of addTemplateParams
+| Remove_template of string
 | Is_originated_contract of address
 
 
@@ -43,12 +45,11 @@ function createProxy(const params : originationParams; var factoryStore : factor
     : (list(operation) * factoryStorage) is
 block {
 
-    (* TODO: check if factory is paused or not *)
     (* TODO: think about all this names too *)
-    const optionalOriginator = Map.find_opt(params.contractName, factoryStore.contracts);
-    const proxyOriginator : originateContractType = case optionalOriginator of
+    const optionalOriginator = Map.find_opt(params.templateName, factoryStore.templates);
+    const proxyOriginator : originateContractFunc = case optionalOriginator of
     | Some(originator) -> originator
-    | None -> (failwith("Contract is not found") : originateContractType)
+    | None -> (failwith("Template is not found") : originateContractFunc)
     end;
 
     const result : originationResult = proxyOriginator(
@@ -59,15 +60,26 @@ block {
 } with (list[result.operation], factoryStore)
 
 
-function addContract(
-    const params : addContractParams;
+function addTemplate(
+    const params : addTemplateParams;
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
     (* TODO: check that called by factory admin *)
-    (* TODO: should it check that this name is not existed or rewrite is good? *)
-    factoryStore.contracts[params.name] := params.contract;
+    (* Rewriting contract with the same name is allowed: *)
+    factoryStore.templates[params.name] := params.originateFunc;
 } with ((nil : list(operation)), factoryStore)
+
+
+function removeTemplate(
+    const templateName : string;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    (* TODO: check that called by factory admin *)
+    factoryStore.templates := Big_map.remove(templateName, factoryStore.templates);
+} with ((nil : list(operation)), factoryStore)
+
 
 
 function isOriginatedContract(
@@ -84,6 +96,7 @@ function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 case params of
 | Create_proxy(p) -> createProxy(p, factoryStore)
-| Add_contract(p) -> addContract(p, factoryStore)
+| Add_template(p) -> addTemplate(p, factoryStore)
+| Remove_template(p) -> removeTemplate(p, factoryStore)
 | Is_originated_contract(p) -> isOriginatedContract(p, factoryStore)
 end

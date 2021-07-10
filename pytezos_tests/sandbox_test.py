@@ -66,7 +66,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
                 'registryAddress': registry_address,
                 'tokenAddress': token_address
             },
-            'contracts': {},
+            'templates': {},
             'originatedContracts': {},
         }
 
@@ -244,14 +244,14 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
 
 
-        # Adding contracts to the factory:
+        # Adding templates to the factory:
         for lambda_name, filename in LAMBDA_ORIGINATE.items():
             originate_lambda = open(
                 join(dirname(__file__), filename)).read()
 
-            self.factory.add_contract({
+            self.factory.add_template({
                 'name': lambda_name,
-                'contract': originate_lambda
+                'originateFunc': originate_lambda
             }).inject()
             self.bake_block()
 
@@ -286,7 +286,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             participants).interpret().storage.hex()
 
         originate_params = {
-            'contractName': 'hic_proxy',
+            'templateName': 'hic_proxy',
             'params': packed_participants
         }
 
@@ -500,7 +500,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             participants).interpret().storage.hex()
 
         originate_params = {
-            'contractName': 'hic_proxy',
+            'templateName': 'hic_proxy',
             'params': packed_participants
         }
 
@@ -526,7 +526,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         # creating another one collab with the same params:
         originate_params = {
-            'contractName': 'hic_proxy',
+            'templateName': 'hic_proxy',
             'params': packed_participants
         }
 

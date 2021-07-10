@@ -82,7 +82,7 @@ class HicBaseCase(TestCase):
                 'registryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
                 'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
             },
-            'contracts': {
+            'templates': {
                 'hic_contract': hic_proxy_code
             },
             'originatedContracts': {},
@@ -99,7 +99,7 @@ class HicBaseCase(TestCase):
             params).interpret().storage.hex()
 
         create_params = {
-            'contractName': contract,
+            'templateName': contract,
             'params': params_bytes
         }
 
