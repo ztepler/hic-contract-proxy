@@ -305,29 +305,29 @@ class HicBaseCase(TestCase):
 
         # Works for factory & collabs both, this is why storage parameter
         # transfered. TODO: Maybe it would be better to use attrib name?
-        sign_callback, sign_entrypoint = params['callback'].split('%')
+        callback, entrypoint_name = params['callback'].split('%')
 
         self.result = entrypoint(params).interpret(
             storage=storage, sender=self.p1, amount=amount)
 
         assert len(self.result.operations) == 1
         op = self.result.operations[0]
-        self.assertEqual(op['parameters']['entrypoint'], sign_entrypoint)
-        self.assertEqual(op['destination'], sign_callback)
+        self.assertEqual(op['parameters']['entrypoint'], entrypoint_name)
+        self.assertEqual(op['destination'], callback)
 
         return op['parameters']['value']['prim'] == 'True'
 
 
     def _collab_is_core_participant_call(
-            self, participant, sign_callback=None,
-            sign_entrypoint='random_entry', amount=0):
+            self, participant, callback=None,
+            entrypoint='random_entry', amount=0):
         """ Testing that is_core_participant call emits correct callback """
 
-        sign_callback = sign_callback or self.random_contract_address
+        callback = callback or self.random_contract_address
 
         params = {
             'participantAddress': participant,
-            'callback': sign_callback + '%' + sign_entrypoint
+            'callback': callback + '%' + entrypoint
         }
 
         return self._call_view_entrypoint(
@@ -343,33 +343,33 @@ class HicBaseCase(TestCase):
 
 
     def _collab_is_administrator_call(
-            self, participant, sign_callback=None,
-            sign_entrypoint='random_entry', amount=0):
+            self, participant, callback=None,
+            entrypoint='random_entry', amount=0):
         """ Testing that is_administrator call emits correct callback """
 
-        sign_callback = sign_callback or self.random_contract_address
+        callback = callback or self.random_contract_address
 
         # TODO: not implemented
         pass
 
 
     def _collab_get_total_shares(
-            self, sign_callback=None,
-            sign_entrypoint='random_entry', amount=0):
+            self, callback=None,
+            entrypoint='random_entry', amount=0):
         """ Testing that get_total_shares call emits correct callback """
 
-        sign_callback = sign_callback or self.random_contract_address
+        callback = callback or self.random_contract_address
 
         # TODO: not implemented
         pass
 
 
     def _collab_get_participant_shares(
-            self, participant, sign_callback=None,
-            sign_entrypoint='random_entry', amount=0):
+            self, participant, callback=None,
+            entrypoint='random_entry', amount=0):
         """ Testing that get_participant_shares call emits correct callback """
 
-        sign_callback = sign_callback or self.random_contract_address
+        callback = callback or self.random_contract_address
 
         # TODO: not implemented
         pass

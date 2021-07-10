@@ -11,12 +11,12 @@ class SignTest(HicBaseCase):
 
         # p1 is core participant, so result should be True:
         result = self._collab_is_core_participant_call(
-            self.p1, sign_callback=sign_kt, sign_entrypoint=entrypoint)
+            self.p1, callback=sign_kt, entrypoint=entrypoint)
         self.assertTrue(result)
 
         # tips is not core participant, so result should be False:
         result = self._collab_is_core_participant_call(
-            self.tips, sign_callback=sign_kt, sign_entrypoint=entrypoint)
+            self.tips, callback=sign_kt, entrypoint=entrypoint)
         self.assertFalse(result)
 
         # minting work:
@@ -26,14 +26,14 @@ class SignTest(HicBaseCase):
         # checking that minted hash returned True:
         result = self._collab_is_minted_hash_call(
             self.mint_params['metadata'],
-            sign_callback=sign_kt,
-            sign_entrypoint=entrypoint)
+            callback=sign_kt,
+            entrypoint=entrypoint)
         self.assertTrue(result)
 
         # checking that another hash returned False:
         not_minted_metadata = '69420420'
         result = self._collab_is_minted_hash_call(
-            not_minted_metadata, sign_callback=sign_kt, sign_entrypoint=entrypoint)
+            not_minted_metadata, callback=sign_kt, entrypoint=entrypoint)
         self.assertFalse(result)
         '''
 
