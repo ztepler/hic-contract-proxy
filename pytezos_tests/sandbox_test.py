@@ -6,6 +6,11 @@ from pytezos.rpc.errors import MichelsonError
 import unittest
 from os.path import dirname, join
 import json
+import codecs
+
+
+def str_to_hex_bytes(string):
+    return codecs.encode(string.encode("ascii"), "hex")
 
 
 FACTORY_TZ = '../build/tz/factory.tz'
@@ -281,7 +286,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
 
 
-    def test_mint_token(self):
+    def _originate_default_contract(self):
+        """ Creates contract using proxy that used in multiple tests """
 
         # Creating contract using proxy
         participants = {
@@ -302,6 +308,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = self.factory.create_proxy(originate_params).inject()
         self.bake_block()
         self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+
+
+    def test_mint_token(self):
+
+        self._originate_default_contract()
 
         # mint:
         mint_params = {
@@ -360,6 +371,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
 
     def test_marketplace_communication(self):
+        """ Testing marketplace communication without any collab contracts """
+
         # mint:
         mint_params = {
             'address': pkh(self.p1),
@@ -573,6 +586,31 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             opg = self.factory.create_proxy(originate_params).inject()
             self.bake_block()
         self.assertTrue("Template is not found" in str(cm.exception))
+
+
+    def test_registry_communication(self):
+
+        self._originate_default_contract()
+        metadata = str_to_hex_bytes(
+            'ipfs://QmVJzbVtq1sc8Cj2ZJFJmSBZVWfLDvsL3asuimUBvMARiB')
+        subjkt = str_to_hex_bytes('MEGA COLLABA')
+
+        registry_params = {
+            'metadata': metadata,
+            'subjkt': subjkt
+        }
+
+        self.collab.registry(registry_params)
+        self.bake_block()
+
+        self.assertTrue(self.registry.storage['subjkts'][subjkt])
+        self.assertTrue(self.registry.storage['entries'][self.collab.address])
+        self.assertEqual(
+            self.registry.storage['registries'][self.collab.address],
+            subjkt)
+        self.assertEqual(
+            self.registry.storage['subjkts_metadata'][subjkt],
+            metadata)
 
 
     '''
