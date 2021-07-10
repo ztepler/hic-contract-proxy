@@ -139,9 +139,21 @@ class MapInteractionTest(HicBaseCase):
 
 
     def _test_lambdas(self):
+        """ Testing that lambda calls emits transactions that goes to right
+            direction
+        """
 
-        # Test mint_OBJKT lambda:
-        entrypoint_name = 'mint_OBJKT'
+        destinations = {
+            'mint_OBJKT': self.collab.storage['minterAddress']()
+        }
+
+        for entrypoint_name, destination in destinations.items():
+            execute_params = self._prepare_lambda_params(entrypoint_name)
+            result = self._collab_execute(self.admin, params=execute_params)
+            self.assertTrue(len(result.operations) == 1)
+            op = result.operations[0]
+            self.assertTrue(op['destination'] == destination)
+            self.assertTrue(op['parameters']['entrypoint'] == entrypoint_name)
 
 
     def test_interactions(self):
@@ -272,6 +284,10 @@ class MapInteractionTest(HicBaseCase):
         # checking view returns true now::
         result = self._collab_is_administrator(self.tips)
         self.assertTrue(result)
+
+        # returning admin back:
+        self._collab_update_admin(self.tips, self.admin)
+        self._collab_accept_ownership(self.admin)
 
         # running lambda testing:
         self._test_lambdas()

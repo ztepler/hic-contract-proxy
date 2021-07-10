@@ -525,5 +525,5 @@ class HicBaseCase(TestCase):
             storage=self.collab_storage, sender=sender, amount=amount)
         self.collab_storage = result.storage
 
-        # TODO: make some checks? or it is impossible to do here?
+        return result
 
