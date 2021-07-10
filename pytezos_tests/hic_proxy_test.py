@@ -3,6 +3,34 @@ from hic_base import HicBaseCase
 
 
 class MapInteractionTest(HicBaseCase):
+
+    def _test_admin_change(self):
+        """ This is copy of the tests that made for factory, I just changed
+            entrypoints. Decided that it is better to copy than
+            make it abstract """
+
+        # Trying to update admin from not admin address:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collab_update_admin(self.p2, self.tips)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+        # Trying to accept admin rights before transfer:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collab_accept_ownership(self.tips)
+        self.assertTrue('Not proposed admin' in str(cm.exception))
+
+        # Trying to update admin admin address:
+        self._collab_update_admin(self.admin, self.tips)
+
+        # Checking that another address can't accept:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collab_accept_ownership(self.p2)
+        self.assertTrue('Not proposed admin' in str(cm.exception))
+
+        # Checking that proposed can accept:
+        self._collab_accept_ownership(self.tips)
+
+
     def test_interactions(self):
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
@@ -127,6 +155,21 @@ class MapInteractionTest(HicBaseCase):
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
             self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+
+        # TODO: test that only admin can call:
+        # - registry
+        # - unregistry
+        # - execute lambda call
+        # - update_operators
+        # - trigger_pause
+
+        # TODO: make separate method to test all lambdas
+
+        # Running tests that in result changes admin to self.tips:
+        self._test_admin_change()
+
+        # checking that self.tips can mint now:
+        self._collab_mint(self.tips)
 
         # TODO: Collab with too many participants can't be created:
         # TODO: NEED TO TEST LIMIT
