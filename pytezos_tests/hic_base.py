@@ -1,6 +1,7 @@
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
 from unittest import TestCase
 from os.path import dirname, join
+import codecs
 
 
 COLLAB_FN = '../build/tz/hic_proxy.tz'
@@ -9,6 +10,10 @@ SIGN_FN = '../build/tz/sign.tz'
 PACKER_FN = '../build/tz/packer.tz'
 
 HIC_PROXY_CODE = '../build/tz/lambdas/originate/hic_proxy.tz'
+
+
+def str_to_hex_bytes(string):
+    return codecs.encode(string.encode("ascii"), "hex")
 
 
 def split_amount(amount, shares, last_address):
@@ -275,25 +280,38 @@ class HicBaseCase(TestCase):
 
 
     def _collab_registry(self, sender, amount=0):
-        # TODO: implement this
-        """
+
+        metadata = str_to_hex_bytes(
+            'ipfs://QmVJzbVtq1sc8Cj2ZJFJmSBZVWfLDvsL3asuimUBvMARiB')
+        subjkt = str_to_hex_bytes('MEGA COLLABA')
+
+        registry_params = {
+            'metadata': metadata,
+            'subjkt': subjkt
+        }
+
+        self.result = self.collab.registry(registry_params).interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+
+        assert len(self.result.operations) == 1
+        assert self.result.operations[0]['parameters']['entrypoint'] == 'registry'
         self.assertEqual(
             self.result.operations[0]['destination'],
             self.collab_storage['registryAddress']
         )
-        """
-        pass
 
 
     def _collab_unregistry(self, sender, amount=0):
-        # TODO: implement this
-        """
+
+        self.result = self.collab.unregistry().interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+
+        assert len(self.result.operations) == 1
+        assert self.result.operations[0]['parameters']['entrypoint'] == 'unregistry'
         self.assertEqual(
             self.result.operations[0]['destination'],
             self.collab_storage['registryAddress']
         )
-        """
-        pass
 
 
     def _collab_default(self, sender, amount):
