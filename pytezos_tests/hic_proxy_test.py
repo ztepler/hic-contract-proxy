@@ -42,7 +42,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_registry(self.admin, amount=100),
             lambda: self._collab_unregistry(self.admin, amount=100),
             lambda: self._collab_is_core_participant(self.admin, amount=100),
-            # lambda: self._collab_update_operators(self.admin, amount=100),
+            lambda: self._collab_update_operators(self.admin, amount=100),
             lambda: self._collab_is_administrator(self.admin, amount=100),
             lambda: self._collab_get_total_shares(amount=100),
             lambda: self._collab_get_participant_shares(self.admin, amount=100),
@@ -70,7 +70,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_curate(not_admin),
             lambda: self._collab_registry(not_admin),
             lambda: self._collab_unregistry(not_admin),
-            # lambda: self._collab_update_operators(not_admin),
+            lambda: self._collab_update_operators(not_admin),
             lambda: self._collab_update_admin(not_admin, self.tips),
             # lambda: self._collab_trigger_pause(not_admin),
             # lambda: self._collab_execute(not_admin),
@@ -221,6 +221,9 @@ class MapInteractionTest(HicBaseCase):
 
         # Running views again for collab with 1 participant:
         self._test_views()
+
+        # Running update operatiors from admin check:
+        self._collab_update_operators(self.admin)
 
         # TODO: test that only admin can call:
         # - registry

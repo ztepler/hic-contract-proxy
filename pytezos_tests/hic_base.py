@@ -384,9 +384,35 @@ class HicBaseCase(TestCase):
         return result.operations[0]['parameters']['value']['prim'] == 'True'
 
 
-    def _collab_update_operators(self, sender, amount=0):
-        # TODO: not implemented
-        pass
+    def _collab_update_operators(
+            self, sender, operator=None, token_id=0, amount=0):
+
+        operator = operator or self.collab_storage['marketplaceAddress']
+
+        # self.collab.address is empty, so using random contract address instead:
+        owner = self.random_contract_address
+
+        update_operatiors_params = [{
+            'add_operator': {
+                'owner': owner,
+                'operator': operator,
+                'token_id': token_id}
+        }]
+
+        result = (self.collab
+            .update_operators(update_operatiors_params)
+            .with_amount(amount)
+            .interpret(storage=self.collab_storage, sender=sender))
+
+        self.collab_storage = result.storage
+
+        self.assertEqual(len(result.operations), 1)
+        op = result.operations[0]
+        self.assertEqual(
+            op['destination'],
+            self.collab_storage['tokenAddress'])
+
+        self.assertEqual(op['parameters']['entrypoint'], 'update_operators')
 
 
     def _collab_is_administrator(
@@ -470,6 +496,12 @@ class HicBaseCase(TestCase):
 
 
     def _collab_trigger_pause(self, sender, amount=0):
+
+        # TODO: not implemented
+        pass
+
+
+    def _collab_execute(self, sender, lambda_call=None, params=None, amount=0):
 
         # TODO: not implemented
         pass
