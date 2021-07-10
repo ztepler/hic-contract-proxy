@@ -199,14 +199,26 @@ block {
 function updateAdmin(var store : storage; var newAdmin : address) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
+    checkSenderIsAdmin(store);
+    store.proposedAdministrator := Some(newAdmin);
 } with ((nil: list(operation)), store)
 
 
 function acceptOwnership(var store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
+
+    const proposedAdministrator : address = case store.proposedAdministrator of
+    | Some(proposed) -> proposed
+    | None -> (failwith("Not proposed admin") : address)
+    end;
+
+    if Tezos.sender = proposedAdministrator then
+    block {
+        store.administrator := proposedAdministrator;
+        store.proposedAdministrator := (None : option(address));
+    } else failwith("Not proposed admin")
+
 } with ((nil: list(operation)), store)
 
 
