@@ -193,8 +193,12 @@ block {
 function getParticipantShares(var store : storage; var params : getParticipantShares) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
-} with ((nil: list(operation)), store)
+    const sharesCount : nat = case Map.find_opt(params.participantAddress, store.shares) of
+    | Some(shares) -> shares
+    | None -> 0n
+    end;
+    const returnOperation = Tezos.transaction(sharesCount, 0mutez, params.callback);
+} with (list[returnOperation], store)
 
 
 function updateAdmin(var store : storage; var newAdmin : address) : (list(operation) * storage) is
