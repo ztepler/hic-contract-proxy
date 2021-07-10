@@ -400,17 +400,3 @@ class HicBaseCase(TestCase):
         # TODO: not implemented
         pass
 
-
-    ''' THIS METHOD IS NOT IMPLEMENTED (and looks like it would not be)
-    def _collab_is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint, amount=0):
-        """ Testing that is_minted_hash call emits correct callback """
-
-        params = {
-            'metadata': metadata,
-            'callback': sign_callback + '%' + sign_entrypoint
-        }
-
-        return self._call_view_entrypoint(
-            self.collab.is_minted_hash, params, self.collab_storage, amount=amount)
-    '''
-
