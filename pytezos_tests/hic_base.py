@@ -215,7 +215,10 @@ class HicBaseCase(TestCase):
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
-        # TODO: check that call goes to marketplaceAddress
+        self.assertEqual(
+            self.result.operations[0]['destination'],
+            self.collab_storage['marketplaceAddress']
+        )
 
 
     def _collab_cancel_swap(self, sender, amount=0):
@@ -228,7 +231,10 @@ class HicBaseCase(TestCase):
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'cancel_swap'
         assert self.result.operations[0]['parameters']['value'] == {'int': '42'}
-        # TODO: check that call goes to marketplaceAddress
+        self.assertEqual(
+            self.result.operations[0]['destination'],
+            self.collab_storage['marketplaceAddress']
+        )
 
 
     def _collab_collect(self, sender, amount=0):
@@ -241,7 +247,10 @@ class HicBaseCase(TestCase):
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'collect'
         assert self.result.operations[0]['parameters']['value']['int'] == '42'
-        # TODO: check that call goes to marketplaceAddress
+        self.assertEqual(
+            self.result.operations[0]['destination'],
+            self.collab_storage['marketplaceAddress']
+        )
 
 
     def _collab_curate(self, sender, amount=0):
@@ -255,21 +264,32 @@ class HicBaseCase(TestCase):
         assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
         assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '100'}
         assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '100000'}
-        # TODO: check that call goes to ?
+        self.assertEqual(
+            self.result.operations[0]['destination'],
+            self.collab_storage['minterAddress']
+        )
 
 
     def _collab_registry(self, sender, amount=0):
         # TODO: implement this
+        """
+        self.assertEqual(
+            self.result.operations[0]['destination'],
+            self.collab_storage['registryAddress']
+        )
+        """
         pass
 
 
     def _collab_unregistry(self, sender, amount=0):
         # TODO: implement this
+        """
+        self.assertEqual(
+            self.result.operations[0]['destination'],
+            self.collab_storage['registryAddress']
+        )
+        """
         pass
-
-        # TODO: test update manager
-        # TODO: test pause
-        # TODO: test views
 
 
     def _collab_default(self, sender, amount):

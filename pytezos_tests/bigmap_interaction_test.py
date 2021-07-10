@@ -22,7 +22,8 @@ class BigMapInteractionTest(HicBaseCase):
                 self.tips: {'share': 170, 'withdrawalsSum': 0}
             },
             'totalWithdrawalsSum': 0,
-            'hicetnuncMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
+            'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
+            'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
         }
 
 
