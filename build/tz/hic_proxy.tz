@@ -28,7 +28,7 @@
                            (pair (address %creator) (nat %objkt_amount))
                            (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))
                         (unit %trigger_pause))
-                    (or (unit %unregistry) (address %update_manager)))))
+                    (or (unit %unregistry) (address %update_admin)))))
         (list %update_operators
            (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
                (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id)))))) ;
