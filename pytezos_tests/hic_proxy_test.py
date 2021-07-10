@@ -39,8 +39,8 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_cancel_swap(self.admin, amount=100),
             lambda: self._collab_collect(self.admin, amount=100),
             lambda: self._collab_curate(self.admin, amount=100),
-            # lambda: self._collab_registry(self.admin, amount=100),
-            # lambda: self._collab_unregistry(self.admin, amount=100),
+            lambda: self._collab_registry(self.admin, amount=100),
+            lambda: self._collab_unregistry(self.admin, amount=100),
             lambda: self._collab_is_core_participant(self.admin, amount=100),
             # lambda: self._collab_update_operators(self.admin, amount=100),
             lambda: self._collab_is_administrator(self.admin, amount=100),
@@ -55,6 +55,32 @@ class MapInteractionTest(HicBaseCase):
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
             self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+
+
+    def _test_no_admin_rights(self):
+        """ Tests that call to all admin entrypoints failed for not admin user """
+        # TODO: make list of all admin entries with lambdas
+
+        not_admin = self.p2
+        admin_calls = [
+            lambda: self._collab_mint(not_admin),
+            lambda: self._collab_swap(not_admin),
+            lambda: self._collab_cancel_swap(not_admin),
+            lambda: self._collab_collect(not_admin),
+            lambda: self._collab_curate(not_admin),
+            lambda: self._collab_registry(not_admin),
+            lambda: self._collab_unregistry(not_admin),
+            # lambda: self._collab_update_operators(not_admin),
+            # lambda: self._collab_update_admin(not_admin, self.tips),
+            # lambda: self._collab_trigger_pause(not_admin),
+            # lambda: self._collab_execute(not_admin),
+        ]
+
+        for call in admin_calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
 
     def _test_views(self):
 
@@ -90,6 +116,9 @@ class MapInteractionTest(HicBaseCase):
 
         # Running views test before any contract updates:
         self._test_views()
+
+        # Checking that not admin fails to run admin entrypoints:
+        self._test_no_admin_rights()
 
         # Test mint call from admin succeed:
         self._collab_mint(self.admin)
