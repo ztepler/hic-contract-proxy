@@ -183,11 +183,11 @@ block {
 } with (list[returnOperation], store)
 
 
-function getTotalShares(var store : storage; var params : getTotalSharesParams) : (list(operation) * storage) is
+function getTotalShares(var store : storage; var callback : getTotalSharesParams) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
-} with ((nil: list(operation)), store)
+    const returnOperation = Tezos.transaction(store.totalShares, 0mutez, callback);
+} with (list[returnOperation], store)
 
 
 function getParticipantShares(var store : storage; var params : getParticipantShares) : (list(operation) * storage) is
