@@ -57,8 +57,20 @@ class MapInteractionTest(HicBaseCase):
             self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
 
     def _test_views(self):
-        # TODO: not implemented
-        pass
+
+        # is_core_participant test, True case:
+        result = self._collab_is_core_participant_call(self.p1)
+        self.assertTrue(result)
+
+        # is_core_participant test, False case:
+        result = self._collab_is_core_participant_call(self.tips)
+        self.assertFalse(result)
+
+        # is_administrator test:
+
+        # get_total_shares test:
+
+        # get_participant_shares test:
 
 
     def test_interactions(self):
