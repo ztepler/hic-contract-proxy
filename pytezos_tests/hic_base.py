@@ -369,8 +369,16 @@ class HicBaseCase(TestCase):
 
         callback = callback or self.random_contract_address
 
-        # TODO: not implemented
-        pass
+        params = {
+            'participantAddress': participant,
+            'callback': callback + '%' + entrypoint
+        }
+
+        return self._call_view_entrypoint(
+            self.collab.is_administrator,
+            params,
+            self.collab_storage,
+            amount=amount)
 
 
     def _collab_get_total_shares(

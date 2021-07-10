@@ -43,7 +43,7 @@ class MapInteractionTest(HicBaseCase):
             # lambda: self._collab_unregistry(self.admin, amount=100),
             lambda: self._collab_is_core_participant(self.admin, amount=100),
             # lambda: self._collab_update_operators(self.admin, amount=100),
-            # lambda: self._collab_is_administrator(self.admin, amount=100),
+            lambda: self._collab_is_administrator(self.admin, amount=100),
             # lambda: self._collab_get_total_shares(amount=100),
             # lambda: self._collab_get_participant_shares(self.admin, amount=100),
             # lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
@@ -66,11 +66,21 @@ class MapInteractionTest(HicBaseCase):
         result = self._collab_is_core_participant(self.tips)
         self.assertFalse(result)
 
-        # is_administrator test:
+        # is_administrator test, True case:
+        result = self._collab_is_administrator(self.admin)
+        self.assertTrue(result)
 
-        # get_total_shares test:
+        # is_administrator test, False case:
+        result = self._collab_is_administrator(self.tips)
+        self.assertFalse(result)
 
-        # get_participant_shares test:
+        # get_total_shares test, True case:
+
+        # get_total_shares test, False case:
+
+        # get_participant_shares test, True case:
+
+        # get_participant_shares test, False case:
 
 
     def test_interactions(self):
@@ -191,6 +201,10 @@ class MapInteractionTest(HicBaseCase):
 
         # checking that self.tips can mint now:
         self._collab_mint(self.tips)
+
+        # checking view returns true now::
+        result = self._collab_is_administrator(self.tips)
+        self.assertTrue(result)
 
         # TODO: Collab with too many participants can't be created:
         # TODO: NEED TO TEST LIMIT
