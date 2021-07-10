@@ -481,10 +481,13 @@
                              DIG 2 ;
                              CONS ;
                              PAIR }
-                           { DIG 2 ;
-                             DROP ;
-                             SWAP ;
+                           { SWAP ;
                              PUSH unit Unit ;
+                             DIG 4 ;
+                             SWAP ;
+                             EXEC ;
+                             DROP ;
+                             DUP ;
                              DIG 3 ;
                              SWAP ;
                              EXEC ;
@@ -537,9 +540,12 @@
                              CONS ;
                              PAIR }
                            { DROP ;
-                             SWAP ;
-                             DROP ;
                              PUSH unit Unit ;
+                             DIG 3 ;
+                             SWAP ;
+                             EXEC ;
+                             DROP ;
+                             DUP ;
                              DIG 2 ;
                              SWAP ;
                              EXEC ;
@@ -548,9 +554,12 @@
                              PAIR } }
                        { IF_LEFT
                            { DROP ;
-                             SWAP ;
-                             DROP ;
                              PUSH unit Unit ;
+                             DIG 3 ;
+                             SWAP ;
+                             EXEC ;
+                             DROP ;
+                             DUP ;
                              DIG 2 ;
                              SWAP ;
                              EXEC ;
