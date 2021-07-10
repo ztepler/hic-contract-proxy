@@ -39,7 +39,7 @@ class BigMapInteractionTest(HicBaseCase):
         """ Testing that calling mint from non-administrator address is not possible """
 
         with self.assertRaises(MichelsonRuntimeError):
-            self.result = self.collab.mint_OBJKT(self.mint_params).interpret(
+            self.result = self.collab.mint_OBJKT(self.default_params['mint_OBJKT']).interpret(
                 storage=self.result.storage, sender=self.p2)
 
 

@@ -4,7 +4,7 @@ from os.path import dirname, join
 import codecs
 from test_data import (
     COLLAB_FN, FACTORY_FN, SIGN_FN, PACKER_FN, HIC_PROXY_CODE,
-    LAMBDA_CALLS, load_lambdas
+    LAMBDA_CALLS, load_lambdas, DEFAULT_PARAMS
 )
 
 
@@ -68,12 +68,7 @@ class HicBaseCase(TestCase):
 
         self.admin = self.p1
 
-        self.mint_params = {
-            'address': 'KT1VRdyXdMb452GRnSz7tPFQVg96bq2XAmSN',
-            'amount': 1,
-            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
-            'royalties': 250
-        }
+        self.default_params = DEFAULT_PARAMS
 
         self.originate_params = {
             self.p1:   {'share': 330, 'isCore': True},
@@ -111,8 +106,23 @@ class HicBaseCase(TestCase):
         self.lambdas = load_lambdas(LAMBDA_CALLS)
 
         # default execute_lambda call params:
-        self.execute_lambda_call = self.lambdas['hic_mint_OBJKT']
-        self.execute_params = '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803'
+        self.execute_params = self._prepare_lambda_params('mint_OBJKT')
+
+
+    def _prepare_lambda_params(self, entrypoint_name):
+        """ Returns dict with some default lambda params for given entrypoint
+        """
+
+        packer_call = getattr(self.packer, f'pack_{entrypoint_name}')
+        packed_bytes = packer_call(
+            self.default_params[entrypoint_name]).interpret().storage.hex()
+
+        execute_params = {
+            'lambda': self.lambdas[f'hic_{entrypoint_name}'],
+            'packedParams': packed_bytes
+        }
+
+        return execute_params
 
 
     def _factory_create_proxy(self, sender, params, contract='hic_contract', amount=0):
@@ -200,7 +210,8 @@ class HicBaseCase(TestCase):
     def _collab_mint(self, sender, amount=0):
         """ Testing that minting doesn't fail with default params """
 
-        self.result = self.collab.mint_OBJKT(self.mint_params).interpret(
+        self.result = self.collab.mint_OBJKT(
+            self.default_params['mint_OBJKT']).interpret(
             storage=self.collab_storage, sender=sender, amount=amount)
 
         self.assertTrue(len(self.result.operations) == 1)
@@ -209,7 +220,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(operation['parameters']['entrypoint'], 'mint_OBJKT')
         op_bytes = operation['parameters']['value']['args'][1]['bytes']
 
-        metadata = self.mint_params['metadata']
+        metadata = self.default_params['mint_OBJKT']['metadata']
         self.assertEqual(op_bytes, metadata)
 
         self.assertEqual(operation['destination'],
@@ -506,17 +517,11 @@ class HicBaseCase(TestCase):
         self.assertEqual(self.collab_storage['isPaused'], not wasPaused)
 
 
-    def _collab_execute(self, sender, lambda_call=None, params=None, amount=0):
+    def _collab_execute(self, sender, params=None, amount=0):
 
-        lambda_call = lambda_call or self.execute_lambda_call
         params = params or self.execute_params
 
-        execute_params = {
-            'lambda': lambda_call,
-            'packedParams': params
-        }
-
-        result = self.collab.execute(execute_params).interpret(
+        result = self.collab.execute(params).interpret(
             storage=self.collab_storage, sender=sender, amount=amount)
         self.collab_storage = result.storage
 

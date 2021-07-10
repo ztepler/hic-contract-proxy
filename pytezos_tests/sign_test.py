@@ -25,7 +25,7 @@ class SignTest(HicBaseCase):
         '''
         # checking that minted hash returned True:
         result = self._collab_is_minted_hash_call(
-            self.mint_params['metadata'],
+            self.default_params['mint_OBJKT']['metadata'],
             callback=sign_kt,
             entrypoint=entrypoint)
         self.assertTrue(result)

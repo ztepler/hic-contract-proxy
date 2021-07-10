@@ -2,6 +2,8 @@ from pytezos import MichelsonRuntimeError
 from hic_base import HicBaseCase
 
 
+# TODO: should I split this test into separate ones?
+
 class MapInteractionTest(HicBaseCase):
 
     def _test_admin_change(self):
@@ -59,7 +61,6 @@ class MapInteractionTest(HicBaseCase):
 
     def _test_no_admin_rights(self):
         """ Tests that call to all admin entrypoints failed for not admin user """
-        # TODO: make list of all admin entries with lambdas
 
         not_admin = self.p2
         admin_calls = [
@@ -73,7 +74,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_update_operators(not_admin),
             lambda: self._collab_update_admin(not_admin, self.tips),
             lambda: self._collab_trigger_pause(not_admin),
-            # lambda: self._collab_execute(not_admin),
+            lambda: self._collab_execute(not_admin),
         ]
 
         for call in admin_calls:
@@ -125,7 +126,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_registry(self.admin),
             lambda: self._collab_unregistry(self.admin),
             lambda: self._collab_update_operators(self.admin),
-            # lambda: self._collab_execute(self.admin),
+            lambda: self._collab_execute(self.admin),
         ]
 
         for call in paused_calls:
@@ -137,7 +138,14 @@ class MapInteractionTest(HicBaseCase):
         self._collab_trigger_pause(self.admin)
 
 
+    def _test_lambdas(self):
+
+        # Test mint_OBJKT lambda:
+        entrypoint_name = 'mint_OBJKT'
+
+
     def test_interactions(self):
+
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
 
@@ -255,15 +263,6 @@ class MapInteractionTest(HicBaseCase):
         # Running update operatiors from admin check:
         self._collab_update_operators(self.admin)
 
-        # TODO: test that only admin can call:
-        # - registry
-        # - unregistry
-        # - execute lambda call
-        # - update_operators
-        # - trigger_pause
-
-        # TODO: make separate method to test all lambdas
-
         # Running tests that in result changes admin to self.tips:
         self._test_admin_change()
 
@@ -274,6 +273,8 @@ class MapInteractionTest(HicBaseCase):
         result = self._collab_is_administrator(self.tips)
         self.assertTrue(result)
 
+        # running lambda testing:
+        self._test_lambdas()
+
         # TODO: Collab with too many participants can't be created:
         # TODO: NEED TO TEST LIMIT
-        # TODO: need to make MORE tests
