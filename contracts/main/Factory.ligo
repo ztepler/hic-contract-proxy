@@ -1,4 +1,5 @@
 #include "../partials/factoryTypes.ligo"
+#include "../partials/general.ligo"
 
 
 type factoryAction is
@@ -13,11 +14,6 @@ type factoryAction is
 function checkSenderIsAdmin(const factoryStore : factoryStorage) : unit is
     if (Tezos.sender = factoryStore.administrator) then unit
     else failwith("Entrypoint can call only administrator");
-
-
-function checkNoAmount(const p : unit) : unit is
-    if (Tezos.amount = 0tez) then unit
-    else failwith("This entrypoint should not receive tez");
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)

@@ -83,11 +83,6 @@ function checkSenderIsAdmin(var store : storage) : unit is
     else failwith("Entrypoint can call only administrator");
 
 
-function checkNoAmount(const p : unit) : unit is
-    if (Tezos.amount = 0tez) then unit
-    else failwith("This entrypoint should not receive tez");
-
-
 function execute(const params : executeParams; const store : storage)
     : (list(operation) * storage) is
 
