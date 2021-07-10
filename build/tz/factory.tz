@@ -7,7 +7,10 @@
                         bytes)
                   (pair (pair (address %address) (bytes %metadata)) (operation %operation))))
             (pair %create_proxy (bytes %params) (string %templateName)))
-        (or (address %is_originated_contract) (string %remove_template))) ;
+        (or (pair %is_originated_contract
+               (contract %callback bool)
+               (address %contractAddress))
+            (string %remove_template))) ;
   storage
     (pair (pair (pair %data
                    (pair (address %marketplaceAddress) (address %minterAddress))
@@ -87,7 +90,22 @@
                  CONS ;
                  PAIR } }
            { IF_LEFT
-               { DROP ; NIL operation ; PAIR }
+               { DUP ;
+                 CAR ;
+                 PUSH mutez 0 ;
+                 DUP 4 ;
+                 CAR ;
+                 CDR ;
+                 DIG 3 ;
+                 CDR ;
+                 GET ;
+                 IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
+                 PAIR }
                { SWAP ;
                  DUP ;
                  DUG 2 ;

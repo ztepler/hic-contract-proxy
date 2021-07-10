@@ -34,11 +34,21 @@ type addTemplateParams is record [
     originateFunc : originateContractFunc;
 ]
 
+
+type isOriginatedResponse is bool
+
+
+type isOriginatedParams is record [
+    contractAddress: address;
+    callback: contract(isOriginatedResponse)
+]
+
+
 type factoryAction is
 | Create_proxy of originationParams
 | Add_template of addTemplateParams
 | Remove_template of string
-| Is_originated_contract of address
+| Is_originated_contract of isOriginatedParams
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
@@ -83,13 +93,19 @@ block {
 
 
 function isOriginatedContract(
-    const contractAddress : address;
+    const params : isOriginatedParams;
     var factoryStore : factoryStorage) is
 
 block {
-    (* TODO: implement this view *)
-    skip;
-} with ((nil : list(operation)), factoryStore)
+    (* TODO: check that this operation did not received any tez *)
+    const isOriginatedOption = Big_map.find_opt(params.contractAddress, factoryStore.originatedContracts);
+    const isOriginated : bool = case isOriginatedOption of
+    | Some(metadata) -> True
+    | None -> False
+    end;
+
+    const returnOperation = Tezos.transaction(isOriginated, 0mutez, params.callback);
+} with (list[returnOperation], factoryStore)
 
 
 function main (const params : factoryAction; var factoryStore : factoryStorage)
