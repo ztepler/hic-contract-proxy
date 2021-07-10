@@ -135,10 +135,10 @@ class BigMapInteractionTest(HicBaseCase):
 
 
     def test_interactions(self):
-        self._mint_call(sender=self.p1)
+        self._collab_mint_call(sender=self.p1)
         self._test_mint_call_without_admin_role()
         self._test_nothing_withdraw_error()
-        self._swap_call(sender=self.p1)
+        self._collab_swap_call(sender=self.p1)
         self._swap_call_without_admin_role()
         self._test_p1_withdraw()
         self._test_p2_withdraw()

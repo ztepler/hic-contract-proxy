@@ -101,7 +101,7 @@ class HicBaseCase(TestCase):
         self.total_incomings = 0
 
 
-    def _create_collab(self, sender, params, contract='hic_contract', amount=0):
+    def _factory_create_proxy(self, sender, params, contract='hic_contract', amount=0):
 
         # converting params to bytes:
         params_bytes = self.packer.pack_originate_hic_proxy(
@@ -125,7 +125,7 @@ class HicBaseCase(TestCase):
         self.assertTrue(self.collab.storage()['administrator'] == sender)
 
 
-    def _add_template(self, sender, template_name='added_template', amount=0):
+    def _factory_add_template(self, sender, template_name='added_template', amount=0):
 
         add_template_params = {
             'name': template_name,
@@ -137,14 +137,14 @@ class HicBaseCase(TestCase):
         self.factory_storage = result.storage
 
 
-    def _remove_template(self, sender, template_name='added_template', amount=0):
+    def _factory_remove_template(self, sender, template_name='added_template', amount=0):
 
         result = self.factory.remove_template(template_name).interpret(
             storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
 
 
-    def _is_originated_contract(
+    def _factory_is_originated_contract(
         self, contract_address, sign_callback, sign_entrypoint, amount=0):
 
         params = {
@@ -173,7 +173,7 @@ class HicBaseCase(TestCase):
         self.factory_storage = result.storage
 
 
-    def _mint_call(self, sender, amount=0):
+    def _collab_mint_call(self, sender, amount=0):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.collab.mint_OBJKT(self.mint_params).interpret(
@@ -193,7 +193,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(operation['amount'], '0')
 
 
-    def _swap_call(self, sender, amount=0):
+    def _collab_swap_call(self, sender, amount=0):
         """ Testing that swapping doesn't fail with default params """
 
         self.result = self.collab.swap(self.swap_params).interpret(
@@ -204,7 +204,7 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _cancel_swap_call(self, sender, amount=0):
+    def _collab_cancel_swap_call(self, sender, amount=0):
         """ Testing that cancel swap doesn't fail with default params """
 
         some_swap_id = 42
@@ -217,7 +217,7 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _collect_call(self, sender, amount=0):
+    def _collab_collect_call(self, sender, amount=0):
         """ Testing that collect doesn't fail with default params """
 
         some_swap_id = 42
@@ -230,7 +230,7 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _curate_call(self, sender, amount=0):
+    def _collab_curate_call(self, sender, amount=0):
         """ Testing that curate doesn't fail with default params """
 
         curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
@@ -244,12 +244,12 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to ?
 
 
-    def _registry_call(self, sender, amount=0):
+    def _collab_registry_call(self, sender, amount=0):
         # TODO: implement this
         pass
 
 
-    def _unregistry_call(self, sender, amount=0):
+    def _collab_unregistry_call(self, sender, amount=0):
         # TODO: implement this
         pass
 
@@ -258,7 +258,7 @@ class HicBaseCase(TestCase):
         # TODO: test views
 
 
-    def _default_call(self, sender, amount):
+    def _collab_default_call(self, sender, amount):
         """ Testing that distribution in default call works properly """
 
         self.result = self.collab.default().with_amount(amount).interpret(
@@ -289,6 +289,8 @@ class HicBaseCase(TestCase):
         """ The returned operations from contract very similar for different
             entrypoints, so it require similar checks: """
 
+        # Works for factory & collabs both, this is why storage parameter
+        # transfered. TODO: Maybe it would be better to use attrib name?
         sign_callback, sign_entrypoint = params['callback'].split('%')
 
         self.result = entrypoint(params).interpret(
@@ -302,7 +304,7 @@ class HicBaseCase(TestCase):
         return op['parameters']['value']['prim'] == 'True'
 
 
-    def _is_core_participant_call(
+    def _collab_is_core_participant_call(
             self, participant, sign_callback, sign_entrypoint, amount=0):
         """ Testing that is_core_participant call emits correct callback """
 
@@ -318,7 +320,7 @@ class HicBaseCase(TestCase):
             amount=amount)
 
 
-    def _is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint, amount=0):
+    def _collab_is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint, amount=0):
         """ Testing that is_minted_hash call emits correct callback """
 
         params = {
