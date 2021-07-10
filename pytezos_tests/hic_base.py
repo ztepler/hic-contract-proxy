@@ -35,6 +35,13 @@ def split_amount(amount, shares, last_address):
     return amounts
   
 
+# TODO: consider split this one big base case into separate:
+# - one for collab
+# - one for factory
+# - one for signer
+# ? It would be good to make them independent, but I want to support all
+# this self.assert* methods, so I don't know how to make it good
+
 class HicBaseCase(TestCase):
 
     def setUp(self):
@@ -94,7 +101,7 @@ class HicBaseCase(TestCase):
         self.total_incomings = 0
 
 
-    def _create_collab(self, sender, params, contract='hic_contract'):
+    def _create_collab(self, sender, params, contract='hic_contract', amount=0):
 
         # converting params to bytes:
         params_bytes = self.packer.pack_originate_hic_proxy(
@@ -106,7 +113,7 @@ class HicBaseCase(TestCase):
         }
 
         result = self.factory.create_proxy(create_params).interpret(
-            storage=self.factory_storage, sender=sender)
+            storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
 
         self.assertEqual(len(result.operations), 1)
@@ -118,7 +125,7 @@ class HicBaseCase(TestCase):
         self.assertTrue(self.collab.storage()['administrator'] == sender)
 
 
-    def _add_template(self, sender, template_name='added_template'):
+    def _add_template(self, sender, template_name='added_template', amount=0):
 
         add_template_params = {
             'name': template_name,
@@ -126,19 +133,19 @@ class HicBaseCase(TestCase):
         }
 
         result = self.factory.add_template(add_template_params).interpret(
-            storage=self.factory_storage, sender=sender)
+            storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
 
 
-    def _remove_template(self, sender, template_name='added_template'):
+    def _remove_template(self, sender, template_name='added_template', amount=0):
 
         result = self.factory.remove_template(template_name).interpret(
-            storage=self.factory_storage, sender=sender)
+            storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
 
 
     def _is_originated_contract(
-        self, contract_address, sign_callback, sign_entrypoint):
+        self, contract_address, sign_callback, sign_entrypoint, amount=0):
 
         params = {
             'contractAddress': contract_address,
@@ -146,28 +153,31 @@ class HicBaseCase(TestCase):
         }
 
         return self._call_view_entrypoint(
-            self.factory.is_originated_contract, params, self.factory_storage)
+            self.factory.is_originated_contract,
+            params,
+            self.factory_storage,
+            amount=amount)
 
 
-    def _factory_update_admin(self, sender, proposed_admin):
+    def _factory_update_admin(self, sender, proposed_admin, amount=0):
 
         result = self.factory.update_admin(proposed_admin).interpret(
-            storage=self.factory_storage, sender=sender)
+            storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
 
 
-    def _factory_accept_ownership(self, sender):
+    def _factory_accept_ownership(self, sender, amount=0):
 
         result = self.factory.accept_ownership().interpret(
-            storage=self.factory_storage, sender=sender)
+            storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
 
 
-    def _mint_call(self, sender):
+    def _mint_call(self, sender, amount=0):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.collab.mint_OBJKT(self.mint_params).interpret(
-            storage=self.collab_storage, sender=sender)
+            storage=self.collab_storage, sender=sender, amount=amount)
 
         self.assertTrue(len(self.result.operations) == 1)
         operation = self.result.operations[0]
@@ -183,23 +193,23 @@ class HicBaseCase(TestCase):
         self.assertEqual(operation['amount'], '0')
 
 
-    def _swap_call(self, sender):
+    def _swap_call(self, sender, amount=0):
         """ Testing that swapping doesn't fail with default params """
 
         self.result = self.collab.swap(self.swap_params).interpret(
-            storage=self.collab_storage, sender=sender)
+            storage=self.collab_storage, sender=sender, amount=amount)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _cancel_swap_call(self, sender):
+    def _cancel_swap_call(self, sender, amount=0):
         """ Testing that cancel swap doesn't fail with default params """
 
         some_swap_id = 42
         self.result = self.collab.cancel_swap(some_swap_id).interpret(
-            storage=self.collab_storage, sender=sender)
+            storage=self.collab_storage, sender=sender, amount=amount)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'cancel_swap'
@@ -207,12 +217,12 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _collect_call(self, sender):
+    def _collect_call(self, sender, amount=0):
         """ Testing that collect doesn't fail with default params """
 
         some_swap_id = 42
         self.result = self.collab.collect(some_swap_id).interpret(
-            storage=self.collab_storage, sender=sender)
+            storage=self.collab_storage, sender=sender, amount=amount)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'collect'
@@ -220,12 +230,12 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _curate_call(self, sender):
+    def _curate_call(self, sender, amount=0):
         """ Testing that curate doesn't fail with default params """
 
         curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
         self.result = self.collab.curate(curate_params).interpret(
-            storage=self.collab_storage, sender=sender)
+            storage=self.collab_storage, sender=sender, amount=amount)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
@@ -234,12 +244,12 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to ?
 
 
-    def _registry_call(self, sender):
+    def _registry_call(self, sender, amount=0):
         # TODO: implement this
         pass
 
 
-    def _unregistry_call(self, sender):
+    def _unregistry_call(self, sender, amount=0):
         # TODO: implement this
         pass
 
@@ -275,14 +285,14 @@ class HicBaseCase(TestCase):
         self.assertEqual(calc_amounts, amounts)
 
 
-    def _call_view_entrypoint(self, entrypoint, params, storage):
+    def _call_view_entrypoint(self, entrypoint, params, storage, amount=0):
         """ The returned operations from contract very similar for different
             entrypoints, so it require similar checks: """
 
         sign_callback, sign_entrypoint = params['callback'].split('%')
 
         self.result = entrypoint(params).interpret(
-            storage=storage, sender=self.p1)
+            storage=storage, sender=self.p1, amount=amount)
 
         assert len(self.result.operations) == 1
         op = self.result.operations[0]
@@ -292,7 +302,8 @@ class HicBaseCase(TestCase):
         return op['parameters']['value']['prim'] == 'True'
 
 
-    def _is_core_participant_call(self, participant, sign_callback, sign_entrypoint):
+    def _is_core_participant_call(
+            self, participant, sign_callback, sign_entrypoint, amount=0):
         """ Testing that is_core_participant call emits correct callback """
 
         params = {
@@ -301,10 +312,13 @@ class HicBaseCase(TestCase):
         }
 
         return self._call_view_entrypoint(
-            self.collab.is_core_participant, params, self.collab_storage)
+            self.collab.is_core_participant,
+            params,
+            self.collab_storage,
+            amount=amount)
 
 
-    def _is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint):
+    def _is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint, amount=0):
         """ Testing that is_minted_hash call emits correct callback """
 
         params = {
@@ -313,5 +327,5 @@ class HicBaseCase(TestCase):
         }
 
         return self._call_view_entrypoint(
-            self.collab.is_minted_hash, params, self.collab_storage)
+            self.collab.is_minted_hash, params, self.collab_storage, amount=amount)
 

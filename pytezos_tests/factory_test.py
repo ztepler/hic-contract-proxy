@@ -66,3 +66,19 @@ class FactoryTest(HicBaseCase):
 
         # Trying to add template new admin address:
         self._add_template(self.tips)
+
+        # Checking that entrypoints is not allow to send any tez:
+        calls = [
+            lambda: self._create_collab(self.p1, self.originate_params, amount=100),
+            lambda: self._add_template(self.tips, amount=100),
+            lambda: self._remove_template(self.tips, amount=100),
+            lambda: self._is_originated_contract(
+                random_address, random_address, entrypoint, amount=100),
+            lambda: self._factory_update_admin(self.tips, self.p2, amount=100),
+            lambda: self._factory_accept_ownership(self.p1, amount=100)
+        ]
+
+        for call in calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
