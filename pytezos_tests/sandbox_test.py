@@ -7,25 +7,14 @@ import unittest
 from os.path import dirname, join
 import json
 import codecs
+from test_data import (
+    load_lambdas, LAMBDA_CALLS, LAMBDA_ORIGINATE, FACTORY_FN,
+    PACKER_FN, CONTRACTS_DIR)
 
 
 def str_to_hex_bytes(string):
     return codecs.encode(string.encode("ascii"), "hex")
 
-
-FACTORY_TZ = '../build/tz/factory.tz'
-
-LAMBDA_CALLS = {
-    'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz'
-}
-
-LAMBDA_ORIGINATE = {
-    'hic_proxy': '../build/tz/lambdas/originate/hic_proxy.tz',
-    'basic_proxy': '../build/tz/lambdas/originate/basic_proxy.tz'
-}
-
-PACKER_TZ = '../build/tz/packer.tz'
-CONTRACTS_DIR = 'contracts'
 
 def pkh(key):
     return key.key.public_key_hash()
@@ -63,7 +52,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self, client, minter_address, marketplace_address,
         registry_address, token_address):
 
-        factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_TZ))
+        factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_FN))
         factory_init = {
             'data': {
                 'minterAddress': minter_address,
@@ -270,17 +259,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             self.bake_block()
 
         # Loading lambdas:
-        def load_lambda(filename):
-            return open(join(dirname(__file__), filename)).read()
-
-        self.lambdas = {
-            lambda_name: load_lambda(filename)
-            for lambda_name, filename in LAMBDA_CALLS.items()
-        }
+        self.lambdas = load_lambdas(LAMBDA_CALLS)
 
         # Deploying packer (I feel this is temporal solution but who knows):
         #    (it is just used to pack data)
-        packer = ContractInterface.from_file(join(dirname(__file__), PACKER_TZ))
+        packer = ContractInterface.from_file(join(dirname(__file__), PACKER_FN))
         opg = self._deploy_contract(self.p1, packer, 0)
         self.bake_block()
         self.packer = self._find_contract_by_hash(self.p1, opg['hash'])

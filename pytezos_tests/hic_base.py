@@ -2,14 +2,10 @@ from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
 from unittest import TestCase
 from os.path import dirname, join
 import codecs
-
-
-COLLAB_FN = '../build/tz/hic_proxy.tz'
-FACTORY_FN = '../build/tz/factory.tz'
-SIGN_FN = '../build/tz/sign.tz'
-PACKER_FN = '../build/tz/packer.tz'
-
-HIC_PROXY_CODE = '../build/tz/lambdas/originate/hic_proxy.tz'
+from test_data import (
+    COLLAB_FN, FACTORY_FN, SIGN_FN, PACKER_FN, HIC_PROXY_CODE,
+    LAMBDA_CALLS, load_lambdas
+)
 
 
 def str_to_hex_bytes(string):
@@ -112,6 +108,11 @@ class HicBaseCase(TestCase):
         self.total_incomings = 0
 
         self.random_contract_address = 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
+        self.lambdas = load_lambdas(LAMBDA_CALLS)
+
+        # default execute_lambda call params:
+        self.execute_lambda_call = self.lambdas['hic_mint_OBJKT']
+        self.execute_params = '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803'
 
 
     def _factory_create_proxy(self, sender, params, contract='hic_contract', amount=0):
@@ -507,6 +508,17 @@ class HicBaseCase(TestCase):
 
     def _collab_execute(self, sender, lambda_call=None, params=None, amount=0):
 
-        # TODO: not implemented
-        pass
+        lambda_call = lambda_call or self.execute_lambda_call
+        params = params or self.execute_params
+
+        execute_params = {
+            'lambda': lambda_call,
+            'packedParams': params
+        }
+
+        result = self.collab.execute(execute_params).interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+        self.collab_storage = result.storage
+
+        # TODO: make some checks? or it is impossible to do here?
 
