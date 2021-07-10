@@ -14,12 +14,12 @@ class FactoryTest(HicBaseCase):
 
         # Checking view is contract originated, result should be True:
         result = self._factory_is_originated_contract(
-            contract_address, sign_callback=random_address, sign_entrypoint=entrypoint)
+            contract_address, callback=random_address, entrypoint=entrypoint)
         self.assertTrue(result)
 
         # Checking view for random contract, should be False:
         result = self._factory_is_originated_contract(
-            random_address, sign_callback=random_address, sign_entrypoint=entrypoint)
+            random_address, callback=random_address, entrypoint=entrypoint)
         self.assertFalse(result)
 
         # Trying to add template from not admin address:
@@ -72,8 +72,7 @@ class FactoryTest(HicBaseCase):
             lambda: self._factory_create_proxy(self.p1, self.originate_params, amount=100),
             lambda: self._factory_add_template(self.tips, amount=100),
             lambda: self._factory_remove_template(self.tips, amount=100),
-            lambda: self._factory_is_originated_contract(
-                random_address, random_address, entrypoint, amount=100),
+            lambda: self._factory_is_originated_contract(amount=100),
             lambda: self._factory_update_admin(self.tips, self.p2, amount=100),
             lambda: self._factory_accept_ownership(self.p1, amount=100)
         ]

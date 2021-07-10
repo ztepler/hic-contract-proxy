@@ -153,11 +153,15 @@ class HicBaseCase(TestCase):
 
 
     def _factory_is_originated_contract(
-        self, contract_address, sign_callback, sign_entrypoint, amount=0):
+            self, contract_address=None, callback=None,
+            entrypoint='random_entry', amount=0):
+
+        contract_address = contract_address or self.random_contract_address
+        callback = callback or self.random_contract_address
 
         params = {
             'contractAddress': contract_address,
-            'callback': sign_callback + '%' + sign_entrypoint
+            'callback': callback + '%' + entrypoint
         }
 
         return self._call_view_entrypoint(
