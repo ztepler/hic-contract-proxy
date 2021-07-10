@@ -26,11 +26,30 @@
                             (pair (address %registryAddress) (address %tokenAddress)))
                       bytes)
                 (pair (pair (address %address) (bytes %metadata)) (operation %operation))))) ;
-  code { UNPAIR ;
+  code { LAMBDA
+           (pair (pair (pair address (pair (pair address address) (pair address address)))
+                       (pair (big_map address bytes) (option address)))
+                 (map string
+                      (lambda
+                         (pair (pair (pair address address) (pair address address)) bytes)
+                         (pair (pair address bytes) operation))))
+           unit
+           { CAR ;
+             CAR ;
+             CAR ;
+             SENDER ;
+             COMPARE ;
+             EQ ;
+             IF { UNIT }
+                { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
+         SWAP ;
+         UNPAIR ;
          IF_LEFT
            { IF_LEFT
                { IF_LEFT
                    { DROP ;
+                     SWAP ;
+                     DROP ;
                      DUP ;
                      CAR ;
                      CDR ;
@@ -74,6 +93,13 @@
                    { SWAP ;
                      DUP ;
                      DUG 2 ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
                      CDR ;
                      SWAP ;
                      DUP ;
@@ -90,7 +116,9 @@
                      PAIR ;
                      NIL operation ;
                      PAIR } }
-               { IF_LEFT
+               { DIG 2 ;
+                 DROP ;
+                 IF_LEFT
                    { SWAP ;
                      DUP ;
                      DUG 2 ;
@@ -163,6 +191,13 @@
                { SWAP ;
                  DUP ;
                  DUG 2 ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
                  CDR ;
                  SWAP ;
                  NONE (lambda
@@ -177,13 +212,10 @@
                  PAIR }
                { SWAP ;
                  DUP ;
-                 CAR ;
-                 CAR ;
-                 CAR ;
-                 SENDER ;
-                 COMPARE ;
-                 EQ ;
-                 IF {} { PUSH string "Entrypoint can call only administrator" ; FAILWITH } ;
+                 DIG 3 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
                  DUP ;
                  CDR ;
                  DIG 2 ;
