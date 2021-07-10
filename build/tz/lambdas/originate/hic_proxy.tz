@@ -233,7 +233,17 @@
                  EQ ;
                  IF { UNIT }
                     { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
-             DIG 2 ;
+             LAMBDA
+               (pair (pair (pair (pair address (set address)) (pair bool address))
+                           (pair (pair address (option address)) (pair address (map address nat))))
+                     (pair address nat))
+               unit
+               { CAR ;
+                 CAR ;
+                 CDR ;
+                 CAR ;
+                 IF { PUSH string "Contract is paused" ; FAILWITH } { UNIT } } ;
+             DIG 3 ;
              UNPAIR ;
              IF_LEFT
                { IF_LEFT
@@ -241,6 +251,8 @@
                        { IF_LEFT
                            { IF_LEFT
                                { DROP ;
+                                 SWAP ;
+                                 DROP ;
                                  SWAP ;
                                  DROP ;
                                  PUSH unit Unit ;
@@ -305,6 +317,11 @@
                                  PAIR }
                                { SWAP ;
                                  PUSH unit Unit ;
+                                 DIG 5 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 4 ;
                                  SWAP ;
                                  EXEC ;
@@ -333,6 +350,11 @@
                            { IF_LEFT
                                { SWAP ;
                                  PUSH unit Unit ;
+                                 DIG 5 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 4 ;
                                  SWAP ;
                                  EXEC ;
@@ -360,6 +382,11 @@
                                  PAIR }
                                { SWAP ;
                                  PUSH unit Unit ;
+                                 DIG 5 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 4 ;
                                  SWAP ;
                                  EXEC ;
@@ -386,10 +413,12 @@
                                  CONS ;
                                  PAIR } } }
                        { IF_LEFT
-                           { DIG 3 ;
+                           { DIG 4 ;
                              DROP ;
                              IF_LEFT
                                { DROP ;
+                                 SWAP ;
+                                 DROP ;
                                  SWAP ;
                                  DROP ;
                                  NIL operation ;
@@ -508,6 +537,13 @@
                                { SWAP ;
                                  DUP ;
                                  DUG 2 ;
+                                 DIG 4 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 SWAP ;
+                                 DUP ;
+                                 DUG 2 ;
                                  DIG 3 ;
                                  SWAP ;
                                  EXEC ;
@@ -522,6 +558,8 @@
                                  EXEC ;
                                  PAIR } }
                            { DIG 2 ;
+                             DROP ;
+                             DIG 2 ;
                              DROP ;
                              IF_LEFT
                                { SWAP ;
@@ -570,6 +608,8 @@
                    { IF_LEFT
                        { IF_LEFT
                            { DIG 2 ;
+                             DROP ;
+                             DIG 2 ;
                              DROP ;
                              IF_LEFT
                                { SWAP ;
@@ -626,6 +666,11 @@
                            { IF_LEFT
                                { SWAP ;
                                  PUSH unit Unit ;
+                                 DIG 5 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 4 ;
                                  SWAP ;
                                  EXEC ;
@@ -654,6 +699,11 @@
                                  PAIR }
                                { SWAP ;
                                  PUSH unit Unit ;
+                                 DIG 5 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 4 ;
                                  SWAP ;
                                  EXEC ;
@@ -683,6 +733,11 @@
                            { IF_LEFT
                                { SWAP ;
                                  PUSH unit Unit ;
+                                 DIG 5 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 4 ;
                                  SWAP ;
                                  EXEC ;
@@ -711,6 +766,8 @@
                                  CONS ;
                                  PAIR }
                                { DROP ;
+                                 SWAP ;
+                                 DROP ;
                                  PUSH unit Unit ;
                                  DIG 3 ;
                                  SWAP ;
@@ -721,11 +778,42 @@
                                  SWAP ;
                                  EXEC ;
                                  DROP ;
+                                 DUP ;
+                                 CDR ;
+                                 SWAP ;
+                                 DUP ;
+                                 DUG 2 ;
+                                 CAR ;
+                                 CDR ;
+                                 DUP 3 ;
+                                 CAR ;
+                                 CAR ;
+                                 CDR ;
+                                 CDR ;
+                                 DUP 4 ;
+                                 CAR ;
+                                 CAR ;
+                                 CDR ;
+                                 CAR ;
+                                 NOT ;
+                                 PAIR ;
+                                 DIG 3 ;
+                                 CAR ;
+                                 CAR ;
+                                 CAR ;
+                                 PAIR ;
+                                 PAIR ;
+                                 PAIR ;
                                  NIL operation ;
                                  PAIR } }
                            { IF_LEFT
                                { DROP ;
                                  PUSH unit Unit ;
+                                 DIG 4 ;
+                                 SWAP ;
+                                 EXEC ;
+                                 DROP ;
+                                 DUP ;
                                  DIG 3 ;
                                  SWAP ;
                                  EXEC ;
@@ -750,7 +838,9 @@
                                  DIG 2 ;
                                  CONS ;
                                  PAIR }
-                               { SWAP ;
+                               { DIG 2 ;
+                                 DROP ;
+                                 SWAP ;
                                  PUSH unit Unit ;
                                  DIG 4 ;
                                  SWAP ;
@@ -787,6 +877,11 @@
                                  PAIR } } } } }
                { SWAP ;
                  PUSH unit Unit ;
+                 DIG 5 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
+                 DUP ;
                  DIG 4 ;
                  SWAP ;
                  EXEC ;
