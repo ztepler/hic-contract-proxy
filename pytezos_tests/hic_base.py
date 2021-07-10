@@ -99,6 +99,8 @@ class HicBaseCase(TestCase):
             'proposedAdministrator': None
         }
 
+        self.sign_storage = {}
+
         self.result = None
         self.total_incomings = 0
 
@@ -527,3 +529,17 @@ class HicBaseCase(TestCase):
 
         return result
 
+
+    def _sign_sign(self, sender):
+        # TODO: not implemented
+        pass
+
+
+    def _sign_unsign(self, sender):
+        # TODO: not implemented
+        pass
+
+
+    def _sign_is_signed(self, sender):
+        # TODO: not implemented
+        pass
