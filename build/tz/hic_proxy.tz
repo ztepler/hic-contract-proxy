@@ -352,13 +352,31 @@
                        { DIG 2 ;
                          DROP ;
                          IF_LEFT
-                           { DROP ;
+                           { SWAP ;
                              PUSH unit Unit ;
-                             DIG 2 ;
+                             DIG 3 ;
                              SWAP ;
                              EXEC ;
                              DROP ;
+                             SWAP ;
+                             DUP ;
+                             DUG 2 ;
+                             CAR ;
+                             PUSH mutez 0 ;
+                             DUP 3 ;
+                             CAR ;
+                             CDR ;
+                             CDR ;
+                             CAR ;
+                             DIG 4 ;
+                             CDR ;
+                             GET ;
+                             IF_NONE { PUSH nat 0 } {} ;
+                             TRANSFER_TOKENS ;
+                             SWAP ;
                              NIL operation ;
+                             DIG 2 ;
+                             CONS ;
                              PAIR }
                            { SWAP ;
                              PUSH unit Unit ;
