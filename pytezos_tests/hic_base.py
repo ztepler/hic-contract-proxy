@@ -187,7 +187,7 @@ class HicBaseCase(TestCase):
         # TODO: implement some checks?
 
 
-    def _collab_mint_call(self, sender, amount=0):
+    def _collab_mint(self, sender, amount=0):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.collab.mint_OBJKT(self.mint_params).interpret(
@@ -207,7 +207,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(operation['amount'], '0')
 
 
-    def _collab_swap_call(self, sender, amount=0):
+    def _collab_swap(self, sender, amount=0):
         """ Testing that swapping doesn't fail with default params """
 
         self.result = self.collab.swap(self.swap_params).interpret(
@@ -218,7 +218,7 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _collab_cancel_swap_call(self, sender, amount=0):
+    def _collab_cancel_swap(self, sender, amount=0):
         """ Testing that cancel swap doesn't fail with default params """
 
         some_swap_id = 42
@@ -231,7 +231,7 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _collab_collect_call(self, sender, amount=0):
+    def _collab_collect(self, sender, amount=0):
         """ Testing that collect doesn't fail with default params """
 
         some_swap_id = 42
@@ -244,7 +244,7 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to marketplaceAddress
 
 
-    def _collab_curate_call(self, sender, amount=0):
+    def _collab_curate(self, sender, amount=0):
         """ Testing that curate doesn't fail with default params """
 
         curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
@@ -258,12 +258,12 @@ class HicBaseCase(TestCase):
         # TODO: check that call goes to ?
 
 
-    def _collab_registry_call(self, sender, amount=0):
+    def _collab_registry(self, sender, amount=0):
         # TODO: implement this
         pass
 
 
-    def _collab_unregistry_call(self, sender, amount=0):
+    def _collab_unregistry(self, sender, amount=0):
         # TODO: implement this
         pass
 
@@ -272,7 +272,7 @@ class HicBaseCase(TestCase):
         # TODO: test views
 
 
-    def _collab_default_call(self, sender, amount):
+    def _collab_default(self, sender, amount):
         """ Testing that distribution in default call works properly """
 
         self.result = self.collab.default().with_amount(amount).interpret(

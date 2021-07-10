@@ -20,7 +20,7 @@ class SignTest(HicBaseCase):
         self.assertFalse(result)
 
         # minting work:
-        self._collab_mint_call(self.admin)
+        self._collab_mint(self.admin)
 
         '''
         # checking that minted hash returned True:
