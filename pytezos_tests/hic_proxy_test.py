@@ -110,9 +110,39 @@ class MapInteractionTest(HicBaseCase):
         self.assertEqual(result, participantShares)
 
 
+    def _test_pause(self):
+
+        # Checking pause:
+        self._collab_trigger_pause(self.admin)
+
+        # These calls should fail when pause:
+        paused_calls = [
+            lambda: self._collab_mint(self.admin),
+            lambda: self._collab_swap(self.admin),
+            lambda: self._collab_cancel_swap(self.admin),
+            lambda: self._collab_collect(self.admin),
+            lambda: self._collab_curate(self.admin),
+            lambda: self._collab_registry(self.admin),
+            lambda: self._collab_unregistry(self.admin),
+            lambda: self._collab_update_operators(self.admin),
+            # lambda: self._collab_execute(self.admin),
+        ]
+
+        for call in paused_calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('Contract is paused' in str(cm.exception))
+
+        # Unpausing collab:
+        self._collab_trigger_pause(self.admin)
+
+
     def test_interactions(self):
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
+
+        # Checking how pause works:
+        self._test_pause()
 
         # Running views test before any contract updates:
         self._test_views()

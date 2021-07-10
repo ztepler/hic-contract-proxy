@@ -497,8 +497,12 @@ class HicBaseCase(TestCase):
 
     def _collab_trigger_pause(self, sender, amount=0):
 
-        # TODO: not implemented
-        pass
+        wasPaused = self.collab_storage['isPaused']
+        result = self.collab.trigger_pause().interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+        self.collab_storage = result.storage
+
+        self.assertEqual(self.collab_storage['isPaused'], not wasPaused)
 
 
     def _collab_execute(self, sender, lambda_call=None, params=None, amount=0):
