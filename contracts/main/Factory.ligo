@@ -38,7 +38,7 @@ function addTemplate(
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
-    (* TODO: check that called by factory admin *)
+    checkSenderIsAdmin(factoryStore);
     (* Rewriting contract with the same name is allowed: *)
     factoryStore.templates[params.name] := params.originateFunc;
 } with ((nil : list(operation)), factoryStore)
@@ -49,7 +49,7 @@ function removeTemplate(
     var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
 
 block {
-    (* TODO: check that called by factory admin *)
+    checkSenderIsAdmin(factoryStore);
     factoryStore.templates := Big_map.remove(templateName, factoryStore.templates);
 } with ((nil : list(operation)), factoryStore)
 
