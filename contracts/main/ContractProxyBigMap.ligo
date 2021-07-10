@@ -33,7 +33,10 @@ type storage is record [
     totalWithdrawalsSum : tez;
 
     (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
-    hicetnuncMinterAddress : address;
+    minterAddress : address;
+
+    (* address of the Hic Et Nunc Marketplace (mainnet: KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn) *)
+    marketplaceAddress : address;
 ]
 
 
@@ -75,14 +78,14 @@ function checkSenderIsAdmin(var store : storage) : unit is
 function mint_OBJKT(var store : storage; var params : mintParams) : (list(operation) * storage) is
 block {
     checkSenderIsAdmin(store);
-    const callToHic = callMintOBJKT(store.hicetnuncMinterAddress, params);
+    const callToHic = callMintOBJKT(store.minterAddress, params);
 } with (list[callToHic], store)
 
 
 function swap(var store : storage; var params : swapParams) : (list(operation) * storage) is
 block {
     checkSenderIsAdmin(store);
-    const callToHic = callSwap(store.hicetnuncMinterAddress, params);
+    const callToHic = callSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
 
 
