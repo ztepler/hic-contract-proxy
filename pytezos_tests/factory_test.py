@@ -3,6 +3,30 @@ from hic_base import HicBaseCase
 
 
 class FactoryTest(HicBaseCase):
+    def _test_admin_change(self):
+
+        # Trying to update admin from not admin address:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_update_admin(self.p2, self.tips)
+        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+        # Trying to accept admin rights before transfer:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_accept_ownership(self.tips)
+        self.assertTrue('Not proposed admin' in str(cm.exception))
+
+        # Trying to update admin admin address:
+        self._factory_update_admin(self.admin, self.tips)
+
+        # Checking that another address can't accept:
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_accept_ownership(self.p2)
+        self.assertTrue('Not proposed admin' in str(cm.exception))
+
+        # Checking that proposed can accept:
+        self._factory_accept_ownership(self.tips)
+
+
     def test_factory(self):
         random_address = 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
         entrypoint = 'not_existed_entrypoint'
@@ -43,26 +67,8 @@ class FactoryTest(HicBaseCase):
             self._factory_create_proxy(self.p2, self.originate_params, contract='added_template')
         self.assertTrue('Template is not found' in str(cm.exception))
 
-        # Trying to update admin from not admin address:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._factory_update_admin(self.p2, self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-        # Trying to accept admin rights before transfer:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._factory_accept_ownership(self.tips)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
-
-        # Trying to update admin admin address:
-        self._factory_update_admin(self.admin, self.tips)
-
-        # Checking that another address can't accept:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._factory_accept_ownership(self.p2)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
-
-        # Checking that proposed can accept:
-        self._factory_accept_ownership(self.tips)
+        # Running tests that in result changes admin to self.tips:
+        self._test_admin_change()
 
         # Trying to add template new admin address:
         self._factory_add_template(self.tips)
