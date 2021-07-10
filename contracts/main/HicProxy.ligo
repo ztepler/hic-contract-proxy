@@ -178,8 +178,9 @@ block {
 function isParticipantAdministrator(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
-} with ((nil: list(operation)), store)
+    const isAdmin : bool = store.administrator = params.participantAddress;
+    const returnOperation = Tezos.transaction(isAdmin, 0mutez, params.callback);
+} with (list[returnOperation], store)
 
 
 function getTotalShares(var store : storage; var params : getTotalSharesParams) : (list(operation) * storage) is
