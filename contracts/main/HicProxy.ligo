@@ -233,6 +233,7 @@ block {
 function registry(var store : storage; var params : registryParams) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
+    checkSenderIsAdmin(store);
     const callToHic = callRegistry(store.registryAddress, params);
 } with (list[callToHic], store)
 
@@ -240,6 +241,7 @@ block {
 function unregistry(var store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
+    checkSenderIsAdmin(store);
     const callToHic = callUnregistry(store.registryAddress);
 } with (list[callToHic], store)
 
@@ -248,6 +250,7 @@ function triggerPause(var store : storage) : (list(operation) * storage) is
 block {
     (* TODO: set contract.isPaused to the opposite *)
     checkNoAmount(Unit);
+    checkSenderIsAdmin(store);
     (* TODO: not implemented *)
 } with ((nil: list(operation)), store)
 
