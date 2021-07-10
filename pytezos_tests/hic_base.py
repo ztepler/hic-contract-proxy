@@ -530,9 +530,13 @@ class HicBaseCase(TestCase):
         return result
 
 
-    def _sign_sign(self, sender):
-        # TODO: not implemented
-        pass
+    def _sign_sign(self, sender, objkt_id=0, amount=0):
+
+        result = self.sign.sign(objkt_id).interpret(
+            storage=self.sign_storage, sender=sender, amount=amount)
+
+        self.assertTrue((sender, objkt_id) in result.storage)
+        self.sign_storage = result.storage
 
 
     def _sign_unsign(self, sender):

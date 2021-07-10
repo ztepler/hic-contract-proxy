@@ -6,4 +6,7 @@ class SignTest(HicBaseCase):
 
     def test_signing(self):
 
-        self.result = self._sign_sign(self.p1)
+        # Check that sign succeed for any artist for any work:
+        self.result = self._sign_sign(self.p1, 42)
+        self.result = self._sign_sign(self.tips, 32768)
+
