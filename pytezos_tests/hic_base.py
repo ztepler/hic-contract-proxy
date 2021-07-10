@@ -419,9 +419,20 @@ class HicBaseCase(TestCase):
         """ Testing that get_participant_shares call emits correct callback """
 
         callback = callback or self.random_contract_address
+        params = {
+            'participantAddress': participant,
+            'callback': callback + '%' + entrypoint
+        }
 
-        # TODO: not implemented
-        pass
+        result = self._call_view_entrypoint(
+            self.collab.get_participant_shares,
+            params,
+            self.collab_storage,
+            callback,
+            entrypoint,
+            amount=amount)
+
+        return int(result.operations[0]['parameters']['value']['int'])
 
 
     def _collab_update_admin(self, sender, proposed_admin, amount=0):

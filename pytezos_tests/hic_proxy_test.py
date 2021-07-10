@@ -75,12 +75,13 @@ class MapInteractionTest(HicBaseCase):
         self.assertFalse(result)
 
         # get_total_shares test:
-        result = self._collab_get_total_shares(self.admin)
+        result = self._collab_get_total_shares()
         self.assertEqual(result, self.collab_storage['totalShares'])
 
-        # get_participant_shares test, True case:
-
-        # get_participant_shares test, False case:
+        # get_participant_shares test:
+        result = self._collab_get_participant_shares(self.p1)
+        participantShares = self.collab_storage['shares'].get(self.p1, 0)
+        self.assertEqual(result, participantShares)
 
 
     def test_interactions(self):
