@@ -43,7 +43,7 @@ class HicBaseCase(TestCase):
         self.sign = ContractInterface.from_file(join(dirname(__file__), SIGN_FN))
         self.packer = ContractInterface.from_file(join(dirname(__file__), PACKER_FN))
 
-        hic_proxy_code = open(join(dirname(__file__), HIC_PROXY_CODE)).read()
+        self.hic_proxy_code = open(join(dirname(__file__), HIC_PROXY_CODE)).read()
 
         # Two core participants:
         self.p1 = 'tz1iQE8ijR5xVPffBUPFubwB9XQJuyD9qsoJ'
@@ -75,7 +75,7 @@ class HicBaseCase(TestCase):
             'royalties': 100
         }
 
-        self.factory_init = {
+        self.factory_storage = {
             'data': {
                 'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
                 'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
@@ -83,7 +83,7 @@ class HicBaseCase(TestCase):
                 'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
             },
             'templates': {
-                'hic_contract': hic_proxy_code
+                'hic_contract': self.hic_proxy_code
             },
             'originatedContracts': {},
             'administrator': self.admin,
@@ -106,21 +106,68 @@ class HicBaseCase(TestCase):
         }
 
         result = self.factory.create_proxy(create_params).interpret(
-            storage=self.factory_init, sender=sender)
+            storage=self.factory_storage, sender=sender)
+        self.factory_storage = result.storage
+
         self.assertEqual(len(result.operations), 1)
 
         operation = result.operations[0]
         self.assertTrue(operation['kind'] == 'origination')
         self.collab.storage_from_micheline(operation['script']['storage'])
-        self.storage = self.collab.storage()
+        self.collab_storage = self.collab.storage()
         self.assertTrue(self.collab.storage()['administrator'] == sender)
+
+
+    def _add_template(self, sender, template_name='added_template'):
+
+        add_template_params = {
+            'name': template_name,
+            'originateFunc': self.hic_proxy_code
+        }
+
+        result = self.factory.add_template(add_template_params).interpret(
+            storage=self.factory_storage, sender=sender)
+        self.factory_storage = result.storage
+
+
+    def _remove_template(self, sender, template_name='added_template'):
+
+        result = self.factory.remove_template(template_name).interpret(
+            storage=self.factory_storage, sender=sender)
+        self.factory_storage = result.storage
+
+
+    def _is_originated_contract(
+        self, contract_address, sign_callback, sign_entrypoint):
+
+        params = {
+            'contractAddress': contract_address,
+            'callback': sign_callback + '%' + sign_entrypoint
+        }
+
+        return self._call_view_entrypoint(
+            self.factory.is_originated_contract, params, self.factory_storage)
+
+
+    def _factory_update_admin(self, sender, proposed_admin):
+
+        result = self.factory.update_admin(proposed_admin).interpret(
+            storage=self.factory_storage, sender=sender)
+        self.factory_storage = result.storage
+
+
+    def _factory_accept_ownership(self, sender):
+
+        result = self.factory.accept_ownership().interpret(
+            storage=self.factory_storage, sender=sender)
+        self.factory_storage = result.storage
 
 
     def _mint_call(self, sender):
         """ Testing that minting doesn't fail with default params """
 
         self.result = self.collab.mint_OBJKT(self.mint_params).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         self.assertTrue(len(self.result.operations) == 1)
         operation = self.result.operations[0]
@@ -132,7 +179,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(op_bytes, metadata)
 
         self.assertEqual(operation['destination'],
-            self.factory_init['data']['minterAddress'])
+            self.factory_storage['data']['minterAddress'])
         self.assertEqual(operation['amount'], '0')
 
 
@@ -140,7 +187,7 @@ class HicBaseCase(TestCase):
         """ Testing that swapping doesn't fail with default params """
 
         self.result = self.collab.swap(self.swap_params).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'swap'
@@ -152,7 +199,7 @@ class HicBaseCase(TestCase):
 
         some_swap_id = 42
         self.result = self.collab.cancel_swap(some_swap_id).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'cancel_swap'
@@ -165,7 +212,7 @@ class HicBaseCase(TestCase):
 
         some_swap_id = 42
         self.result = self.collab.collect(some_swap_id).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'collect'
@@ -178,7 +225,7 @@ class HicBaseCase(TestCase):
 
         curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
         self.result = self.collab.curate(curate_params).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         assert len(self.result.operations) == 1
         assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
@@ -205,14 +252,14 @@ class HicBaseCase(TestCase):
         """ Testing that distribution in default call works properly """
 
         self.result = self.collab.default().with_amount(amount).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         ops = self.result.operations
         # Operations is collected in reversed order
         # Order means because one (last) operation takes dust:
         ops = list(reversed(ops))
 
-        shares = self.storage['shares']
+        shares = self.collab_storage['shares']
         last_address = ops[-1]['destination']
         calc_amounts = split_amount(amount, shares, last_address)
 
@@ -228,14 +275,14 @@ class HicBaseCase(TestCase):
         self.assertEqual(calc_amounts, amounts)
 
 
-    def _call_view_entrypoint(self, entrypoint, params):
+    def _call_view_entrypoint(self, entrypoint, params, storage):
         """ The returned operations from contract very similar for different
             entrypoints, so it require similar checks: """
 
         sign_callback, sign_entrypoint = params['callback'].split('%')
 
         self.result = entrypoint(params).interpret(
-            storage=self.storage, sender=self.p1)
+            storage=storage, sender=self.p1)
 
         assert len(self.result.operations) == 1
         op = self.result.operations[0]
@@ -253,7 +300,8 @@ class HicBaseCase(TestCase):
             'callback': sign_callback + '%' + sign_entrypoint
         }
 
-        return self._call_view_entrypoint(self.collab.is_core_participant, params)
+        return self._call_view_entrypoint(
+            self.collab.is_core_participant, params, self.collab_storage)
 
 
     def _is_minted_hash_call(self, metadata, sign_callback, sign_entrypoint):
@@ -264,5 +312,6 @@ class HicBaseCase(TestCase):
             'callback': sign_callback + '%' + sign_entrypoint
         }
 
-        return self._call_view_entrypoint(self.collab.is_minted_hash, params)
+        return self._call_view_entrypoint(
+            self.collab.is_minted_hash, params, self.collab_storage)
 

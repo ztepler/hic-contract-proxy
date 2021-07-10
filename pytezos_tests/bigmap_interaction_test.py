@@ -14,7 +14,7 @@ class BigMapInteractionTest(HicBaseCase):
         self.collab = ContractInterface.from_file(join(dirname(__file__), CONTRACT_FN))
 
         # TODO: replace this with factory creating bigmap contract:
-        self.storage = {
+        self.collab_storage = {
             'administrator': self.p1,
             'accounts': {
                 self.p1: {'share': 330, 'withdrawalsSum': 0},

@@ -49,14 +49,14 @@ class SignTest(HicBaseCase):
         }
 
         self.result = self.sign.sign(sign_params).with_amount(amount).interpret(
-            storage=self.storage, sender=sender)
+            storage=self.collab_storage, sender=sender)
 
         ops = self.result.operations
         # Operations is collected in reversed order
         # Order means because one (last) operation takes dust:
         ops = list(reversed(ops))
 
-        shares = self.storage['shares']
+        shares = self.collab_storage['shares']
         last_address = ops[-1]['destination']
         calc_amounts = split_amount(amount, shares, last_address)
 

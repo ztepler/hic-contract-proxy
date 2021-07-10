@@ -524,9 +524,14 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         result = self._find_call_result_by_hash(self.p1, opg['hash'])
 
-        # TODO: check result params
+        # Checking result params:
+        self.assertTrue(len(result.operations) == 1)
+        op = result.operations[0]
+        self.assertEqual(op['destination'], self.minter.address)
+        self.assertTrue(op['amount'] == '0')
+        self.assertTrue(op['parameters']['entrypoint'] == 'mint_OBJKT')
 
-        # creating another one collab with the same params:
+        # Creating another one collab with the same params:
         originate_params = {
             'templateName': 'hic_proxy',
             'params': packed_participants
@@ -535,10 +540,33 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = self.factory.create_proxy(originate_params).inject()
         self.bake_block()
 
-        # TODO: testing running lambda with name that does not exist failed
-        # TODO: testing running lambda on proxy-contract not from factory failed
-        # TODO: testing that only admin can add lambda/contracts
-        # TODO: testing that ids are correctly updates
+        # Checking that basic proxy created:
+        participants = {
+            pkh(self.p1): 330,
+            pkh(self.p2): 670}
+
+        packed_participants = self.packer.pack_originate_basic_proxy(
+            participants).interpret().storage.hex()
+
+        originate_params = {
+            'templateName': 'basic_proxy',
+            'params': packed_participants
+        }
+
+        opg = self.factory.create_proxy(originate_params).inject()
+        self.bake_block()
+
+        # Trying to originate contract with name that does not exist failed:
+        originate_params = {
+            'templateName': 'unknown',
+            'params': packed_participants
+        }
+
+        with self.assertRaises(MichelsonError) as cm:
+            opg = self.factory.create_proxy(originate_params).inject()
+            self.bake_block()
+        self.assertTrue("Template is not found" in str(cm.exception))
+
 
     '''
     def test_withdraw_token(self):
