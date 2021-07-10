@@ -239,10 +239,9 @@ block {
 
 function unregistry(var store : storage) : (list(operation) * storage) is
 block {
-    (* TODO: make call to h=n SUBJKT *)
     checkNoAmount(Unit);
-    (* TODO: not implemented *)
-} with ((nil: list(operation)), store)
+    const callToHic = callUnregistry(store.registryAddress);
+} with (list[callToHic], store)
 
 
 function triggerPause(var store : storage) : (list(operation) * storage) is

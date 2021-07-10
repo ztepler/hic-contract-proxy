@@ -133,3 +133,18 @@ block {
 
 } with callToHic;
 
+
+(* This function used to redirect unregistry call to hic et nunc registry entrypoint *)
+function callUnregistry(var registryAddress : address) : operation is
+block {
+    const receiver : contract(unit) =
+        case (Tezos.get_entrypoint_opt("%unregistry", registryAddress)
+            : option(contract(unit))) of
+        | None -> (failwith("No registry found") : contract(unit))
+        | Some(con) -> con
+        end;
+
+    const callToHic : operation = Tezos.transaction(Unit, 0tez, receiver);
+
+} with callToHic;
+
