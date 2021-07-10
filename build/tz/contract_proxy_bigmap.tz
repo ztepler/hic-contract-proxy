@@ -8,13 +8,16 @@
                (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))
             (unit %withdraw))) ;
   storage
-    (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
-                (address %administrator))
-          (pair (address %hicetnuncMinterAddress) (mutez %totalWithdrawalsSum))) ;
+    (pair (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
+                      (address %administrator))
+                (pair (address %marketplaceAddress) (address %minterAddress)))
+          (mutez %totalWithdrawalsSum)) ;
   code { LAMBDA
-           (pair (pair (big_map address (pair nat mutez)) address) (pair address mutez))
+           (pair (pair (pair (big_map address (pair nat mutez)) address) (pair address address))
+                 mutez)
            unit
            { CAR ;
+             CAR ;
              CDR ;
              SENDER ;
              COMPARE ;
@@ -34,8 +37,9 @@
                  DROP ;
                  DUP ;
                  DUG 2 ;
-                 CDR ;
                  CAR ;
+                 CDR ;
+                 CDR ;
                  CONTRACT %mint_OBJKT
                    (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
                  IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
@@ -56,6 +60,7 @@
                  DROP ;
                  DUP ;
                  DUG 2 ;
+                 CAR ;
                  CDR ;
                  CAR ;
                  CONTRACT %swap
@@ -75,7 +80,6 @@
                  DROP ;
                  DUP ;
                  CDR ;
-                 CDR ;
                  BALANCE ;
                  ADD ;
                  SWAP ;
@@ -83,6 +87,7 @@
                  DUG 2 ;
                  SENDER ;
                  SWAP ;
+                 CAR ;
                  CAR ;
                  CAR ;
                  SWAP ;
@@ -123,12 +128,7 @@
                  DUG 2 ;
                  DUP 5 ;
                  CDR ;
-                 CDR ;
                  ADD ;
-                 DUP 5 ;
-                 CDR ;
-                 CAR ;
-                 PAIR ;
                  DIG 4 ;
                  CAR ;
                  PAIR ;
@@ -146,13 +146,19 @@
                  DUP 3 ;
                  CAR ;
                  CDR ;
-                 DIG 3 ;
+                 DUP 4 ;
                  CAR ;
                  CAR ;
-                 DIG 3 ;
+                 CDR ;
+                 DIG 4 ;
+                 CAR ;
+                 CAR ;
+                 CAR ;
+                 DIG 4 ;
                  SOME ;
                  SENDER ;
                  UPDATE ;
+                 PAIR ;
                  PAIR ;
                  PAIR ;
                  NIL operation ;
