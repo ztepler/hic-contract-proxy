@@ -9,7 +9,7 @@ import json
 import codecs
 from test_data import (
     load_lambdas, LAMBDA_CALLS, LAMBDA_ORIGINATE, FACTORY_FN,
-    PACKER_FN, CONTRACTS_DIR)
+    PACKER_FN, CONTRACTS_DIR, SIGN_FN, MOCK_FN)
 
 
 def str_to_hex_bytes(string):
@@ -268,6 +268,20 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
         self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
 
+        # Deploying signer:
+        sign = ContractInterface.from_file(join(dirname(__file__), SIGN_FN))
+        sign_storage = {}
+        opg = self._deploy_contract(self.p1, sign, sign_storage)
+        self.bake_block()
+        self.sign = self._find_contract_by_hash(self.p1, opg['hash'])
+
+        # Deploying mock view:
+        mock = ContractInterface.from_file(join(dirname(__file__), MOCK_FN))
+        mock_storage = {'natValue': None, 'boolValue': None}
+        opg = self._deploy_contract(self.p1, mock, mock_storage)
+        self.bake_block()
+        self.mock = self._find_contract_by_hash(self.p1, opg['hash'])
+
 
     def _originate_default_contract(self):
         """ Creates contract using proxy that used in multiple tests """
@@ -291,7 +305,6 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = self.factory.create_proxy(originate_params).inject()
         self.bake_block()
         self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
-
 
     def test_mint_token(self):
 
@@ -611,7 +624,6 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.assertEqual(op['destination'], self.registry.address)
         self.assertEqual(op['parameters']['entrypoint'], 'unregistry')
 
-
     '''
     def test_withdraw_token(self):
         # Do I need to implement this? Would need to support FA2 only or FA1.2 too?
@@ -637,19 +649,28 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
     '''
 
     def test_signature_communications(self):
-        pass
-        # NEED TO UNDERSTAND WHY THESE LINES ARE FAILING:
-        """
-        # Creating contract using proxy
-        originate_params = {
-            pkh(self.p1):   {'share': 330, 'isCore': True},
-            pkh(self.p2):   {'share': 500, 'isCore': True},
-            pkh(self.tips): {'share': 170, 'isCore': False}
+
+        opg = self.p1.contract(self.sign.address).sign(42).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        self.sign.storage[(pkh(self.p1), 42)]()
+
+        opg = self.tips.contract(self.sign.address).sign(32768).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        self.sign.storage[(pkh(self.tips), 32768)]()
+
+        is_signed_params = {
+            'participant': pkh(self.p1),
+            'id': 42,
+            'callback': self.mock.address + '%' + 'bool_view'
         }
 
-        opg = self.factory.default(originate_params).inject()
+        opg = self.sign.is_signed(is_signed_params).inject()
         self.bake_block()
-        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
-
-        # TODO: test all signature contract communications
-        """
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        self.assertTrue(self.mock.storage['boolValue']())
+        self.assertTrue(len(result.operations) == 1)
+        op = result.operations[0]
+        self.assertEqual(op['destination'], self.mock.address)
+        self.assertEqual(op['parameters']['entrypoint'], 'bool_view')
