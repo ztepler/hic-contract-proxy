@@ -85,15 +85,20 @@ class FactoryTest(HicBaseCase):
         self._factory_create_proxy(self.p1, self.originate_params)
 
         # checking contract addresses:
-        for name, address in self.addresses.items():
-            self.assertEqual(self.collab_storage[name], address)
+        collab_addresses = {
+            'hicMinterAddress': self.collab_storage['minterAddress'],
+            'hicMarketplaceAddress': self.collab_storage['marketplaceAddress'],
+            'hicTokenAddress': self.collab_storage['tokenAddress'],
+            'hicRegistryAddress': self.collab_storage['registryAddress']
+        }
+        self.assertEqual(collab_addresses, self.addresses)
 
         # removing one of the records succeeded:
-        self._factory_remove_record(self.admin, 'minterAddress')
+        self._factory_remove_record(self.admin, 'hicMinterAddress')
 
         # adding record with nat type instead of address is succeed:
         self._factory_add_record(
-            self.admin, 'minterAddress', self._pack_nat(42))
+            self.admin, 'hicMinterAddress', self._pack_nat(42))
 
         # contract origination failed: "Unpack failed"
         with self.assertRaises(MichelsonRuntimeError) as cm:
@@ -103,8 +108,8 @@ class FactoryTest(HicBaseCase):
         # replacing record with this name with correct address:
         self._factory_add_record(
             self.admin,
-            'minterAddress',
-            self._pack_address(self.addresses['minterAddress']))
+            'hicMinterAddress',
+            self._pack_address(self.addresses['hicMinterAddress']))
 
         # contract origination succeeded:
         self._factory_create_proxy(self.p1, self.originate_params)

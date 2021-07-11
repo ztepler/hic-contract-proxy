@@ -85,10 +85,10 @@ class HicBaseCase(TestCase):
         }
 
         self.addresses = {
-            'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
-            'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
-            'registryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
-            'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
+            'hicMinterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
+            'hicMarketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
+            'hicRegistryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
+            'hicTokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
         }
 
         self.factory_storage = {
@@ -264,7 +264,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(op_bytes, metadata)
 
         self.assertEqual(operation['destination'],
-            self.addresses['minterAddress'])
+            self.addresses['hicMinterAddress'])
         self.assertEqual(operation['amount'], '0')
 
 

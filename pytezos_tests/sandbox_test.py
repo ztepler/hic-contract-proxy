@@ -257,10 +257,10 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
                 address).interpret().storage.hex()
 
         records = {
-            'minterAddress': pack_address(self.minter.address),
-            'marketplaceAddress': pack_address(self.marketplace.address),
-            'tokenAddress': pack_address(self.objkts.address),
-            'registryAddress': pack_address(self.registry.address)
+            'hicMinterAddress': pack_address(self.minter.address),
+            'hicMarketplaceAddress': pack_address(self.marketplace.address),
+            'hicTokenAddress': pack_address(self.objkts.address),
+            'hicRegistryAddress': pack_address(self.registry.address)
         }
 
         for record_name, value in records.items():
