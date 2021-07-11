@@ -1,13 +1,15 @@
 { parameter
-    (or (or (address %pack_address)
-            (pair %pack_mint_OBJKT
-               (pair (address %address) (nat %amount))
-               (pair (bytes %metadata) (nat %royalties))))
-        (or (map %pack_originate_basic_proxy address nat)
-            (map %pack_originate_hic_proxy address (pair (bool %isCore) (nat %share))))) ;
+    (or (or (or (address %pack_address)
+                (pair %pack_mint_OBJKT
+                   (pair (address %address) (nat %amount))
+                   (pair (bytes %metadata) (nat %royalties))))
+            (or (nat %pack_nat) (map %pack_originate_basic_proxy address nat)))
+        (map %pack_originate_hic_proxy address (pair (bool %isCore) (nat %share)))) ;
   storage bytes ;
   code { CAR ;
          IF_LEFT
-           { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } }
-           { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } } } }
+           { IF_LEFT
+               { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } }
+               { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } } }
+           { PACK ; NIL operation ; PAIR } } }
 
