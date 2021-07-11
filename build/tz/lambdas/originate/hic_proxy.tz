@@ -102,6 +102,13 @@
     COMPARE ;
     EQ ;
     IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
+    PUSH nat 1000000000000 ;
+    SWAP ;
+    DUP ;
+    DUG 2 ;
+    COMPARE ;
+    GT ;
+    IF { PUSH string "The maximum shares is 10**12" ; FAILWITH } {} ;
     PUSH nat 108 ;
     DIG 3 ;
     SIZE ;
