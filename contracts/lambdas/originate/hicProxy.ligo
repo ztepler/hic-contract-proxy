@@ -80,6 +80,10 @@ block {
     if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
     else skip;
 
+    if totalShares > 1_000_000_000_000n then
+        failwith("The maximum shares is 10**12")
+    else skip;
+
     if Map.size(participants) > 108n then failwith("The maximum participants count is 108")
     else skip;
 
