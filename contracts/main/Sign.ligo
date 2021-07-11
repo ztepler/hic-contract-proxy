@@ -1,3 +1,6 @@
+#include "../partials/general.ligo"
+
+
 type isSignedResponse is bool
 
 type isSignedParams is record [
@@ -23,6 +26,7 @@ type storage is record [
 
 function sign(var store : storage; const signId : nat) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     const key : signKey = (Tezos.sender, signId);
     store.signatures[key] := Unit;
 } with ((nil: list(operation)), store)
@@ -30,6 +34,7 @@ block {
 
 function unsign(var store : storage; const signId : nat) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     const key : signKey = (Tezos.sender, signId);
     store.signatures := Big_map.remove(key, store.signatures);
 } with ((nil: list(operation)), store)
@@ -37,6 +42,7 @@ block {
 
 function isSigned(var store : storage; var params : isSignedParams) : (list(operation) * storage) is
 block {
+    checkNoAmount(Unit);
     const key : signKey = (params.participant, params.id);
     const isSigned : bool = case Big_map.find_opt(key, store.signatures) of
     | Some(u) -> True
