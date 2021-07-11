@@ -48,6 +48,24 @@ class FactoryTest(HicBaseCase):
             self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
 
 
+    def _test_no_admin_rights(self):
+        """ Tests that call to all admin entrypoints failed for not admin user """
+
+        not_admin = self.p2
+        admin_calls = [
+            lambda: self._factory_add_template(not_admin),
+            lambda: self._factory_remove_template(not_admin),
+            lambda: self._factory_update_admin(not_admin, self.p2),
+            lambda: self._factory_add_record(not_admin),
+            lambda: self._factory_remove_record(not_admin)
+        ]
+
+        for call in admin_calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+
+
     def _test_records(self):
         # removing all records from factory:
         self.factory_storage['records'] = {}
@@ -142,3 +160,4 @@ class FactoryTest(HicBaseCase):
         self._factory_add_template(self.tips)
 
         self._test_no_tez_entrypoints()
+        self._test_no_admin_rights()
