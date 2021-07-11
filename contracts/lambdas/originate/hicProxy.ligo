@@ -95,10 +95,10 @@ block {
         proposedAdministrator = (None : option(address));
         shares = shares;
         totalShares = totalShares;
-        minterAddress = unpackAddressRecord("minterAddress", records);
-        marketplaceAddress = unpackAddressRecord("marketplaceAddress", records);
-        tokenAddress = unpackAddressRecord("tokenAddress", records);
-        registryAddress = unpackAddressRecord("registryAddress", records);
+        minterAddress = unpackAddressRecord("hicMinterAddress", records);
+        marketplaceAddress = unpackAddressRecord("hicMarketplaceAddress", records);
+        tokenAddress = unpackAddressRecord("hicTokenAddress", records);
+        registryAddress = unpackAddressRecord("hicRegistryAddress", records);
         coreParticipants = coreParticipants;
         isPaused = False;
     ];
