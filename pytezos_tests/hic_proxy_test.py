@@ -292,5 +292,20 @@ class MapInteractionTest(HicBaseCase):
         # running lambda testing:
         self._test_lambdas()
 
-        # TODO: Collab with too many participants can't be created:
-        # TODO: NEED TO TEST LIMIT
+
+    def test_zero_core_participants(self):
+        """ Zero core participants should be possible """
+
+        originate_params = {
+            self.p1:   {'share': 330, 'isCore': False},
+            self.p2:   {'share': 500, 'isCore': False},
+            self.tips: {'share': 170, 'isCore': False}
+        }
+
+        self._factory_create_proxy(self.p2, originate_params)
+
+        originate_params = {
+            self.tips: {'share': 170, 'isCore': False}
+        }
+
+        self._factory_create_proxy(self.p2, originate_params)
