@@ -48,18 +48,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         return opg.fill().sign().inject()
 
 
-    def _deploy_factory(
-        self, client, minter_address, marketplace_address,
-        registry_address, token_address):
+    def _deploy_factory(self, client):
 
         factory = ContractInterface.from_file(join(dirname(__file__), FACTORY_FN))
         factory_init = {
-            'data': {
-                'minterAddress': minter_address,
-                'marketplaceAddress': marketplace_address,
-                'registryAddress': registry_address,
-                'tokenAddress': token_address
-            },
+            'records': {},
             'templates': {},
             'originatedContracts': {},
             'administrator': pkh(client),
@@ -235,17 +228,17 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self._activate_accs()
         self._deploy_hic_contracts(self.hic_admin)
 
-        # Deploying factory:
-        opg = self._deploy_factory(
-            self.p1,
-            self.minter.address,
-            self.marketplace.address,
-            self.registry.address,
-            self.objkts.address)
+        # Deploying packer (I feel this is temporal solution but who knows):
+        #    (it is just used to pack data)
+        packer = ContractInterface.from_file(join(dirname(__file__), PACKER_FN))
+        opg = self._deploy_contract(self.p1, packer, 0)
+        self.bake_block()
+        self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
 
+        # Deploying factory:
+        opg = self._deploy_factory(self.p1)
         self.bake_block()
         self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
-
 
         # Adding templates to the factory:
         for lambda_name, filename in LAMBDA_ORIGINATE.items():
@@ -258,15 +251,27 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             }).inject()
             self.bake_block()
 
+        # Adding records to the factory:
+        def pack_address(address):
+            return self.packer.pack_address(
+                address).interpret().storage.hex()
+
+        records = {
+            'minterAddress': pack_address(self.minter.address),
+            'marketplaceAddress': pack_address(self.marketplace.address),
+            'tokenAddress': pack_address(self.objkts.address),
+            'registryAddress': pack_address(self.registry.address)
+        }
+
+        for record_name, value in records.items():
+            self.factory.add_record({
+                'name': record_name,
+                'value': value
+            }).inject()
+            self.bake_block()
+
         # Loading lambdas:
         self.lambdas = load_lambdas(LAMBDA_CALLS)
-
-        # Deploying packer (I feel this is temporal solution but who knows):
-        #    (it is just used to pack data)
-        packer = ContractInterface.from_file(join(dirname(__file__), PACKER_FN))
-        opg = self._deploy_contract(self.p1, packer, 0)
-        self.bake_block()
-        self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
 
         # Deploying signer:
         sign = ContractInterface.from_file(join(dirname(__file__), SIGN_FN))
