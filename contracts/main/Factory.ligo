@@ -110,8 +110,8 @@ function addRecord(
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(factoryStore);
-    (* Rewriting contract with the same name is allowed: *)
-    (* TODO: not implemented *)
+    (* Rewriting record with the same name is allowed: *)
+    factoryStore.records[params.name] := params.value;
 } with ((nil : list(operation)), factoryStore)
 
 
@@ -122,8 +122,7 @@ function removeRecord(
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(factoryStore);
-    (* Rewriting contract with the same name is allowed: *)
-    (* TODO: not implemented *)
+    factoryStore.records := Big_map.remove(name, factoryStore.records);
 } with ((nil : list(operation)), factoryStore)
 
 
