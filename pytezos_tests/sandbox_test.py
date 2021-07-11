@@ -3,6 +3,7 @@ from pytezos.sandbox.parameters import sandbox_addresses, sandbox_commitment
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
 from pytezos.contract.result import ContractCallResult
 from pytezos.rpc.errors import MichelsonError
+from pytezos.crypto.key import Key
 import unittest
 from os.path import dirname, join
 import json
@@ -310,6 +311,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = self.factory.create_proxy(originate_params).inject()
         self.bake_block()
         self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+
 
     def test_mint_token(self):
 
@@ -679,3 +681,94 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         op = result.operations[0]
         self.assertEqual(op['destination'], self.mock.address)
         self.assertEqual(op['parameters']['entrypoint'], 'bool_view')
+
+
+    def test_participant_count_limit(self):
+
+        # Creating contract using proxy
+        COUNT = 221
+
+        participants = {
+            Key.generate(export=False).public_key_hash(): {
+                'share': 100,
+                'isCore': True
+            } for _ in range(COUNT)
+        }
+
+        # Packer is just helper contract that converts data to bytes:
+        packed_participants = self.packer.pack_originate_hic_proxy(
+            participants).interpret().storage.hex()
+
+        originate_params = {
+            'templateName': 'hic_proxy',
+            'params': packed_participants
+        }
+
+        opg = self.factory.create_proxy(originate_params).inject()
+        self.bake_block()
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+
+        # mint:
+        mint_params = {
+            'address': self.collab.address,
+            'amount': 1,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 250
+        }
+
+        collab = self.p1.contract(self.collab.address)
+        opg = collab.mint_OBJKT(mint_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # update operators:
+        self._add_operator(
+            collab,
+            self.p1,
+            collab.address,
+            self.marketplace.address,
+            0)
+
+        self.bake_block()
+
+        # swap:
+        swap_params = {
+            'creator': collab.address,
+            'objkt_amount': 1,
+            'objkt_id': 0,
+            'royalties': 250,
+            'xtz_per_objkt': 1_000_000,
+        }
+
+        swap_id = self.marketplace.storage['counter']()
+        opg = collab.swap(swap_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # collect:
+        opg = self.buyer.contract(self.marketplace.address).collect(
+            swap_id).with_amount(1_000_000).inject()
+
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        opg_details = self.p1.shell.blocks['head':].find_operation(opg['hash'])
+        metadata = opg_details['contents'][0]['metadata']
+        internal_ops = metadata['internal_operation_results']
+
+        # INTERNAL TRANSACTIONS:
+        # + 1x fa2 transfer
+        # + 1x marketplace fee
+        # + 1x sale transaction from marketplace to collab
+        # + 1x royalty transaction from marketplace to collab
+        # + participants count sale transaction from collab
+        # + participants count royalty transaction from collab
+
+        target_op_count = len(participants)*2 + 4
+        self.assertEqual(len(internal_ops), target_op_count)
+
+        # Total gas (1,040,000 hard op limit in florencenet):
+        gas = [int(op['result']['consumed_gas']) for op in internal_ops]
+        total_gas = sum(gas)
+
+        self.assertTrue(total_gas <= 1_040_000)
