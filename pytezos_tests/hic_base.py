@@ -542,7 +542,10 @@ class HicBaseCase(TestCase):
         result = self.collab.update_admin(proposed_admin).interpret(
             storage=self.collab_storage, sender=sender, amount=amount)
         self.collab_storage = result.storage
-        # TODO: implement some checks?
+
+        self.assertEqual(
+            self.collab_storage['proposedAdministrator'],
+            proposed_admin)
 
 
     def _collab_accept_ownership(self, sender, amount=0):
@@ -550,7 +553,10 @@ class HicBaseCase(TestCase):
         result = self.collab.accept_ownership().interpret(
             storage=self.collab_storage, sender=sender, amount=amount)
         self.collab_storage = result.storage
-        # TODO: implement some checks?
+
+        self.assertEqual(
+            self.collab_storage['administrator'],
+            sender)
 
 
     def _collab_trigger_pause(self, sender, amount=0):
