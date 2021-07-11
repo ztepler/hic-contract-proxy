@@ -1,30 +1,23 @@
 { parameter
-    (or (or (or (unit %accept_ownership)
-                (pair %add_template
+    (or (or (or (unit %accept_ownership) (pair %add_record (string %name) (bytes %value)))
+            (or (pair %add_template
                    (string %name)
                    (lambda %originateFunc
-                      (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
-                                  (pair (address %registryAddress) (address %tokenAddress)))
-                            bytes)
-                      (pair (pair (address %address) (bytes %metadata)) (operation %operation)))))
-            (or (pair %create_proxy (bytes %params) (string %templateName))
-                (pair %is_originated_contract
+                      (pair (big_map string bytes) bytes)
+                      (pair (pair (address %address) (bytes %metadata)) (operation %operation))))
+                (pair %create_proxy (bytes %params) (string %templateName))))
+        (or (or (pair %is_originated_contract
                    (contract %callback bool)
-                   (address %contractAddress))))
-        (or (string %remove_template) (address %update_admin))) ;
+                   (address %contractAddress))
+                (string %remove_record))
+            (or (string %remove_template) (address %update_admin)))) ;
   storage
-    (pair (pair (pair (address %administrator)
-                      (pair %data
-                         (pair (address %marketplaceAddress) (address %minterAddress))
-                         (pair (address %registryAddress) (address %tokenAddress))))
-                (pair (big_map %originatedContracts address bytes)
-                      (option %proposedAdministrator address)))
+    (pair (pair (pair (address %administrator) (big_map %originatedContracts address bytes))
+                (pair (option %proposedAdministrator address) (big_map %records string bytes)))
           (map %templates
              string
              (lambda
-                (pair (pair (pair (address %marketplaceAddress) (address %minterAddress))
-                            (pair (address %registryAddress) (address %tokenAddress)))
-                      bytes)
+                (pair (big_map string bytes) bytes)
                 (pair (pair (address %address) (bytes %metadata)) (operation %operation))))) ;
   code { LAMBDA
            unit
@@ -37,12 +30,10 @@
              IF { UNIT }
                 { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
          LAMBDA
-           (pair (pair (pair address (pair (pair address address) (pair address address)))
-                       (pair (big_map address bytes) (option address)))
+           (pair (pair (pair address (big_map address bytes))
+                       (pair (option address) (big_map string bytes)))
                  (map string
-                      (lambda
-                         (pair (pair (pair address address) (pair address address)) bytes)
-                         (pair (pair address bytes) operation))))
+                      (lambda (pair (big_map string bytes) bytes) (pair (pair address bytes) operation))))
            unit
            { CAR ;
              CAR ;
@@ -68,7 +59,7 @@
                      DUP ;
                      CAR ;
                      CDR ;
-                     CDR ;
+                     CAR ;
                      IF_NONE { PUSH string "Not proposed admin" ; FAILWITH } {} ;
                      DUP ;
                      SENDER ;
@@ -91,11 +82,13 @@
                           PAIR ;
                           DUP ;
                           CDR ;
-                          NONE address ;
-                          DUP 3 ;
+                          SWAP ;
+                          DUP ;
+                          DUG 2 ;
                           CAR ;
                           CDR ;
-                          CAR ;
+                          CDR ;
+                          NONE address ;
                           PAIR ;
                           DIG 2 ;
                           CAR ;
@@ -105,6 +98,47 @@
                         { DROP ; PUSH string "Not proposed admin" ; FAILWITH } ;
                      NIL operation ;
                      PAIR }
+                   { PUSH unit Unit ;
+                     DIG 4 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DUP 3 ;
+                     CAR ;
+                     CDR ;
+                     CDR ;
+                     DUP 3 ;
+                     CDR ;
+                     DIG 3 ;
+                     CAR ;
+                     SWAP ;
+                     SOME ;
+                     SWAP ;
+                     UPDATE ;
+                     DUP 3 ;
+                     CAR ;
+                     CDR ;
+                     CAR ;
+                     PAIR ;
+                     DIG 2 ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR } }
+               { IF_LEFT
                    { PUSH unit Unit ;
                      DIG 4 ;
                      SWAP ;
@@ -135,11 +169,10 @@
                      CAR ;
                      PAIR ;
                      NIL operation ;
-                     PAIR } }
-               { DIG 2 ;
-                 DROP ;
-                 IF_LEFT
-                   { PUSH unit Unit ;
+                     PAIR }
+                   { DIG 2 ;
+                     DROP ;
+                     PUSH unit Unit ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
@@ -158,7 +191,7 @@
                      CAR ;
                      DUP 3 ;
                      CAR ;
-                     CAR ;
+                     CDR ;
                      CDR ;
                      PAIR ;
                      EXEC ;
@@ -169,11 +202,10 @@
                      DUP 3 ;
                      CAR ;
                      CDR ;
-                     CDR ;
                      DUP 4 ;
                      CAR ;
-                     CDR ;
                      CAR ;
+                     CDR ;
                      DUP 4 ;
                      CAR ;
                      CDR ;
@@ -184,18 +216,23 @@
                      SOME ;
                      SWAP ;
                      UPDATE ;
+                     DIG 4 ;
+                     CAR ;
+                     CAR ;
+                     CAR ;
                      PAIR ;
-                     DIG 3 ;
-                     CAR ;
-                     CAR ;
                      PAIR ;
                      PAIR ;
                      NIL operation ;
                      DIG 2 ;
                      CDR ;
                      CONS ;
-                     PAIR }
-                   { PUSH unit Unit ;
+                     PAIR } } }
+           { IF_LEFT
+               { IF_LEFT
+                   { DIG 2 ;
+                     DROP ;
+                     PUSH unit Unit ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
@@ -205,8 +242,8 @@
                      PUSH mutez 0 ;
                      DUP 4 ;
                      CAR ;
-                     CDR ;
                      CAR ;
+                     CDR ;
                      DIG 3 ;
                      CDR ;
                      GET ;
@@ -216,60 +253,96 @@
                      NIL operation ;
                      DIG 2 ;
                      CONS ;
-                     PAIR } } }
-           { IF_LEFT
-               { PUSH unit Unit ;
-                 DIG 4 ;
-                 SWAP ;
-                 EXEC ;
-                 DROP ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
-                 DIG 3 ;
-                 SWAP ;
-                 EXEC ;
-                 DROP ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
-                 CDR ;
-                 SWAP ;
-                 NONE (lambda
-                         (pair (pair (pair address address) (pair address address)) bytes)
-                         (pair (pair address bytes) operation)) ;
-                 SWAP ;
-                 UPDATE ;
-                 SWAP ;
-                 CAR ;
-                 PAIR ;
-                 NIL operation ;
-                 PAIR }
-               { SWAP ;
-                 PUSH unit Unit ;
-                 DIG 4 ;
-                 SWAP ;
-                 EXEC ;
-                 DROP ;
-                 DUP ;
-                 DIG 3 ;
-                 SWAP ;
-                 EXEC ;
-                 DROP ;
-                 DUP ;
-                 CDR ;
-                 DIG 2 ;
-                 SOME ;
-                 DUP 3 ;
-                 CAR ;
-                 CDR ;
-                 CAR ;
-                 PAIR ;
-                 DIG 2 ;
-                 CAR ;
-                 CAR ;
-                 PAIR ;
-                 PAIR ;
-                 NIL operation ;
-                 PAIR } } } }
+                     PAIR }
+                   { PUSH unit Unit ;
+                     DIG 4 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     DUP 3 ;
+                     CAR ;
+                     CDR ;
+                     CDR ;
+                     DIG 2 ;
+                     NONE bytes ;
+                     SWAP ;
+                     UPDATE ;
+                     DUP 3 ;
+                     CAR ;
+                     CDR ;
+                     CAR ;
+                     PAIR ;
+                     DIG 2 ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR } }
+               { IF_LEFT
+                   { PUSH unit Unit ;
+                     DIG 4 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CDR ;
+                     SWAP ;
+                     NONE (lambda (pair (big_map string bytes) bytes) (pair (pair address bytes) operation)) ;
+                     SWAP ;
+                     UPDATE ;
+                     SWAP ;
+                     CAR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR }
+                   { SWAP ;
+                     PUSH unit Unit ;
+                     DIG 4 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     DUP ;
+                     DIG 3 ;
+                     SWAP ;
+                     EXEC ;
+                     DROP ;
+                     DUP ;
+                     CDR ;
+                     SWAP ;
+                     DUP ;
+                     DUG 2 ;
+                     CAR ;
+                     CDR ;
+                     CDR ;
+                     DIG 3 ;
+                     SOME ;
+                     PAIR ;
+                     DIG 2 ;
+                     CAR ;
+                     CAR ;
+                     PAIR ;
+                     PAIR ;
+                     NIL operation ;
+                     PAIR } } } } }
 
