@@ -141,7 +141,7 @@
     IF { PUSH string "Collab contract should have at least one core" ; FAILWITH }
        {} ;
     DUP 3 ;
-    PUSH string "tokenAddress" ;
+    PUSH string "hicTokenAddress" ;
     PAIR ;
     DUP 5 ;
     SWAP ;
@@ -153,7 +153,7 @@
     CDR ;
     CAR ;
     DUP 4 ;
-    PUSH string "registryAddress" ;
+    PUSH string "hicRegistryAddress" ;
     PAIR ;
     DUP 6 ;
     SWAP ;
@@ -161,7 +161,7 @@
     PAIR ;
     NONE address ;
     DUP 5 ;
-    PUSH string "minterAddress" ;
+    PUSH string "hicMinterAddress" ;
     PAIR ;
     DUP 7 ;
     SWAP ;
@@ -169,7 +169,7 @@
     PAIR ;
     PAIR ;
     DIG 3 ;
-    PUSH string "marketplaceAddress" ;
+    PUSH string "hicMarketplaceAddress" ;
     PAIR ;
     DIG 4 ;
     SWAP ;
