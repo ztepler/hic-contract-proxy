@@ -211,7 +211,10 @@ class HicBaseCase(TestCase):
         result = self.factory.update_admin(proposed_admin).interpret(
             storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
-        # TODO: implement some checks?
+
+        self.assertEqual(
+            self.factory_storage['proposedAdministrator'],
+            proposed_admin)
 
 
     def _factory_accept_ownership(self, sender, amount=0):
@@ -219,7 +222,10 @@ class HicBaseCase(TestCase):
         result = self.factory.accept_ownership().interpret(
             storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
-        # TODO: implement some checks?
+
+        self.assertEqual(
+            self.factory_storage['administrator'],
+            sender)
 
 
     def _factory_add_record(
