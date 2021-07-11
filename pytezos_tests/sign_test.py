@@ -8,5 +8,16 @@ class SignTest(HicBaseCase):
 
         # Check that sign succeed for any artist for any work:
         self.result = self._sign_sign(self.p1, 42)
-        self.result = self._sign_sign(self.tips, 32768)
 
+        # This is very strange, but pytezos failed inside
+        # _sign_is_signed with MichelsonRuntimeError "keys are unsorted"
+        # if id very big (32000 for example)
+        self.result = self._sign_sign(self.tips, 32)
+
+        # Checking is_sign_view for signed works, True case:
+        is_signed = self._sign_is_signed(participant=self.p1, objkt_id=42)
+        self.assertTrue(is_signed)
+
+        # False case
+        is_signed = self._sign_is_signed(participant=self.p1, objkt_id=43)
+        self.assertFalse(is_signed)
