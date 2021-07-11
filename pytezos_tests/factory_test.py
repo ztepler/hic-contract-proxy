@@ -3,6 +3,7 @@ from hic_base import HicBaseCase
 
 
 class FactoryTest(HicBaseCase):
+
     def _test_admin_change(self):
 
         # Trying to update admin from not admin address:
@@ -27,9 +28,76 @@ class FactoryTest(HicBaseCase):
         self._factory_accept_ownership(self.tips)
 
 
+    def _test_no_tez_entrypoints(self):
+
+        # Checking that entrypoints is not allow to send any tez:
+        calls = [
+            lambda: self._factory_create_proxy(self.p1, self.originate_params, amount=100),
+            lambda: self._factory_add_template(self.tips, amount=100),
+            lambda: self._factory_remove_template(self.tips, amount=100),
+            lambda: self._factory_is_originated_contract(amount=100),
+            lambda: self._factory_update_admin(self.tips, self.p2, amount=100),
+            lambda: self._factory_accept_ownership(self.p1, amount=100),
+            lambda: self._factory_add_record(self.p1, amount=100),
+            lambda: self._factory_remove_record(self.p1, amount=100)
+        ]
+
+        for call in calls:
+            with self.assertRaises(MichelsonRuntimeError) as cm:
+                call()
+            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+
+
+    def _test_records(self):
+        # removing all records from factory:
+        self.factory_storage['records'] = {}
+
+        # no records added, trying to originate proxy
+        # and failwith "Record is not found":
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_create_proxy(self.p1, self.originate_params)
+        self.assertTrue('Record is not found' in str(cm.exception))
+
+        # adding all records is succeeded:
+        for name, address in self.addresses.items():
+            self._factory_add_record(
+                self.admin, name, self._pack_address(address))
+
+        # contract origination is succeeded:
+        self._factory_create_proxy(self.p1, self.originate_params)
+
+        # checking contract addresses:
+        for name, address in self.addresses.items():
+            self.assertEqual(self.collab_storage[name], address)
+
+        # removing one of the records succeeded:
+        self._factory_remove_record(self.admin, 'minterAddress')
+
+        # adding record with nat type instead of address is succeed:
+        self._factory_add_record(
+            self.admin, 'minterAddress', self._pack_nat(42))
+
+        # contract origination failed: "Unpack failed"
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_create_proxy(self.p1, self.originate_params)
+        self.assertTrue('Unpack failed' in str(cm.exception))
+
+        # replacing record with this name with correct address:
+        self._factory_add_record(
+            self.admin,
+            'minterAddress',
+            self._pack_address(self.addresses['minterAddress']))
+
+        # contract origination succeeded:
+        self._factory_create_proxy(self.p1, self.originate_params)
+
+
     def test_factory(self):
         random_address = 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9'
         entrypoint = 'not_existed_entrypoint'
+
+        # Testing records before any interactions:
+        self._test_records()
 
         # Anyone can create collab
         self._factory_create_proxy(self.p2, self.originate_params)
@@ -73,17 +141,4 @@ class FactoryTest(HicBaseCase):
         # Trying to add template new admin address:
         self._factory_add_template(self.tips)
 
-        # Checking that entrypoints is not allow to send any tez:
-        calls = [
-            lambda: self._factory_create_proxy(self.p1, self.originate_params, amount=100),
-            lambda: self._factory_add_template(self.tips, amount=100),
-            lambda: self._factory_remove_template(self.tips, amount=100),
-            lambda: self._factory_is_originated_contract(amount=100),
-            lambda: self._factory_update_admin(self.tips, self.p2, amount=100),
-            lambda: self._factory_accept_ownership(self.p1, amount=100)
-        ]
-
-        for call in calls:
-            with self.assertRaises(MichelsonRuntimeError) as cm:
-                call()
-            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+        self._test_no_tez_entrypoints()

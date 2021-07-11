@@ -120,6 +120,10 @@ class HicBaseCase(TestCase):
         return self.packer.pack_address(address).interpret().storage.hex()
 
 
+    def _pack_nat(self, nat):
+        return self.packer.pack_nat(nat).interpret().storage.hex()
+
+
     def _prepare_lambda_params(self, entrypoint_name):
         """ Returns dict with some default lambda params for given entrypoint
         """
@@ -216,6 +220,31 @@ class HicBaseCase(TestCase):
             storage=self.factory_storage, sender=sender, amount=amount)
         self.factory_storage = result.storage
         # TODO: implement some checks?
+
+
+    def _factory_add_record(
+            self, sender, name='without name', value=None, amount=0):
+
+        value = self._pack_nat(42) if value is None else value
+        params = dict(name=name, value=value)
+
+        result = self.factory.add_record(params).interpret(
+            storage=self.factory_storage, sender=sender, amount=amount)
+        self.factory_storage = result.storage
+
+        recorded_value = self.factory_storage['records'][name]
+        self.assertEqual(recorded_value, bytes.fromhex(value))
+
+
+    def _factory_remove_record(self, sender, name='without name', amount=0):
+
+        result = self.factory.remove_record(name).interpret(
+            storage=self.factory_storage, sender=sender, amount=amount)
+
+        self.assertEqual(result.storage['records'][name], None)
+        result.storage['records'].pop(name)
+
+        self.factory_storage = result.storage
 
 
     def _collab_mint(self, sender, amount=0):
