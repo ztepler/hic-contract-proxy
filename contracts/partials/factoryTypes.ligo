@@ -5,21 +5,18 @@ type originationResult is record [
 ]
 
 
-(* TODO: need to decide: is it better to have all this data inside factory or
-    it is better to have them inside bytes that transfered when contract originated? *)
-type factoryData is record [
-    minterAddress : address;
-    marketplaceAddress : address;
-    registryAddress : address;
-    tokenAddress : address;
-]
+type recordsType is big_map(string, bytes)
 
-type originateContractFunc is (factoryData * bytes) -> originationResult
+
+type originateContractFunc is (recordsType * bytes) -> originationResult
 
 
 type factoryStorage is record [
-    data : factoryData;
+    (* Records is packed factory params that can be accessed in originate
+        lambdas, so it can be used to store contract-specific data: *)
+    records : recordsType;
 
+    (* Templates is map of lambdas each of one should originate contract *)
     templates : map(string, originateContractFunc);
 
     (* Ledger with all originated contracts and their params *)
@@ -48,4 +45,10 @@ type isOriginatedResponse is bool
 type isOriginatedParams is record [
     contractAddress: address;
     callback: contract(isOriginatedResponse)
+]
+
+
+type addRecordParams is record [
+    name : string;
+    value : bytes;
 ]

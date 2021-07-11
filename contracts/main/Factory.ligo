@@ -9,6 +9,8 @@ type factoryAction is
 | Is_originated_contract of isOriginatedParams
 | Update_admin of address
 | Accept_ownership of unit
+| Add_record of addRecordParams
+| Remove_record of string
 
 
 function checkSenderIsAdmin(const factoryStore : factoryStorage) : unit is
@@ -28,7 +30,7 @@ block {
     end;
 
     const result : originationResult = proxyOriginator(
-        factoryStore.data, params.params);
+        factoryStore.records, params.params);
 
     factoryStore.originatedContracts[result.address] := result.metadata;
 
@@ -101,6 +103,30 @@ block {
 } with ((nil: list(operation)), factoryStore)
 
 
+function addRecord(
+    const params : addRecordParams;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    checkNoAmount(Unit);
+    checkSenderIsAdmin(factoryStore);
+    (* Rewriting contract with the same name is allowed: *)
+    (* TODO: not implemented *)
+} with ((nil : list(operation)), factoryStore)
+
+
+function removeRecord(
+    const name : string;
+    var factoryStore : factoryStorage) : (list(operation) * factoryStorage) is
+
+block {
+    checkNoAmount(Unit);
+    checkSenderIsAdmin(factoryStore);
+    (* Rewriting contract with the same name is allowed: *)
+    (* TODO: not implemented *)
+} with ((nil : list(operation)), factoryStore)
+
+
 function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
 case params of
@@ -110,4 +136,6 @@ case params of
 | Is_originated_contract(p) -> isOriginatedContract(p, factoryStore)
 | Update_admin(p) -> updateAdmin(factoryStore, p)
 | Accept_ownership -> acceptOwnership(factoryStore)
+| Add_record(p) -> addRecord(p, factoryStore)
+| Remove_record(p) -> removeRecord(p, factoryStore)
 end

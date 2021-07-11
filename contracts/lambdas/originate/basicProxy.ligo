@@ -18,7 +18,7 @@ const createProxyFunc : createProxyFuncType =
 
 
 function lambda(
-    const data : factoryData;
+    const records : recordsType;
     const packedParams : bytes) : originationResult is
 
 block {

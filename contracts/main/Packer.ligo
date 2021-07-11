@@ -7,16 +7,19 @@
 type shares is map(address, nat);
 
 type action is
+| Pack_address of address
 | Pack_mint_OBJKT of mintParams
 | Pack_originate_hic_proxy of participantsMap
 | Pack_originate_basic_proxy of shares
 
+function pack_address(var params : address) : bytes is Bytes.pack(params)
 function mint_OBJKT(var params : mintParams) : bytes is Bytes.pack(params)
 function originate_hic_proxy(var params : participantsMap) : bytes is Bytes.pack(params)
 function originate_basic_proxy(var params : shares) : bytes is Bytes.pack(params)
 
 function main (var params : action; var store : bytes) : (list(operation) * bytes) is
 case params of
+| Pack_address(p) -> ((nil: list(operation)), pack_address(p))
 | Pack_mint_OBJKT(p) -> ((nil: list(operation)), mint_OBJKT(p))
 | Pack_originate_hic_proxy(p) -> ((nil: list(operation)), originate_hic_proxy(p))
 | Pack_originate_basic_proxy(p) -> ((nil: list(operation)), originate_basic_proxy(p))
