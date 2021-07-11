@@ -148,7 +148,6 @@ block {
 } with (list[callToHic], store)
 
 
-(* TODO: REPLACE THIS WITH ediv *)
 function natDiv(const value : tez; const num : nat; const den : nat) : tez is
     natToTez(tezToNat(value) * num / den)
 
@@ -173,7 +172,6 @@ block {
         allocatedPayouts := allocatedPayouts + payoutAmount;
     }
 
-    (* TODO: return dust to the last participant? *)
 } with (operations, store)
 
 
