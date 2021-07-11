@@ -685,8 +685,8 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
     def test_participant_count_limit(self):
 
-        # Creating contract using proxy
-        COUNT = 221
+        # The real hard gas limit was 221 but I limited contract to 108
+        COUNT = 108
 
         participants = {
             Key.generate(export=False).public_key_hash(): {
