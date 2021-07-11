@@ -80,10 +80,10 @@ block {
     if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
     else skip;
 
-    (* TODO: check how much participants it can handle and limit this count here *)
+    if Map.size(participants) > 108n then failwith("The maximum participants count is 108")
+    else skip;
 
     (* Preparing initial storage: *)
-
     const initialStore : storage = record [
         administrator = Tezos.sender;
         proposedAdministrator = (None : option(address));
