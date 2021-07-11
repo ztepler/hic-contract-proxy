@@ -283,7 +283,7 @@ class MapInteractionTest(HicBaseCase):
         self._test_lambdas()
 
 
-    def test_zero_core_participants(self):
+    def test_zero_core_participants_one(self):
         """ Zero core participants should be possible """
 
         originate_params = {
@@ -294,8 +294,22 @@ class MapInteractionTest(HicBaseCase):
 
         self._factory_create_proxy(self.p2, originate_params)
 
+
+    def test_zero_core_participants_two(self):
+        """ Zero core participants should be possible """
+
         originate_params = {
             self.tips: {'share': 170, 'isCore': False}
         }
 
         self._factory_create_proxy(self.p2, originate_params)
+
+
+    def test_no_participants(self):
+        """ No participants should not be allowed """
+
+        originate_params = {}
+
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_create_proxy(self.p2, originate_params)
+        # There are no special msg, 0 shares should be failwithed
