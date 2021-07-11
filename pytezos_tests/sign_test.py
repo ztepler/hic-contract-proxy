@@ -21,3 +21,19 @@ class SignTest(HicBaseCase):
         # False case
         is_signed = self._sign_is_signed(participant=self.p1, objkt_id=43)
         self.assertFalse(is_signed)
+
+        # False case 2:
+        is_signed = self._sign_is_signed(participant=self.tips, objkt_id=42)
+        self.assertFalse(is_signed)
+
+        # Another work from False case is became True case:
+        self.result = self._sign_sign(self.p1, 43)
+        is_signed = self._sign_is_signed(participant=self.p1, objkt_id=43)
+        self.assertTrue(is_signed)
+
+        # Unsign test:
+        self.result = self._sign_unsign(self.p1, 43)
+
+        # And again False case:
+        is_signed = self._sign_is_signed(participant=self.p1, objkt_id=43)
+        self.assertFalse(is_signed)

@@ -539,9 +539,15 @@ class HicBaseCase(TestCase):
         self.sign_storage = result.storage
 
 
-    def _sign_unsign(self, sender):
-        # TODO: not implemented
-        pass
+    def _sign_unsign(self, sender, objkt_id=0, amount=0):
+
+        result = self.sign.unsign(objkt_id).interpret(
+            storage=self.sign_storage, sender=sender, amount=amount)
+
+        key = (sender, objkt_id)
+        self.assertTrue(result.storage[key] is None)
+        result.storage.pop(key)
+        self.sign_storage = result.storage
 
 
     def _sign_is_signed(
