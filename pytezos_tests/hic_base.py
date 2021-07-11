@@ -544,6 +544,25 @@ class HicBaseCase(TestCase):
         pass
 
 
-    def _sign_is_signed(self, sender):
-        # TODO: not implemented
-        pass
+    def _sign_is_signed(
+            self, participant=None, objkt_id=0, callback=None,
+            entrypoint='random_entry', amount=0):
+
+        callback = callback or self.random_contract_address
+        participant = participant or self.p1
+
+        params = {
+            'participant': participant,
+            'id': objkt_id,
+            'callback': callback + '%' + entrypoint
+        }
+
+        result = self._call_view_entrypoint(
+            self.sign.is_signed,
+            params,
+            self.sign_storage,
+            callback,
+            entrypoint,
+            amount=amount)
+
+        return result.operations[0]['parameters']['value']['prim'] == 'True'
