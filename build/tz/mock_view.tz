@@ -1,0 +1,7 @@
+{ parameter (or (bool %bool_view) (nat %nat_view)) ;
+  storage (pair (option %boolValue bool) (option %natValue nat)) ;
+  code { CAR ;
+         IF_LEFT { NONE nat ; SWAP ; SOME ; PAIR } { SOME ; NONE bool ; PAIR } ;
+         NIL operation ;
+         PAIR } }
+

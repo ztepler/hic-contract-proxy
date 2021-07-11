@@ -21,8 +21,10 @@
                  GET ;
                  IF_NONE { PUSH bool False } { DROP ; PUSH bool True } ;
                  TRANSFER_TOKENS ;
-                 DROP ;
+                 SWAP ;
                  NIL operation ;
+                 DIG 2 ;
+                 CONS ;
                  PAIR }
                { SENDER ;
                  PAIR ;
