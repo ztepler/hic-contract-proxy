@@ -67,23 +67,17 @@ block {
     var shares : map(address, nat) := map [];
     var coreParticipants : set (address) := set [];
     var totalShares : nat := 0n;
-    var coreCount : nat := 0n;
 
     for participantAddress -> participantRec in map participants block {
         shares[participantAddress] := participantRec.share;
         totalShares := totalShares + participantRec.share;
 
         if participantRec.isCore then
-        block {
             coreParticipants := Set.add (participantAddress, coreParticipants);
-            coreCount := coreCount + 1n;
-        } else skip;
+        else skip;
     };
 
     if totalShares = 0n then failwith("Sum of the shares should be more than 0n")
-    else skip;
-
-    if coreCount = 0n then failwith("Collab contract should have at least one core")
     else skip;
 
     (* TODO: check how much participants it can handle and limit this count here *)
