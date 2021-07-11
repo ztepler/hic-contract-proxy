@@ -1,5 +1,6 @@
 from pytezos import MichelsonRuntimeError
 from hic_base import HicBaseCase
+from pytezos.crypto.key import Key
 
 
 # TODO: should I split this test into separate ones?
@@ -313,3 +314,22 @@ class MapInteractionTest(HicBaseCase):
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p2, originate_params)
         # There are no special msg, 0 shares should be failwithed
+
+
+    def test_too_many_participants(self):
+        """ More than 108 participants is not allowed """
+
+        COUNT = 109
+
+        originate_params = {
+            Key.generate(export=False).public_key_hash(): {
+                'share': 170,
+                'isCore': False
+            } for _ in range(COUNT)
+        }
+
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_create_proxy(self.p2, originate_params)
+        msg = 'The maximum participants count is 108'
+        self.assertTrue(msg in str(cm.exception))
+
