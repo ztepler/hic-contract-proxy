@@ -333,3 +333,17 @@ class MapInteractionTest(HicBaseCase):
         msg = 'The maximum participants count is 108'
         self.assertTrue(msg in str(cm.exception))
 
+
+    def test_too_many_shares(self):
+        """ More than 10**12 shares is not allowed """
+
+        originate_params = {
+            self.p1:   {'share': 10**12, 'isCore': False},
+            self.p2:   {'share': 10**12, 'isCore': False},
+        }
+
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._factory_create_proxy(self.p2, originate_params)
+        msg = 'The maximum shares is 10**12'
+        self.assertTrue(msg in str(cm.exception))
+
