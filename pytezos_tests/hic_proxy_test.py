@@ -182,6 +182,7 @@ class MapInteractionTest(HicBaseCase):
         # Test swap call from admin succeed:
         self._collab_swap(self.admin)
 
+        # TODO: remove duplicated tests:
         # Testing that calling swap from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_swap(self.p2)
@@ -223,11 +224,11 @@ class MapInteractionTest(HicBaseCase):
         # Default entrypoint tests with very big value (100 bln tez):
         self._collab_default(self.tips, 10**17)
 
-        # Collab with very crazy big shares:
+        # Collab with very big share sums (10**12 is hard limit):
         crazy_params = {
-            self.p1: {'share': 10**35, 'isCore': True},
-            self.p2: {'share': 10**35, 'isCore': True},
-            self.tips: {'share': 10**35, 'isCore': True}
+            self.p1: {'share': 10**11, 'isCore': True},
+            self.p2: {'share': 10**11, 'isCore': True},
+            self.tips: {'share': 10**11, 'isCore': True}
         }
 
         self._factory_create_proxy(self.p2, crazy_params)
