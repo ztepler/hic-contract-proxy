@@ -257,16 +257,6 @@ class MapInteractionTest(HicBaseCase):
         msg = 'Sum of the shares should be more than 0n'
         self.assertTrue(msg in str(cm.exception))
 
-        # Collab with zero-core can't be created:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            no_core = {
-                self.p1: {'share': 1, 'isCore': False},
-                self.p2: {'share': 1, 'isCore': False},
-            }
-            self._factory_create_proxy(self.admin, no_core)
-        msg = 'Collab contract should have at least one core'
-        self.assertTrue(msg in str(cm.exception))
-
         self._test_no_tez_entrypoints()
 
         # Running views again for collab with 1 participant:
