@@ -84,12 +84,17 @@ class HicBaseCase(TestCase):
             'royalties': 100
         }
 
+        self.addresses = {
+            'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
+            'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
+            'registryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
+            'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
+        }
+
         self.factory_storage = {
-            'data': {
-                'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
-                'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
-                'registryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
-                'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
+            'records': {
+                name: self._pack_address(address)
+                for name, address in self.addresses.items()
             },
             'templates': {
                 'hic_contract': self.hic_proxy_code
@@ -109,6 +114,10 @@ class HicBaseCase(TestCase):
 
         # default execute_lambda call params:
         self.execute_params = self._prepare_lambda_params('mint_OBJKT')
+
+
+    def _pack_address(self, address):
+        return self.packer.pack_address(address).interpret().storage.hex()
 
 
     def _prepare_lambda_params(self, entrypoint_name):
@@ -226,7 +235,7 @@ class HicBaseCase(TestCase):
         self.assertEqual(op_bytes, metadata)
 
         self.assertEqual(operation['destination'],
-            self.factory_storage['data']['minterAddress'])
+            self.addresses['minterAddress'])
         self.assertEqual(operation['amount'], '0')
 
 
