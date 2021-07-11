@@ -1,4 +1,4 @@
-#include "../../partials/factoryTypes.ligo"
+#include "../../partials/factory.ligo"
 #include "../../main/HicProxy.ligo"
 
 
@@ -25,30 +25,6 @@ const createProxyFunc : createProxyFuncType =
         ;
           PAIR } |}
  : createProxyFuncType)];
-
-
-(* TODO: move this unpacker to separate file/general or somewhere out
-    of this current proxy lambda: *)
-function unpackAddressRecord(
-    const name : string;
-    const records : recordsType
-) : address is
-block {
-
-    (* Getting record by its name: *)
-    const packedRecord : bytes = case Big_map.find_opt(name, records) of
-    | None -> (failwith("Record is not found") : bytes)
-    | Some(rec) -> rec
-    end;
-
-    (* Unpacking record to address type: *)
-    const addressOption: option(address) = Bytes.unpack(packedRecord);
-    const unpackedAddress : address = case addressOption of
-    | None -> (failwith("Unpack failed") : address)
-    | Some(adr) -> adr
-    end;
-
-} with unpackedAddress
 
 
 function lambda(

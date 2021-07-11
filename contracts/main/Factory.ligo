@@ -1,4 +1,4 @@
-#include "../partials/factoryTypes.ligo"
+#include "../partials/factory.ligo"
 #include "../partials/general.ligo"
 
 

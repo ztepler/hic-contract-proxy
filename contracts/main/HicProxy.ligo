@@ -1,5 +1,3 @@
-#include "../partials/factoryTypes.ligo"
-
 (* Including hic et nunc interface: *)
 #include "../partials/hicetnunc.ligo"
 

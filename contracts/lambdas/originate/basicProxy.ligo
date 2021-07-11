@@ -1,4 +1,4 @@
-#include "../../main/Factory.ligo"
+#include "../../partials/factory.ligo"
 #include "../../main/BasicProxy.ligo"
 
 
