@@ -17,6 +17,8 @@
     PAIR ;
     PAIR ;
     SWAP ;
+    DUP ;
+    DUG 2 ;
     ITER { SWAP ;
            PAIR ;
            DUP ;
@@ -100,6 +102,12 @@
     COMPARE ;
     EQ ;
     IF { PUSH string "Sum of the shares should be more than 0n" ; FAILWITH } {} ;
+    PUSH nat 108 ;
+    DIG 3 ;
+    SIZE ;
+    COMPARE ;
+    GT ;
+    IF { PUSH string "The maximum participants count is 108" ; FAILWITH } {} ;
     DUP 3 ;
     PUSH string "hicTokenAddress" ;
     PAIR ;
