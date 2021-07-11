@@ -42,7 +42,6 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
     def _deploy_contract(self, client, contract, storage):
         """ Deploys contract with given storage """
 
-        # TODO: try to replace key with client.key:
         opg = contract.using(shell=self.get_node_url(), key=client.key)
         opg = opg.originate(initial_storage=storage)
 
