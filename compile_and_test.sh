@@ -5,6 +5,7 @@ docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-contract
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-contract contracts/main/Sign.ligo main > build/tz/sign.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-contract contracts/main/Packer.ligo main > build/tz/packer.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-expression pascaligo --init-file="contracts/lambdas/call/hicMintOBJKT.ligo" lambda > build/tz/lambdas/call/hic_mint_OBJKT.tz
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-expression pascaligo --init-file="contracts/lambdas/call/objkt_bid_english_create_auction.ligo" lambda > build/tz/lambdas/call/objkt_bid_english_create_auction.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-expression pascaligo --init-file="contracts/lambdas/originate/hicProxy.ligo" lambda > build/tz/lambdas/originate/hic_proxy.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-expression pascaligo --init-file="contracts/lambdas/originate/basicProxy.ligo" lambda > build/tz/lambdas/originate/basic_proxy.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.24.0 compile-contract contracts/main/MockView.ligo main > build/tz/mock_view.tz
