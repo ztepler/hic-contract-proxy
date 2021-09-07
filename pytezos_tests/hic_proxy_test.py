@@ -52,6 +52,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
             lambda: self._collab_accept_ownership(self.admin, amount=100),
             lambda: self._collab_trigger_pause(self.admin, amount=100),
+            lambda: self._collab_transfer(self.admin, amount=100),
         ]
 
         for call in calls:
@@ -76,6 +77,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_update_admin(not_admin, self.tips),
             lambda: self._collab_trigger_pause(not_admin),
             lambda: self._collab_execute(not_admin),
+            lambda: self._collab_transfer(not_admin),
         ]
 
         for call in admin_calls:
@@ -128,6 +130,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_unregistry(self.admin),
             lambda: self._collab_update_operators(self.admin),
             lambda: self._collab_execute(self.admin),
+            lambda: self._collab_transfer(self.admin),
         ]
 
         for call in paused_calls:
@@ -347,4 +350,15 @@ class MapInteractionTest(HicBaseCase):
             self._factory_create_proxy(self.p2, originate_params)
         msg = 'The maximum shares is 10**12'
         self.assertTrue(msg in str(cm.exception))
+
+
+    def test_transfer(self):
+        """ Simple call .transfer entrypoint with default params from admin
+            address """
+
+        # Need to originate collab storage before any collab tests:
+        self._factory_create_proxy(self.admin, self.originate_params)
+
+        # Checking that transfer with admin acc is succeed:
+        self._collab_transfer(sender=self.admin)
 

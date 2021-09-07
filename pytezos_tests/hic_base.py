@@ -70,12 +70,15 @@ class HicBaseCase(TestCase):
 
         self.default_params = DEFAULT_PARAMS
 
+        # default originate params for tests:
         self.originate_params = {
             self.p1:   {'share': 330, 'isCore': True},
             self.p2:   {'share': 500, 'isCore': True},
             self.tips: {'share': 170, 'isCore': False}
         }
 
+        # default swap params for tests:
+        # TODO: move to the DEFAULT_PARAMS
         self.swap_params = {
             'objkt_amount': 1,
             'objkt_id': 30000,
@@ -90,6 +93,18 @@ class HicBaseCase(TestCase):
             'hicRegistryAddress': 'KT1My1wDZHDGweCrJnQJi3wcFaS67iksirvj',
             'hicTokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton'
         }
+
+        # default transfer params for tests:
+        # TODO: move to the DEFAULT_PARAMS (if this is possible)
+        self.transfer_params = [{
+            'txs': [{
+                'to_': self.p2,
+                'amount': 1,
+                'token_id': 0
+            }],
+            # from_ should be self.collab.address but it is undefined in interpret mode:
+            'from_': self.p1
+        }]
 
         self.factory_storage = {
             'records': {
@@ -579,6 +594,23 @@ class HicBaseCase(TestCase):
 
         return result
 
+
+    def _collab_transfer(self, sender, transfer_params=None, amount=0):
+
+        transfer_params = transfer_params or self.transfer_params
+
+        result = self.collab.transfer(transfer_params).interpret(
+            storage=self.collab_storage, sender=sender, amount=amount)
+        self.collab_storage = result.storage
+
+        self.assertEqual(len(result.operations), 1)
+        operation = result.operations[0]
+
+        self.assertEqual(operation['parameters']['entrypoint'], 'transfer')
+        self.assertEqual(
+            operation['destination'],
+            self.addresses['hicTokenAddress']
+        )
 
     def _sign_sign(self, sender, objkt_id=0, amount=0):
 

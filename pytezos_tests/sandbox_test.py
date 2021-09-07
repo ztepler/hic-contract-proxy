@@ -212,6 +212,18 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.registry = self._find_contract_by_hash(client, opg['hash'])
 
 
+        # Deploying objkt.bid English auctions:
+        storage = read_storage('objkt_bid_english')
+        storage.update({'admin': pkh(client)})
+        opg = self._deploy_contract(
+            client=client,
+            contract=read_contract('objkt_bid_english'),
+            storage=storage)
+
+        self.bake_block()
+        self.objkt_bid_english = self._find_contract_by_hash(client, opg['hash'])
+
+
     def _add_operator(self, contract, owner_client, owner, operator, token_id):
         fa2_contract = owner_client.contract(contract.address)
         update_operatiors_params = [{
@@ -808,4 +820,67 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.assertEqual(self.objkts.storage['all_tokens'](), 1)
         self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 0)
         self.assertEqual(self.objkts.storage['ledger'][pkh(self.p2), 0](), 1)
+
+
+    def test_place_token_on_objkt_bid_english_using_lambda(self):
+
+        self._originate_default_contract()
+
+        # mint:
+        mint_params = {
+            'address': self.collab.address,
+            'amount': 1,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 250
+        }
+
+        collab = self.p1.contract(self.collab.address)
+        opg = collab.mint_OBJKT(mint_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # Packing auction params:
+        current_time = 0
+
+        place_english_params = {
+            'auctionParams': {
+                'artist': collab.address,
+                'end_time': current_time + 24*60*60,
+                'extension_time': 600,
+                'fa2': self.objkts.address,
+                'objkt_id': 0,
+                'price_increment': 1_000_000,
+                'reserve': 1_000_000,
+                'royalties': 250,
+                'start_time': current_time
+            },
+            'auctionAddress': self.objkt_bid_english.address
+        }
+
+        packed_place_params = self.packer.pack_create_english_auction(
+            place_english_params).interpret().storage.hex()
+
+        import pdb; pdb.set_trace()
+
+        # using lambda to place token:
+        executeParams = {
+            'lambda': self.lambdas['objkt_bid_english_create_auction'],
+            'packedParams': packed_place_params
+        }
+
+        opg = self.collab.execute(executeParams).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # Checking result params:
+        self.assertTrue(len(result.operations) == 3)
+        op = result.operations[1]
+        self.assertEqual(op['destination'], self.objkt_bid_english.address)
+        self.assertTrue(op['amount'] == '0')
+        self.assertTrue(op['parameters']['entrypoint'] == 'create_auction')
+
+        # Checking that transfer succeed:
+        self.assertEqual(self.objkts.storage['all_tokens'](), 1)
+        self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 0)
+        self.assertEqual(self.objkts.storage['ledger'][self.objkt_bid_english, 0](), 1)
 

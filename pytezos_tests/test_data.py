@@ -12,7 +12,9 @@ def load_lambdas(lambda_calls):
 
 
 LAMBDA_CALLS = {
-    'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz'
+    'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz',
+    'objkt_bid_english_create_auction':
+        '../build/tz/lambdas/call/objkt_bid_english_create_auction.tz'
 }
 
 LAMBDA_ORIGINATE = {
