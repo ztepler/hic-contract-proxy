@@ -28,7 +28,7 @@
          UNPAIR ;
          IF_LEFT
            { IF_LEFT
-               { DROP ; SWAP ; DROP ; NIL operation ; PAIR }
+               { DIG 2 ; DROP 2 ; NIL operation ; PAIR }
                { SWAP ;
                  DUP ;
                  DIG 3 ;
@@ -75,9 +75,8 @@
                  DIG 2 ;
                  CONS ;
                  PAIR }
-               { DROP ;
-                 SWAP ;
-                 DROP ;
+               { DIG 2 ;
+                 DROP 2 ;
                  DUP ;
                  CDR ;
                  BALANCE ;

@@ -48,9 +48,8 @@
          IF_LEFT
            { IF_LEFT
                { IF_LEFT
-                   { DROP ;
-                     SWAP ;
-                     DROP ;
+                   { DIG 2 ;
+                     DROP 2 ;
                      PUSH unit Unit ;
                      DIG 2 ;
                      SWAP ;
