@@ -75,6 +75,7 @@ type action is
 | Update_admin of address
 | Accept_ownership of unit
 | Trigger_pause of unit
+| Transfer of transferParams
 
 (* TODO: Transfer method to withdraw tokens from contract *)
 
@@ -268,6 +269,15 @@ block {
 } with (list[callToHic], store)
 
 
+function transfer(var store : storage; var params : transferParams) : (list(operation) * storage) is
+block {
+    checkNoAmount(Unit);
+    checkSenderIsAdmin(store);
+    checkIsNotPaused(store);
+    const callToHic = callTransfer(store.tokenAddress, params);
+} with (list[callToHic], store)
+
+
 function main (const params : action; const store : storage) : (list(operation) * storage) is
 case params of
 | Execute(call) -> execute(call, store)
@@ -287,4 +297,6 @@ case params of
 | Unregistry -> unregistry(store)
 | Trigger_pause -> triggerPause(store)
 | Update_operators(p) -> updateOperators(store, p)
+| Transfer(p) -> transfer(store, p)
 end
+
