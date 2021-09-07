@@ -17,8 +17,8 @@ def str_to_hex_bytes(string):
     return codecs.encode(string.encode("ascii"), "hex")
 
 
-def pkh(key):
-    return key.key.public_key_hash()
+def pkh(client):
+    return client.key.public_key_hash()
 
 
 def read_contract(name):
@@ -771,3 +771,41 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         total_gas = sum(gas)
 
         self.assertTrue(total_gas <= 1_040_000)
+
+
+    def test_transfer_from_collab(self):
+
+        self._originate_default_contract()
+
+        # mint:
+        mint_params = {
+            'address': self.collab.address,
+            'amount': 1,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 250
+        }
+
+        collab = self.p1.contract(self.collab.address)
+        opg = collab.mint_OBJKT(mint_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # transfer to self.p2:
+        transfer_params = [{
+            'txs': [{
+                'to_': pkh(self.p2),
+                'amount': 1,
+                'token_id': 0
+            }],
+            'from_': self.collab.address
+        }]
+
+        opg = collab.transfer(transfer_params).inject()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+
+        # checking that transfer succeed:
+        self.assertEqual(self.objkts.storage['all_tokens'](), 1)
+        self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 0)
+        self.assertEqual(self.objkts.storage['ledger'][pkh(self.p2), 0](), 1)
+
