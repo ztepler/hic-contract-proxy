@@ -1,15 +1,23 @@
 { parameter
     (or (or (or (address %pack_address)
-                (pair %pack_mint_OBJKT
+                (pair %pack_create_english_auction
+                   (address %auctionAddress)
+                   (pair %auctionParams
+                      (pair (pair (address %artist) (timestamp %end_time))
+                            (pair (nat %extension_time) (address %fa2)))
+                      (pair (pair (nat %objkt_id) (mutez %price_increment))
+                            (pair (mutez %reserve) (pair (nat %royalties) (timestamp %start_time)))))))
+            (or (pair %pack_mint_OBJKT
                    (pair (address %address) (nat %amount))
-                   (pair (bytes %metadata) (nat %royalties))))
-            (or (nat %pack_nat) (map %pack_originate_basic_proxy address nat)))
-        (map %pack_originate_hic_proxy address (pair (bool %isCore) (nat %share)))) ;
+                   (pair (bytes %metadata) (nat %royalties)))
+                (nat %pack_nat)))
+        (or (map %pack_originate_basic_proxy address nat)
+            (map %pack_originate_hic_proxy address (pair (bool %isCore) (nat %share))))) ;
   storage bytes ;
   code { CAR ;
          IF_LEFT
            { IF_LEFT
                { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } }
                { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } } }
-           { PACK ; NIL operation ; PAIR } } }
+           { IF_LEFT { PACK ; NIL operation ; PAIR } { PACK ; NIL operation ; PAIR } } } }
 

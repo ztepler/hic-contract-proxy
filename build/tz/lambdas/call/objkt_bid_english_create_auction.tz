@@ -1,0 +1,81 @@
+{ PUSH (lambda
+          (pair address (list (or (pair address address nat) (pair address address nat))))
+          operation)
+       { UNPAIR ;
+         CONTRACT %update_operators
+           (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                     (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
+         IF_NONE { PUSH string "No FA2 contract found" ; FAILWITH } {} ;
+         PUSH mutez 0 ;
+         DIG 2 ;
+         TRANSFER_TOKENS } ;
+  PAIR ;
+  { UNPAIR ;
+    SWAP ;
+    UNPAIR ;
+    SWAP ;
+    UNPACK
+      (pair (address %auctionAddress)
+            (pair %auctionParams
+               (pair (pair (address %artist) (timestamp %end_time))
+                     (pair (nat %extension_time) (address %fa2)))
+               (pair (pair (nat %objkt_id) (mutez %price_increment))
+                     (pair (mutez %reserve) (pair (nat %royalties) (timestamp %start_time)))))) ;
+    IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
+    DUP ;
+    CAR ;
+    SWAP ;
+    CDR ;
+    SELF_ADDRESS ;
+    DUP 3 ;
+    DUP 3 ;
+    CDR ;
+    CAR ;
+    CAR ;
+    SWAP ;
+    PAIR ;
+    SWAP ;
+    PAIR ;
+    NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+    SWAP ;
+    DUP ;
+    DUG 2 ;
+    LEFT (pair address (pair address nat)) ;
+    CONS ;
+    DUP 5 ;
+    CDR ;
+    CAR ;
+    PAIR ;
+    DUP 6 ;
+    SWAP ;
+    EXEC ;
+    DIG 2 ;
+    DIG 3 ;
+    CONTRACT %create_auction
+      (pair (pair (pair (address %artist) (timestamp %end_time))
+                  (pair (nat %extension_time) (address %fa2)))
+            (pair (pair (nat %objkt_id) (mutez %price_increment))
+                  (pair (mutez %reserve) (pair (nat %royalties) (timestamp %start_time))))) ;
+    IF_NONE { PUSH string "No auction found" ; FAILWITH } {} ;
+    PUSH mutez 0 ;
+    DIG 2 ;
+    TRANSFER_TOKENS ;
+    NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+    DIG 3 ;
+    RIGHT (pair address (pair address nat)) ;
+    CONS ;
+    DIG 3 ;
+    CDR ;
+    CAR ;
+    PAIR ;
+    DIG 3 ;
+    SWAP ;
+    EXEC ;
+    NIL operation ;
+    SWAP ;
+    CONS ;
+    SWAP ;
+    CONS ;
+    SWAP ;
+    CONS } }
+
