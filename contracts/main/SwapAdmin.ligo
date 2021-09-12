@@ -97,10 +97,16 @@ block {
 } with (list[acceptCall], store)
 
 
+function checkSenderIsAdmin(var store : storage) : unit is
+    if (Tezos.sender = store.administrator) then unit
+    else failwith("Entrypoint can call only administrator");
+
+
 (* Return gallery rights to the administrator *)
 function returnAdmin(const store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
+    checkSenderIsAdmin(store);
     const returnUpdateCall = callUpdateAdmin(store.galleryAddress, store.administrator);
 } with (list[returnUpdateCall], store)
 
