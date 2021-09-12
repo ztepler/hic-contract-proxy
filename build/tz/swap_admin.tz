@@ -1,11 +1,11 @@
 { parameter
-    (or (unit %accept_gallery_ownership)
+    (or (or (unit %accept_gallery_ownership) (unit %return_admin))
         (pair %swap
            (pair (address %creator) (nat %objkt_amount))
            (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))) ;
   storage
-    (pair (pair (address %galleryAddress) (address %marketplaceAddress))
-          (address %tokenAddress)) ;
+    (pair (pair (address %administrator) (address %galleryAddress))
+          (pair (address %marketplaceAddress) (address %tokenAddress))) ;
   code { LAMBDA
            unit
            unit
@@ -32,25 +32,58 @@
          UNPAIR ;
          IF_LEFT
            { DIG 2 ;
-             DROP 2 ;
-             PUSH unit Unit ;
-             DIG 2 ;
-             SWAP ;
-             EXEC ;
              DROP ;
-             DUP ;
-             CAR ;
-             CAR ;
-             CONTRACT %accept_ownership unit ;
-             IF_NONE { PUSH string "No gallery found" ; FAILWITH } {} ;
-             PUSH mutez 0 ;
-             PUSH unit Unit ;
-             TRANSFER_TOKENS ;
-             SWAP ;
-             NIL operation ;
-             DIG 2 ;
-             CONS ;
-             PAIR }
+             IF_LEFT
+               { DROP ;
+                 PUSH unit Unit ;
+                 DIG 2 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
+                 DUP ;
+                 CAR ;
+                 CDR ;
+                 CONTRACT %accept_ownership unit ;
+                 IF_NONE { PUSH string "No gallery found" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 PUSH unit Unit ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
+                 PAIR }
+               { DROP ;
+                 PUSH unit Unit ;
+                 DIG 2 ;
+                 SWAP ;
+                 EXEC ;
+                 DROP ;
+                 DUP ;
+                 CAR ;
+                 CAR ;
+                 SENDER ;
+                 COMPARE ;
+                 EQ ;
+                 IF {} { PUSH string "Entrypoint can call only administrator" ; FAILWITH } ;
+                 DUP ;
+                 CAR ;
+                 CAR ;
+                 SWAP ;
+                 DUP ;
+                 DUG 2 ;
+                 CAR ;
+                 CDR ;
+                 CONTRACT %update_admin address ;
+                 IF_NONE { PUSH string "No gallery found" ; FAILWITH } {} ;
+                 PUSH mutez 0 ;
+                 DIG 2 ;
+                 TRANSFER_TOKENS ;
+                 SWAP ;
+                 NIL operation ;
+                 DIG 2 ;
+                 CONS ;
+                 PAIR } }
            { SWAP ;
              PUSH unit Unit ;
              DIG 4 ;
@@ -62,7 +95,7 @@
              NIL (pair address (pair nat nat)) ;
              DUP 4 ;
              CAR ;
-             CAR ;
+             CDR ;
              DUP 6 ;
              CDR ;
              CAR ;
@@ -81,6 +114,7 @@
              DUP ;
              DUG 2 ;
              CDR ;
+             CDR ;
              CONTRACT %transfer
                (list (pair (address %from_)
                            (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount)))))) ;
@@ -92,10 +126,10 @@
              DUP ;
              DUG 2 ;
              CAR ;
-             CAR ;
-             DUP 3 ;
-             CAR ;
              CDR ;
+             DUP 3 ;
+             CDR ;
+             CAR ;
              DUP 5 ;
              CDR ;
              CAR ;
@@ -111,7 +145,7 @@
              CONS ;
              DUP 4 ;
              CAR ;
-             CAR ;
+             CDR ;
              PAIR ;
              DUP 6 ;
              SWAP ;
@@ -122,7 +156,7 @@
              CONS ;
              DUP 4 ;
              CAR ;
-             CAR ;
+             CDR ;
              PAIR ;
              DIG 5 ;
              SWAP ;
@@ -130,7 +164,7 @@
              DIG 4 ;
              DUP 5 ;
              CAR ;
-             CAR ;
+             CDR ;
              CONTRACT %swap
                (pair (pair (address %creator) (nat %objkt_amount))
                      (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt)))) ;
