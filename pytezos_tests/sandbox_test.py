@@ -70,7 +70,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         swap_admin = ContractInterface.from_file(join(dirname(__file__), SWAP_ADMIN_FN))
         swap_admin_init = {
-            # 'administrator': pkh(client),
+            'administrator': pkh(client),
             'galleryAddress': gallery_address,
             'tokenAddress': token_address,
             'marketplaceAddress': marketplace_address

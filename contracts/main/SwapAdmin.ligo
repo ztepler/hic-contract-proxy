@@ -17,20 +17,24 @@
 #include "../partials/fa2.ligo"
 
 
+(* Management interface *)
+#include "../partials/management.ligo"
+
+
 type storage is record [
     galleryAddress : address;
     tokenAddress : address;
     marketplaceAddress : address;
+    administrator : address;
     // TODO: swap owners to make possible to cancel swaps?
     // TODO: isPaused : bool;
-    // TODO: administrator : address;
 ]
 
 type action is
 | Swap of swapParams
 | Accept_gallery_ownership of unit
+| Return_admin of unit
 // TODO: | Trigger_pause of unit
-// TODO: | Transfer_gallery_ownership of address OR Dismiss of unit
 // TODO: | Cancel_swap of cancelSwapParams
 
 (*
@@ -86,19 +90,6 @@ block {
 } with (operations, store)
 
 
-function callAcceptOwnership(const galleryAddress : address) : operation is
-block {
-    const receiver : contract(unit) =
-        case (Tezos.get_entrypoint_opt("%accept_ownership", galleryAddress)
-            : option(contract(unit))) of
-        | None -> (failwith("No gallery found") : contract(unit))
-        | Some(con) -> con
-        end;
-
-    const acceptCall = Tezos.transaction(Unit, 0tez, receiver);
-} with acceptCall
-
-
 function acceptGalleryOwnership(const store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
@@ -106,9 +97,18 @@ block {
 } with (list[acceptCall], store)
 
 
+(* Return gallery rights to the administrator *)
+function returnAdmin(const store : storage) : (list(operation) * storage) is
+block {
+    checkNoAmount(Unit);
+    const returnUpdateCall = callUpdateAdmin(store.galleryAddress, store.administrator);
+} with (list[returnUpdateCall], store)
+
+
 function main (const params : action; const store : storage) : (list(operation) * storage) is
 case params of
 | Swap(p) -> swap(store, p)
 | Accept_gallery_ownership -> acceptGalleryOwnership(store)
+| Return_admin -> returnAdmin(store)
 end
 
