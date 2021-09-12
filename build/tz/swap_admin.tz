@@ -1,0 +1,152 @@
+{ parameter
+    (or (unit %accept_gallery_ownership)
+        (pair %swap
+           (pair (address %creator) (nat %objkt_amount))
+           (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))) ;
+  storage
+    (pair (pair (address %galleryAddress) (address %marketplaceAddress))
+          (address %tokenAddress)) ;
+  code { LAMBDA
+           unit
+           unit
+           { DROP ;
+             PUSH mutez 0 ;
+             AMOUNT ;
+             COMPARE ;
+             EQ ;
+             IF { UNIT }
+                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+         LAMBDA
+           (pair address
+                 (list (or (pair address (pair address nat)) (pair address (pair address nat)))))
+           operation
+           { UNPAIR ;
+             CONTRACT %update_operators
+               (list (or (pair %add_operator (address %owner) (pair (address %operator) (nat %token_id)))
+                         (pair %remove_operator (address %owner) (pair (address %operator) (nat %token_id))))) ;
+             IF_NONE { PUSH string "No FA2 contract found" ; FAILWITH } {} ;
+             PUSH mutez 0 ;
+             DIG 2 ;
+             TRANSFER_TOKENS } ;
+         DIG 2 ;
+         UNPAIR ;
+         IF_LEFT
+           { DIG 2 ;
+             DROP 2 ;
+             PUSH unit Unit ;
+             DIG 2 ;
+             SWAP ;
+             EXEC ;
+             DROP ;
+             DUP ;
+             CAR ;
+             CAR ;
+             CONTRACT %accept_ownership unit ;
+             IF_NONE { PUSH string "No gallery found" ; FAILWITH } {} ;
+             PUSH mutez 0 ;
+             PUSH unit Unit ;
+             TRANSFER_TOKENS ;
+             SWAP ;
+             NIL operation ;
+             DIG 2 ;
+             CONS ;
+             PAIR }
+           { SWAP ;
+             PUSH unit Unit ;
+             DIG 4 ;
+             SWAP ;
+             EXEC ;
+             DROP ;
+             NIL (pair address (list (pair address (pair nat nat)))) ;
+             SENDER ;
+             NIL (pair address (pair nat nat)) ;
+             DUP 4 ;
+             CAR ;
+             CAR ;
+             DUP 6 ;
+             CDR ;
+             CAR ;
+             DUP 7 ;
+             CAR ;
+             CDR ;
+             SWAP ;
+             PAIR ;
+             SWAP ;
+             PAIR ;
+             CONS ;
+             SWAP ;
+             PAIR ;
+             CONS ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             CDR ;
+             CONTRACT %transfer
+               (list (pair (address %from_)
+                           (list %txs (pair (address %to_) (pair (nat %token_id) (nat %amount)))))) ;
+             IF_NONE { PUSH string "No FA2 contract found" ; FAILWITH } {} ;
+             PUSH mutez 0 ;
+             DIG 2 ;
+             TRANSFER_TOKENS ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             CAR ;
+             CAR ;
+             DUP 3 ;
+             CAR ;
+             CDR ;
+             DUP 5 ;
+             CDR ;
+             CAR ;
+             SWAP ;
+             PAIR ;
+             SWAP ;
+             PAIR ;
+             NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+             SWAP ;
+             DUP ;
+             DUG 2 ;
+             LEFT (pair address (pair address nat)) ;
+             CONS ;
+             DUP 4 ;
+             CAR ;
+             CAR ;
+             PAIR ;
+             DUP 6 ;
+             SWAP ;
+             EXEC ;
+             NIL (or (pair address (pair address nat)) (pair address (pair address nat))) ;
+             DIG 2 ;
+             RIGHT (pair address (pair address nat)) ;
+             CONS ;
+             DUP 4 ;
+             CAR ;
+             CAR ;
+             PAIR ;
+             DIG 5 ;
+             SWAP ;
+             EXEC ;
+             DIG 4 ;
+             DUP 5 ;
+             CAR ;
+             CAR ;
+             CONTRACT %swap
+               (pair (pair (address %creator) (nat %objkt_amount))
+                     (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt)))) ;
+             IF_NONE { PUSH string "No marketplace found" ; FAILWITH } {} ;
+             PUSH mutez 0 ;
+             DIG 2 ;
+             TRANSFER_TOKENS ;
+             DIG 4 ;
+             NIL operation ;
+             DIG 3 ;
+             CONS ;
+             DIG 2 ;
+             CONS ;
+             DIG 2 ;
+             CONS ;
+             DIG 2 ;
+             CONS ;
+             PAIR } } }
+
