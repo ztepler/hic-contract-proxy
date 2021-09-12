@@ -18,7 +18,7 @@ const createProxyFunc : createProxyFuncType =
 
 
 function lambda(
-    const records : recordsType;
+    const _records : recordsType;
     const packedParams : bytes) : originationResult is
 
 block {
@@ -31,7 +31,7 @@ block {
     (* Calculating total shares and core participants: *)
     var totalShares : nat := 0n;
 
-    for participantAddress -> share in map shares block {
+    for _participantAddress -> share in map shares block {
         totalShares := totalShares + share;
     };
 

@@ -69,7 +69,7 @@ block {
     checkNoAmount(Unit);
     const isOriginatedOption = Big_map.find_opt(params.contractAddress, factoryStore.originatedContracts);
     const isOriginated : bool = case isOriginatedOption of
-    | Some(metadata) -> True
+    | Some(_metadata) -> True
     | None -> False
     end;
 

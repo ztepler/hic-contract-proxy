@@ -154,21 +154,21 @@ function natDiv(const value : tez; const num : nat; const den : nat) : tez is
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
-    var opNumber : nat := 0n;
-    var allocatedPayouts : tez := 0tez;
+    var _opNumber : nat := 0n;
+    var _allocatedPayouts : tez := 0tez;
 
     for participantAddress -> participantShare in map store.shares block {
-        opNumber := opNumber + 1n;
-        const isLast : bool = opNumber = Set.size(store.shares);
+        _opNumber := _opNumber + 1n;
+        const isLast : bool = _opNumber = Set.size(store.shares);
         const payoutAmount : tez = if isLast
-            then Tezos.amount - allocatedPayouts
+            then Tezos.amount - _allocatedPayouts
             else natDiv(Tezos.amount, participantShare, store.totalShares);
 
         const receiver : contract(unit) = getReceiver(participantAddress);
         const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
 
         if payoutAmount > 0tez then operations := op # operations else skip;
-        allocatedPayouts := allocatedPayouts + payoutAmount;
+        _allocatedPayouts := _allocatedPayouts + payoutAmount;
     }
 
 } with (operations, store)

@@ -45,7 +45,7 @@ block {
     checkNoAmount(Unit);
     const key : signKey = (params.participant, params.id);
     const isSigned : bool = case Big_map.find_opt(key, store.signatures) of
-    | Some(u) -> True
+    | Some(_u) -> True
     | None -> False
     end;
     const returnOperation = Tezos.transaction(isSigned, 0mutez, params.callback);

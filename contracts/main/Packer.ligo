@@ -19,7 +19,7 @@ function mint_OBJKT(var params : mintParams) : bytes is Bytes.pack(params)
 function originate_hic_proxy(var params : participantsMap) : bytes is Bytes.pack(params)
 function originate_basic_proxy(var params : shares) : bytes is Bytes.pack(params)
 
-function main (var params : action; var store : bytes) : (list(operation) * bytes) is
+function main (var params : action; var _store : bytes) : (list(operation) * bytes) is
 case params of
 | Pack_nat(p) -> ((nil: list(operation)), pack_nat(p))
 | Pack_address(p) -> ((nil: list(operation)), pack_address(p))

@@ -20,6 +20,6 @@ function tezToNat(const value : tez) : nat is value / 1mutez
 function natToTez(const value : nat) : tez is value * 1mutez
 
 
-function checkNoAmount(const p : unit) : unit is
+function checkNoAmount(const _p : unit) : unit is
     if (Tezos.amount = 0tez) then unit
     else failwith("This entrypoint should not receive tez");

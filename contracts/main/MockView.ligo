@@ -20,6 +20,6 @@ case param of
 ]
 end
 
-function main(const param : action; const store : storage)
+function main(const param : action; const _store : storage)
     : (list(operation) * storage) is
         ((nil: list(operation)), dispatchAction(param))
