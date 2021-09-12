@@ -45,7 +45,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         opg = contract.using(shell=self.get_node_url(), key=client.key)
         opg = opg.originate(initial_storage=storage)
 
-        return opg.fill().sign().inject()
+        return opg.send()
 
 
     def _deploy_factory(self, client):
@@ -126,7 +126,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             storage=storage)
 
         self.bake_block()
-        self.objkts = self._find_contract_by_hash(client, opg['hash'])
+        self.objkts = self._find_contract_by_hash(client, opg.hash())
 
         # Deploying hDAO:
         storage = read_storage('fa2_hdao')
@@ -137,7 +137,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             storage=storage)
 
         self.bake_block()
-        self.hdao = self._find_contract_by_hash(client, opg['hash'])
+        self.hdao = self._find_contract_by_hash(client, opg.hash())
 
         # Deploying curate:
         storage = read_storage('curation')
@@ -151,7 +151,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             storage=storage)
 
         self.bake_block()
-        self.curate = self._find_contract_by_hash(client, opg['hash'])
+        self.curate = self._find_contract_by_hash(client, opg.hash())
 
         # Deploying objkt_swap:
         storage = read_storage('objkt_swap')
@@ -167,23 +167,23 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             storage=storage)
 
         self.bake_block()
-        self.minter = self._find_contract_by_hash(client, opg['hash'])
+        self.minter = self._find_contract_by_hash(client, opg.hash())
 
         # configure curate:
         configuration = {
             'fa2': self.hdao.address,
             'protocol': self.minter.address
         }
-        self.curate.configure(configuration).inject()
+        self.curate.configure(configuration).send()
         self.bake_block()
 
         # what does this genesis?:
-        self.minter.genesis().inject()
+        self.minter.genesis().send()
         self.bake_block()
 
         # configure objkts and hdao:
-        self.objkts.set_administrator(self.minter.address).inject()
-        self.hdao.set_administrator(self.minter.address).inject()
+        self.objkts.set_administrator(self.minter.address).send()
+        self.hdao.set_administrator(self.minter.address).send()
         self.bake_block()
 
         # Deploying Marketplace:
@@ -198,7 +198,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             storage=storage)
 
         self.bake_block()
-        self.marketplace = self._find_contract_by_hash(client, opg['hash'])
+        self.marketplace = self._find_contract_by_hash(client, opg.hash())
 
         # Deploying registry
         storage = read_storage('subjkt')
@@ -209,7 +209,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             storage=storage)
 
         self.bake_block()
-        self.registry = self._find_contract_by_hash(client, opg['hash'])
+        self.registry = self._find_contract_by_hash(client, opg.hash())
 
 
     def _add_operator(self, contract, owner_client, owner, operator, token_id):
@@ -221,7 +221,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
                 'token_id': token_id}
         }]
 
-        return fa2_contract.update_operators(update_operatiors_params).inject()
+        return fa2_contract.update_operators(update_operatiors_params).send()
 
 
     def setUp(self):
@@ -233,12 +233,12 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         packer = ContractInterface.from_file(join(dirname(__file__), PACKER_FN))
         opg = self._deploy_contract(self.p1, packer, 0)
         self.bake_block()
-        self.packer = self._find_contract_by_hash(self.p1, opg['hash'])
+        self.packer = self._find_contract_by_hash(self.p1, opg.hash())
 
         # Deploying factory:
         opg = self._deploy_factory(self.p1)
         self.bake_block()
-        self.factory = self._find_contract_by_hash(self.p1, opg['hash'])
+        self.factory = self._find_contract_by_hash(self.p1, opg.hash())
 
         # Adding templates to the factory:
         for lambda_name, filename in LAMBDA_ORIGINATE.items():
@@ -248,7 +248,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             self.factory.add_template({
                 'name': lambda_name,
                 'originateFunc': originate_lambda
-            }).inject()
+            }).send()
             self.bake_block()
 
         # Adding records to the factory:
@@ -267,7 +267,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             self.factory.add_record({
                 'name': record_name,
                 'value': value
-            }).inject()
+            }).send()
             self.bake_block()
 
         # Loading lambdas:
@@ -278,14 +278,14 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         sign_storage = {}
         opg = self._deploy_contract(self.p1, sign, sign_storage)
         self.bake_block()
-        self.sign = self._find_contract_by_hash(self.p1, opg['hash'])
+        self.sign = self._find_contract_by_hash(self.p1, opg.hash())
 
         # Deploying mock view:
         mock = ContractInterface.from_file(join(dirname(__file__), MOCK_FN))
         mock_storage = {'natValue': None, 'boolValue': None}
         opg = self._deploy_contract(self.p1, mock, mock_storage)
         self.bake_block()
-        self.mock = self._find_contract_by_hash(self.p1, opg['hash'])
+        self.mock = self._find_contract_by_hash(self.p1, opg.hash())
 
 
     def _originate_default_contract(self):
@@ -307,9 +307,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'params': packed_participants
         }
 
-        opg = self.factory.create_proxy(originate_params).inject()
+        opg = self.factory.create_proxy(originate_params).send()
         self.bake_block()
-        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg.hash())
 
 
     def test_mint_token(self):
@@ -324,9 +324,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'royalties': 250
         }
 
-        opg = self.collab.mint_OBJKT(mint_params).inject()
+        opg = self.collab.mint_OBJKT(mint_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # checking that mint is ok:
         self.assertEqual(self.objkts.storage['all_tokens'](), 1)
@@ -351,16 +351,16 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         swap_id = self.marketplace.storage['counter']()
-        opg = self.collab.swap(swap_params).inject()
+        opg = self.collab.swap(swap_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # collect:
         opg = self.buyer.contract(self.marketplace.address).collect(
-            swap_id).with_amount(1_000_000).inject()
+            swap_id).with_amount(1_000_000).send()
 
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # checking objkt holders:
         self.assertEqual(self.objkts.storage['all_tokens'](), 1)
@@ -384,9 +384,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         minter = self.p1.contract(self.minter.address)
-        opg = minter.mint_OBJKT(mint_params).inject()
+        opg = minter.mint_OBJKT(mint_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # update operators:
         self._add_operator(self.objkts, self.p1, pkh(self.p1), self.marketplace.address, 0)
@@ -403,16 +403,16 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
         marketplace = self.p1.contract(self.marketplace.address)
         swap_id = marketplace.storage['counter']()
-        opg = marketplace.swap(swap_params).inject()
+        opg = marketplace.swap(swap_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # collect:
         opg = self.buyer.contract(self.marketplace.address).collect(
-            swap_id).with_amount(1_000_000).inject()
+            swap_id).with_amount(1_000_000).send()
 
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
         assert self.objkts.storage['ledger'][(pkh(self.buyer), 0)]() == 1
 
         # reswap this one objkt with low price:
@@ -426,15 +426,15 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'objkt_amount': 1,
             'xtz_per_objkt': 100
         })
-        opg = marketplace.swap(swap_params).inject()
+        opg = marketplace.swap(swap_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # rebuing second swap:
         opg = self.p2.contract(self.marketplace.address).collect(
-            swap_id).with_amount(1*100).inject()
+            swap_id).with_amount(1*100).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # and p2 should not receive this 1 objkt:
         assert self.objkts.storage['ledger'][(pkh(self.p2), 0)]() == 1
@@ -443,14 +443,14 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         # Trying to use this second swap second time:
         with self.assertRaises(MichelsonError) as cm:
             opg = self.p2.contract(self.marketplace.address).collect(
-                swap_id).with_amount(1*100).inject()
+                swap_id).with_amount(1*100).send()
             self.bake_block()
-            result = self._find_call_result_by_hash(self.p1, opg['hash'])
+            result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # Trying to collect swap that does not exist:
         with self.assertRaises(MichelsonError) as cm:
             opg = self.p2.contract(self.marketplace.address).collect(
-                3).with_amount(1*100).inject()
+                3).with_amount(1*100).send()
             self.bake_block()
 
         # 0-tez swap
@@ -464,11 +464,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'objkt_amount': 1,
             'xtz_per_objkt': 0
         })
-        opg = marketplace.swap(swap_params).inject()
+        opg = marketplace.swap(swap_params).send()
         self.bake_block()
 
         opg = self.buyer.contract(self.marketplace.address).collect(
-            swap_id).with_amount(0).inject()
+            swap_id).with_amount(0).send()
         self.bake_block()
 
         assert self.objkts.storage['ledger'][(pkh(self.buyer), 0)]() == 1
@@ -483,7 +483,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
                 'objkt_amount': 2,
                 'xtz_per_objkt': 0
             })
-            opg = marketplace.swap(swap_params).inject()
+            opg = marketplace.swap(swap_params).send()
             self.bake_block()
 
         self.assertTrue('FA2_INSUFFICIENT_BALANCE' in str(cm.exception))
@@ -501,11 +501,11 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'objkt_amount': 1,
             'xtz_per_objkt': 10
         })
-        opg = marketplace.swap(swap_params).inject()
+        opg = marketplace.swap(swap_params).send()
         self.bake_block()
 
         opg = self.p2.contract(self.marketplace.address).collect(
-            swap_id).with_amount(10).inject()
+            swap_id).with_amount(10).send()
         self.bake_block()
         """
 
@@ -528,9 +528,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'params': packed_participants
         }
 
-        opg = self.factory.create_proxy(originate_params).inject()
+        opg = self.factory.create_proxy(originate_params).send()
         self.bake_block()
-        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg.hash())
 
         # Checking that factory have address of new created collab in their ledger:
         metadata = self.factory.storage['originatedContracts'][self.collab.address]()
@@ -542,9 +542,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'packedParams': '05070707070a00000016013116e679766d18239f246ca78b0a4fdaa637ecf20000a40107070a00000035697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775008803'
         }
 
-        opg = self.collab.execute(executeParams).inject()
+        opg = self.collab.execute(executeParams).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # Checking result params:
         self.assertTrue(len(result.operations) == 1)
@@ -559,7 +559,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'params': packed_participants
         }
 
-        opg = self.factory.create_proxy(originate_params).inject()
+        opg = self.factory.create_proxy(originate_params).send()
         self.bake_block()
 
         # Checking that basic proxy created:
@@ -575,7 +575,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'params': packed_participants
         }
 
-        opg = self.factory.create_proxy(originate_params).inject()
+        opg = self.factory.create_proxy(originate_params).send()
         self.bake_block()
 
         # Trying to originate contract with name that does not exist failed:
@@ -585,7 +585,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         with self.assertRaises(MichelsonError) as cm:
-            opg = self.factory.create_proxy(originate_params).inject()
+            opg = self.factory.create_proxy(originate_params).send()
             self.bake_block()
         self.assertTrue("Template is not found" in str(cm.exception))
 
@@ -604,9 +604,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'subjkt': subjkt
         }
 
-        opg = self.collab.registry(registry_params).inject()
+        opg = self.collab.registry(registry_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
         self.assertEqual(len(result.operations), 1)
         op = result.operations[0]
         self.assertEqual(op['destination'], self.registry.address)
@@ -622,9 +622,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             metadata)
 
         # Unregistry test:
-        opg = self.collab.unregistry().inject()
+        opg = self.collab.unregistry().send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         op = result.operations[0]
         self.assertEqual(op['destination'], self.registry.address)
@@ -656,14 +656,14 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
     def test_signature_communications(self):
 
-        opg = self.p1.contract(self.sign.address).sign(42).inject()
+        opg = self.p1.contract(self.sign.address).sign(42).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
         self.sign.storage[(pkh(self.p1), 42)]()
 
-        opg = self.tips.contract(self.sign.address).sign(32768).inject()
+        opg = self.tips.contract(self.sign.address).sign(32768).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
         self.sign.storage[(pkh(self.tips), 32768)]()
 
         is_signed_params = {
@@ -672,9 +672,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'callback': self.mock.address + '%' + 'bool_view'
         }
 
-        opg = self.sign.is_signed(is_signed_params).inject()
+        opg = self.sign.is_signed(is_signed_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
         self.assertTrue(self.mock.storage['boolValue']())
         self.assertTrue(len(result.operations) == 1)
         op = result.operations[0]
@@ -703,9 +703,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'params': packed_participants
         }
 
-        opg = self.factory.create_proxy(originate_params).inject()
+        opg = self.factory.create_proxy(originate_params).send()
         self.bake_block()
-        self.collab = self._find_contract_internal_by_hash(self.p1, opg['hash'])
+        self.collab = self._find_contract_internal_by_hash(self.p1, opg.hash())
 
         # mint:
         mint_params = {
@@ -716,9 +716,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         collab = self.p1.contract(self.collab.address)
-        opg = collab.mint_OBJKT(mint_params).inject()
+        opg = collab.mint_OBJKT(mint_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # update operators:
         self._add_operator(
@@ -740,18 +740,18 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         swap_id = self.marketplace.storage['counter']()
-        opg = collab.swap(swap_params).inject()
+        opg = collab.swap(swap_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # collect:
         opg = self.buyer.contract(self.marketplace.address).collect(
-            swap_id).with_amount(1_000_000).inject()
+            swap_id).with_amount(1_000_000).send()
 
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
-        opg_details = self.p1.shell.blocks['head':].find_operation(opg['hash'])
+        opg_details = self.p1.shell.blocks['head':].find_operation(opg.hash())
         metadata = opg_details['contents'][0]['metadata']
         internal_ops = metadata['internal_operation_results']
 
@@ -786,9 +786,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         collab = self.p1.contract(self.collab.address)
-        opg = collab.mint_OBJKT(mint_params).inject()
+        opg = collab.mint_OBJKT(mint_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # transfer to self.p2:
         transfer_params = [{
@@ -800,9 +800,9 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             'from_': self.collab.address
         }]
 
-        opg = collab.transfer(transfer_params).inject()
+        opg = collab.transfer(transfer_params).send()
         self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg['hash'])
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
 
         # checking that transfer succeed:
         self.assertEqual(self.objkts.storage['all_tokens'](), 1)
