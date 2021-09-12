@@ -1,3 +1,6 @@
+""" TODO: This tests are getting overcomplicated, need to split them into
+    separate files """
+
 from pytezos.sandbox.node import SandboxedNodeTestCase
 from pytezos.sandbox.parameters import sandbox_addresses, sandbox_commitment
 from pytezos import ContractInterface, pytezos, MichelsonRuntimeError
@@ -10,7 +13,7 @@ import json
 import codecs
 from test_data import (
     load_lambdas, LAMBDA_CALLS, LAMBDA_ORIGINATE, FACTORY_FN,
-    PACKER_FN, CONTRACTS_DIR, SIGN_FN, MOCK_FN)
+    PACKER_FN, CONTRACTS_DIR, SIGN_FN, MOCK_FN, SWAP_ADMIN_FN)
 
 
 def str_to_hex_bytes(string):
@@ -60,6 +63,20 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         }
 
         return self._deploy_contract(client, factory, factory_init)
+
+
+    def _deploy_swap_admin(
+            self, client, gallery_address, token_address, marketplace_address):
+
+        swap_admin = ContractInterface.from_file(join(dirname(__file__), SWAP_ADMIN_FN))
+        swap_admin_init = {
+            # 'administrator': pkh(client),
+            'galleryAddress': gallery_address,
+            'tokenAddress': token_address,
+            'marketplaceAddress': marketplace_address
+        }
+
+        return self._deploy_contract(client, swap_admin, swap_admin_init)
 
 
     def _find_call_result_by_hash(self, client, opg_hash):
@@ -289,6 +306,7 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
 
 
     def _originate_default_contract(self):
+        # TODO: add admin as param
         """ Creates contract using proxy that used in multiple tests """
 
         # Creating contract using proxy
@@ -682,6 +700,39 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.assertEqual(op['parameters']['entrypoint'], 'bool_view')
 
 
+    def default_mint(self, minter, address):
+        """ Default mint call used in multiple test cases """
+
+        mint_params = {
+            'address': address,
+            'amount': 1,
+            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
+            'royalties': 250
+        }
+
+        opg = minter.mint_OBJKT(mint_params).send()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
+        return result
+
+
+    def default_swap(self, marketplace, artist_address):
+        """ Default mint call used in multiple test cases """
+
+        swap_params = {
+            'creator': artist_address,
+            'objkt_amount': 1,
+            'objkt_id': 0,
+            'royalties': 250,
+            'xtz_per_objkt': 1_000_000,
+        }
+
+        opg = marketplace.swap(swap_params).send()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
+        return result
+
+
     def test_participant_count_limit(self):
 
         # The real hard gas limit was 221 but I limited contract to 108
@@ -708,17 +759,10 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.collab = self._find_contract_internal_by_hash(self.p1, opg.hash())
 
         # mint:
-        mint_params = {
-            'address': self.collab.address,
-            'amount': 1,
-            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
-            'royalties': 250
-        }
-
         collab = self.p1.contract(self.collab.address)
-        opg = collab.mint_OBJKT(mint_params).send()
-        self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg.hash())
+        result = self.default_mint(
+            minter=collab,
+            address=self.collab.address)
 
         # update operators:
         self._add_operator(
@@ -731,18 +775,10 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.bake_block()
 
         # swap:
-        swap_params = {
-            'creator': collab.address,
-            'objkt_amount': 1,
-            'objkt_id': 0,
-            'royalties': 250,
-            'xtz_per_objkt': 1_000_000,
-        }
-
         swap_id = self.marketplace.storage['counter']()
-        opg = collab.swap(swap_params).send()
-        self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg.hash())
+        result = self.default_swap(
+            marketplace=collab,
+            artist_address=collab.address)
 
         # collect:
         opg = self.buyer.contract(self.marketplace.address).collect(
@@ -778,17 +814,10 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self._originate_default_contract()
 
         # mint:
-        mint_params = {
-            'address': self.collab.address,
-            'amount': 1,
-            'metadata': '697066733a2f2f516d5952724264554578587269473470526679746e666d596b664a4564417157793632683746327771346b517775',
-            'royalties': 250
-        }
-
         collab = self.p1.contract(self.collab.address)
-        opg = collab.mint_OBJKT(mint_params).send()
-        self.bake_block()
-        result = self._find_call_result_by_hash(self.p1, opg.hash())
+        result = self.default_mint(
+            minter=collab,
+            address=self.collab.address)
 
         # transfer to self.p2:
         transfer_params = [{
@@ -808,4 +837,55 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
         self.assertEqual(self.objkts.storage['all_tokens'](), 1)
         self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 0)
         self.assertEqual(self.objkts.storage['ledger'][pkh(self.p2), 0](), 1)
+
+
+    def test_swap_admin_use_case(self):
+
+        # Creating collab (p1 is default admin):
+        self._originate_default_contract()
+
+        # Deploying swap admin
+        opg = self._deploy_swap_admin(
+            self.p1,
+            self.collab.address,
+            self.objkts.address,
+            self.marketplace.address)
+
+        self.bake_block()
+        self.swap_admin = self._find_contract_by_hash(self.p1, opg.hash())
+
+        # Transfer ownership:
+        self.collab.update_admin(self.swap_admin.address).send()
+        self.bake_block()
+
+        self.swap_admin.accept_gallery_ownership().send()
+        self.bake_block()
+
+        self.assertEqual(
+            self.collab.storage['administrator'](),
+            self.swap_admin.address)
+
+        # Mint something from p2:
+        result = self.default_mint(
+            minter=self.minter,
+            address=pkh(self.p2))
+
+        # update operators:
+        self._add_operator(
+            contract=self.objkts,
+            owner_client=self.p2,
+            owner=pkh(self.p2),
+            operator=self.swap_admin.address,
+            token_id=0)
+
+        self.bake_block()
+
+        # Swap it on collab using swap admin from p2:
+        swap_admin = self.p2.contract(self.swap_admin.address)
+        result = self.default_swap(
+            marketplace=swap_admin,
+            artist_address=pkh(self.p2))
+
+        # TODO: check that collab shareholders received tez
+        # import pdb; pdb.set_trace()
 

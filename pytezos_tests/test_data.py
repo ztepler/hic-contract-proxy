@@ -25,6 +25,7 @@ FACTORY_FN = '../build/tz/factory.tz'
 SIGN_FN = '../build/tz/sign.tz'
 PACKER_FN = '../build/tz/packer.tz'
 MOCK_FN = '../build/tz/mock_view.tz'
+SWAP_ADMIN_FN = '../build/tz/swap_admin.tz'
 
 HIC_PROXY_CODE = '../build/tz/lambdas/originate/hic_proxy.tz'
 
