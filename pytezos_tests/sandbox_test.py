@@ -886,6 +886,39 @@ class ContractInteractionsTestCase(SandboxedNodeTestCase):
             marketplace=swap_admin,
             artist_address=pkh(self.p2))
 
-        # TODO: check that collab shareholders received tez
-        # import pdb; pdb.set_trace()
+        # collect:
+        # TODO: need to move all this default amounts to ? idk
+        swap_id = 0
+        opg = self.buyer.contract(self.marketplace.address).collect(
+            swap_id).with_amount(1_000_000).send()
+
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
+
+        # checking that all shareholders get some:
+        opg_details = self.p1.shell.blocks['head':].find_operation(opg.hash())
+        metadata = opg_details['contents'][0]['metadata']
+        internal_ops = metadata['internal_operation_results']
+
+        destinations = {op['destination'] for op in internal_ops}
+        shareholders = set(self.collab.storage()['shares'].keys())
+        self.assertTrue(shareholders.issubset(destinations))
+
+        # return back rights from not admin should fail:
+        with self.assertRaises(MichelsonError) as cm:
+            opg = self.p2.contract(self.swap_admin.address).return_admin().send()
+            self.bake_block()
+
+        # return back rights and check that collab admin is p1 again
+        swap_admin = self.p1.contract(self.swap_admin.address)
+        result = swap_admin.return_admin().send()
+        self.bake_block()
+
+        gallery = self.p1.contract(self.collab.address)
+        result = gallery.accept_ownership().send()
+        self.bake_block()
+
+        self.assertEqual(
+            self.collab.storage['administrator'](),
+            pkh(self.p1))
 
