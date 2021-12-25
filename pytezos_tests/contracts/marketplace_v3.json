@@ -1,0 +1,13 @@
+{
+  "manager": "tz1hdQscorfqMzFqYxnrApuS5i6QSTuoAp3w",
+  "metadata": {},
+  "allowed_fa2s": {},
+  "swaps": {},
+  "fee": 25,
+  "fee_recipient": "tz1hdQscorfqMzFqYxnrApuS5i6QSTuoAp3w",
+  "counter": 0,
+  "proposed_manager": null,
+  "swaps_paused": false,
+  "collects_paused": false
+}
+

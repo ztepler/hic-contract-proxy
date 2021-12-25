@@ -117,6 +117,23 @@ class HicProxyTestCase(ContractInteractionsTestCase):
         self.registry = self._find_contract_by_hash(client, opg.hash())
 
 
+    def _deploy_marketplace_v3(self, client):
+        storage = read_storage('marketplace_v3')
+        storage.update({
+            'allowed_fa2s': {self.objkts.address: True},
+            'manager': pkh(client),
+            'fee_recipient': pkh(client),
+        })
+
+        opg = self._deploy_contract(
+            client=client,
+            contract=read_contract('marketplace_v3'),
+            storage=storage)
+
+        self.bake_block()
+        self.marketplace_v3 = self._find_contract_by_hash(client, opg.hash())
+
+
     def _add_operator(self, contract, owner_client, owner, operator, token_id):
         fa2_contract = owner_client.contract(contract.address)
         update_operatiors_params = [{
@@ -191,6 +208,10 @@ class HicProxyTestCase(ContractInteractionsTestCase):
         opg = self._deploy_contract(self.p1, mock, mock_storage)
         self.bake_block()
         self.mock = self._find_contract_by_hash(self.p1, opg.hash())
+
+        # Deploying Marketplace V3:
+        self._deploy_marketplace_v3(self.hic_admin)
+        self.bake_block()
 
 
     def _originate_default_contract(self):
@@ -808,4 +829,10 @@ class HicProxyTestCase(ContractInteractionsTestCase):
         self.assertEqual(
             self.collab.storage['administrator'](),
             pkh(self.p1))
+
+
+    def test_marketplace_v3_lambda(self):
+        # Creating collab (p1 is default admin):
+        self._originate_default_contract()
+        # TODO: self.collab.execute({'lambda': swap_v3_call, 'params': swap_v3_packed_params})
 
