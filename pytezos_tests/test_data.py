@@ -12,7 +12,8 @@ def load_lambdas(lambda_calls):
 
 
 LAMBDA_CALLS = {
-    'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz'
+    'hic_mint_OBJKT': '../build/tz/lambdas/call/hic_mint_OBJKT.tz',
+    'marketplace_v3_swap': '../build/tz/lambdas/call/marketplace_v3_swap.tz'
 }
 
 LAMBDA_ORIGINATE = {

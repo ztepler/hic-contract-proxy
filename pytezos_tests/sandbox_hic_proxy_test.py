@@ -1,3 +1,5 @@
+from pytezos.michelson.parse import michelson_to_micheline
+from pytezos.michelson.types.base import MichelsonType
 from pytezos.contract.result import ContractCallResult
 from pytezos import ContractInterface
 from pytezos.rpc.errors import MichelsonError
@@ -832,7 +834,74 @@ class HicProxyTestCase(ContractInteractionsTestCase):
 
 
     def test_marketplace_v3_lambda(self):
-        # Creating collab (p1 is default admin):
+        # creating default proxy contract:
         self._originate_default_contract()
-        # TODO: self.collab.execute({'lambda': swap_v3_call, 'params': swap_v3_packed_params})
+
+        # minting default objkt:
+        result = self.default_mint(
+            minter=self.collab,
+            address=self.collab.address)
+        self.bake_block()
+
+        # allwing markeplace v3 to use this minted objkt from collab contract:
+        self._add_operator(
+            contract=self.collab,
+            owner_client=self.p1,
+            owner=self.collab.address,
+            operator=self.marketplace_v3.address,
+            token_id=0)
+        self.bake_block()
+
+        # packing marketplace params:
+        marketplace_v3_call_params = {
+            'marketplaceAddress': self.marketplace_v3.address,
+            'params': {
+                'fa2': self.objkts.address,
+                'objkt_id': 0,
+                'objkt_amount': 1,
+                'royalties': 250,
+                'xtz_per_objkt': 1_000_000,
+                'creator': self.collab.address
+            }
+        }
+
+        type_expression = michelson_to_micheline("""
+        pair (address %marketplaceAddress)
+                  (pair %params
+                     (address %fa2)
+                     (pair (nat %objkt_id)
+                           (pair (nat %objkt_amount)
+                                 (pair (mutez %xtz_per_objkt) (pair (nat %royalties) (address %creator))))))
+        """)
+
+        params_type = MichelsonType.match(type_expression)
+        filled_params = params_type.from_python_object(marketplace_v3_call_params)
+        packed_marketplace_call_params = filled_params.pack()
+
+        executeParams = {
+            'lambda': self.lambdas['marketplace_v3_swap'],
+            'packedParams': packed_marketplace_call_params
+        }
+
+        opg = self.collab.execute(executeParams).send()
+        self.bake_block()
+        result = self._find_call_result_by_hash(self.p1, opg.hash())
+
+        # Checking result params:
+        self.assertTrue(len(result.operations) == 1)
+        op = result.operations[0]
+        self.assertEqual(op['destination'], self.marketplace_v3.address)
+        self.assertTrue(op['amount'] == '0')
+        self.assertTrue(op['parameters']['entrypoint'] == 'swap')
+
+        # checking that objkt ledger contains with that marketplace v3 holds this objkt:
+        self.assertEqual(self.objkts.storage['all_tokens'](), 1)
+        self.assertEqual(self.objkts.storage['ledger'][self.collab.address, 0](), 0)
+        self.assertEqual(self.objkts.storage['ledger'][self.marketplace_v3.address, 0](), 1)
+
+        # collecting objkt:
+        collect_op = self.p1.contract(self.marketplace_v3.address).collect(0)
+        collect_op.with_amount(1_000_000).send()
+        self.bake_block()
+        self.assertEqual(self.objkts.storage['ledger'][pkh(self.p1), 0](), 1)
 

@@ -1,0 +1,25 @@
+{ CDR ;
+  UNPACK
+    (pair (address %marketplaceAddress)
+          (pair %params
+             (address %fa2)
+             (pair (nat %objkt_id)
+                   (pair (nat %objkt_amount)
+                         (pair (mutez %xtz_per_objkt) (pair (nat %royalties) (address %creator))))))) ;
+  IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
+  DUP ;
+  CAR ;
+  CONTRACT %swap
+    (pair (address %fa2)
+          (pair (nat %objkt_id)
+                (pair (nat %objkt_amount)
+                      (pair (mutez %xtz_per_objkt) (pair (nat %royalties) (address %creator)))))) ;
+  IF_NONE { PUSH string "Marketplace V3 is not found" ; FAILWITH } {} ;
+  PUSH mutez 0 ;
+  DIG 2 ;
+  CDR ;
+  TRANSFER_TOKENS ;
+  NIL operation ;
+  SWAP ;
+  CONS }
+
