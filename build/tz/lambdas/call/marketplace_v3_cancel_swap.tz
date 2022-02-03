@@ -1,0 +1,15 @@
+{ CDR ;
+  UNPACK (pair (address %marketplaceAddress) (nat %swap_id)) ;
+  IF_NONE { PUSH string "Unpack failed" ; FAILWITH } {} ;
+  DUP ;
+  CAR ;
+  CONTRACT %cancel_swap nat ;
+  IF_NONE { PUSH string "Marketplace V3 is not found" ; FAILWITH } {} ;
+  PUSH mutez 0 ;
+  DIG 2 ;
+  CDR ;
+  TRANSFER_TOKENS ;
+  NIL operation ;
+  SWAP ;
+  CONS }
+
