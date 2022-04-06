@@ -44,17 +44,17 @@ function isSigned(var store : storage; var params : isSignedParams) : (list(oper
 block {
     checkNoAmount(Unit);
     const key : signKey = (params.participant, params.id);
-    const isSigned : bool = case Big_map.find_opt(key, store.signatures) of
+    const isSigned : bool = case Big_map.find_opt(key, store.signatures) of [
     | Some(_u) -> True
     | None -> False
-    end;
+    ];
     const returnOperation = Tezos.transaction(isSigned, 0mutez, params.callback);
 } with (list[returnOperation], store)
 
 
 function main (var params : action; var store : storage) : (list(operation) * storage) is
-case params of
+case params of [
 | Sign(p) -> sign(store, p)
 | Unsign(p) -> unsign(store, p)
 | Is_signed(p) -> isSigned(store, p)
-end
+]

@@ -38,7 +38,7 @@ block {
 
 
 function main (const params : action; const store : storage) : (list(operation) * storage) is
-case params of
+case params of [
 | Execute(call) -> execute(call, store)
 | Default -> default(store)
-end
+]

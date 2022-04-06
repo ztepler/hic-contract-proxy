@@ -92,9 +92,9 @@ block {
 
 
 function main (var params : action; var store : storage) : (list(operation) * storage) is
-case params of
+case params of [
 | Mint_OBJKT(p) -> mint_OBJKT(store, p)
 | Swap(p) -> swap(store, p)
 | Withdraw -> withdraw(store)
 | Default -> ((nil: list(operation)), store)
-end
+]

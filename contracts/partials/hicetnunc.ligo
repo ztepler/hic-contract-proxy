@@ -50,10 +50,10 @@ function callMintOBJKT(var minterAddress : address; var params : mintParams) : o
 block {
     const hicReceiver : contract(mintParams) =
         case (Tezos.get_entrypoint_opt("%mint_OBJKT", minterAddress)
-            : option(contract(mintParams))) of
+            : option(contract(mintParams))) of [
         | None -> (failwith("No minter found") : contract(mintParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
 } with callToHic;
@@ -64,10 +64,10 @@ function callSwap(var marketplaceAddress : address; var params : swapParams) : o
 block {
     const hicReceiver : contract(swapParams) =
         case (Tezos.get_entrypoint_opt("%swap", marketplaceAddress)
-            : option(contract(swapParams))) of
+            : option(contract(swapParams))) of [
         | None -> (failwith("No marketplace found") : contract(swapParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
 
@@ -79,10 +79,10 @@ function callCancelSwap(var marketplaceAddress : address; var params : cancelSwa
 block {
     const hicReceiver : contract(cancelSwapParams) =
         case (Tezos.get_entrypoint_opt("%cancel_swap", marketplaceAddress)
-            : option(contract(cancelSwapParams))) of
+            : option(contract(cancelSwapParams))) of [
         | None -> (failwith("No marketplace found") : contract(cancelSwapParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
 
@@ -94,10 +94,10 @@ function callCollect(var marketplaceAddress : address; var params : collectParam
 block {
     const hicReceiver : contract(collectParams) =
         case (Tezos.get_entrypoint_opt("%collect", marketplaceAddress)
-            : option(contract(collectParams))) of
+            : option(contract(collectParams))) of [
         | None -> (failwith("No marketplace found") : contract(collectParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
 
@@ -109,10 +109,10 @@ function callCurate(var minterAddress : address; var params : curateParams) : op
 block {
     const hicReceiver : contract(curateParams) =
         case (Tezos.get_entrypoint_opt("%curate", minterAddress)
-            : option(contract(curateParams))) of
+            : option(contract(curateParams))) of [
         | None -> (failwith("No minter found") : contract(curateParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(params, 0tez, hicReceiver);
 
@@ -124,10 +124,10 @@ function callRegistry(var registryAddress : address; var params : registryParams
 block {
     const receiver : contract(registryParams) =
         case (Tezos.get_entrypoint_opt("%registry", registryAddress)
-            : option(contract(registryParams))) of
+            : option(contract(registryParams))) of [
         | None -> (failwith("No registry found") : contract(registryParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(params, 0tez, receiver);
 
@@ -139,10 +139,10 @@ function callUnregistry(var registryAddress : address) : operation is
 block {
     const receiver : contract(unit) =
         case (Tezos.get_entrypoint_opt("%unregistry", registryAddress)
-            : option(contract(unit))) of
+            : option(contract(unit))) of [
         | None -> (failwith("No registry found") : contract(unit))
         | Some(con) -> con
-        end;
+        ];
 
     const callToHic : operation = Tezos.transaction(Unit, 0tez, receiver);
 

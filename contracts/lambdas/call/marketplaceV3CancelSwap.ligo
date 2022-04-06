@@ -10,17 +10,17 @@ function lambda(const _store : storage; const packedParams : bytes) : list(opera
 
 block {
 
-    const unpacked = case (Bytes.unpack(packedParams) : option(callParams)) of
+    const unpacked = case (Bytes.unpack(packedParams) : option(callParams)) of [
     | None -> (failwith("Unpack failed") : callParams)
     | Some(p) -> p
-    end;
+    ];
 
     const marketplace : contract(nat) =
         case (Tezos.get_entrypoint_opt("%cancel_swap", unpacked.marketplaceAddress)
-            : option(contract(nat))) of
+            : option(contract(nat))) of [
         | None -> (failwith("Marketplace V3 is not found") : contract(nat))
         | Some(con) -> con
-        end;
+        ];
 
     const callToV3 : operation = Tezos.transaction(unpacked.swap_id, 0tez, marketplace);
 

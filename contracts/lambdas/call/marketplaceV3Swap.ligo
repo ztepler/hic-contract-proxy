@@ -27,17 +27,17 @@ function lambda(const _store : storage; const packedParams : bytes) : list(opera
 
 block {
 
-    const unpacked = case (Bytes.unpack(packedParams) : option(callParams)) of
+    const unpacked = case (Bytes.unpack(packedParams) : option(callParams)) of [
     | None -> (failwith("Unpack failed") : callParams)
     | Some(p) -> p
-    end;
+    ];
 
     const marketplace : contract(marketplaceV3Params) =
         case (Tezos.get_entrypoint_opt("%swap", unpacked.marketplaceAddress)
-            : option(contract(marketplaceV3Params))) of
+            : option(contract(marketplaceV3Params))) of [
         | None -> (failwith("Marketplace V3 is not found") : contract(marketplaceV3Params))
         | Some(con) -> con
-        end;
+        ];
 
     const callToV3 : operation = Tezos.transaction(unpacked.params, 0tez, marketplace);
 

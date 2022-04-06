@@ -23,10 +23,10 @@ function lambda(
 
 block {
 
-    const shares : shares = case (Bytes.unpack(packedParams) : option(shares)) of
+    const shares : shares = case (Bytes.unpack(packedParams) : option(shares)) of [
     | None -> (failwith("Unpack failed") : shares)
     | Some(p) -> p
-    end;
+    ];
 
     (* Calculating total shares and core participants: *)
     var totalShares : nat := 0n;

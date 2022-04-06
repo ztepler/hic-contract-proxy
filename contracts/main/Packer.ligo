@@ -20,10 +20,10 @@ function originate_hic_proxy(var params : participantsMap) : bytes is Bytes.pack
 function originate_basic_proxy(var params : shares) : bytes is Bytes.pack(params)
 
 function main (var params : action; var _store : bytes) : (list(operation) * bytes) is
-case params of
+case params of [
 | Pack_nat(p) -> ((nil: list(operation)), pack_nat(p))
 | Pack_address(p) -> ((nil: list(operation)), pack_address(p))
 | Pack_mint_OBJKT(p) -> ((nil: list(operation)), mint_OBJKT(p))
 | Pack_originate_hic_proxy(p) -> ((nil: list(operation)), originate_hic_proxy(p))
 | Pack_originate_basic_proxy(p) -> ((nil: list(operation)), originate_basic_proxy(p))
-end
+]

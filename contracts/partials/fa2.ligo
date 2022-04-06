@@ -38,10 +38,10 @@ function callUpdateOperators(
 block {
     const receiver : contract(updateOperatorsParam) =
         case (Tezos.get_entrypoint_opt("%update_operators", tokenAddress)
-            : option(contract(updateOperatorsParam))) of
+            : option(contract(updateOperatorsParam))) of [
         | None -> (failwith("No FA2 contract found") : contract(updateOperatorsParam))
         | Some(con) -> con
-        end;
+        ];
 
     const callToFa2 : operation = Tezos.transaction(params, 0tez, receiver);
 
@@ -55,10 +55,10 @@ function callTransfer(
 block {
     const receiver : contract(transferParams) =
         case (Tezos.get_entrypoint_opt("%transfer", tokenAddress)
-            : option(contract(transferParams))) of
+            : option(contract(transferParams))) of [
         | None -> (failwith("No FA2 contract found") : contract(transferParams))
         | Some(con) -> con
-        end;
+        ];
 
     const callToFa2 : operation = Tezos.transaction(params, 0tez, receiver);
 

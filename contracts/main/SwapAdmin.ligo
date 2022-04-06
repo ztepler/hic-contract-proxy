@@ -112,9 +112,9 @@ block {
 
 
 function main (const params : action; const store : storage) : (list(operation) * storage) is
-case params of
+case params of [
 | Swap(p) -> swap(store, p)
 | Accept_gallery_ownership -> acceptGalleryOwnership(store)
 | Return_admin -> returnAdmin(store)
-end
+]
 

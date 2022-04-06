@@ -1,8 +1,8 @@
 function getReceiver(var a : address) : contract(unit) is
-    case (Tezos.get_contract_opt(a): option(contract(unit))) of
+    case (Tezos.get_contract_opt(a): option(contract(unit))) of [
     | Some (con) -> con
     | None -> (failwith ("Not a contract") : (contract(unit)))
-    end;
+    ];
 
 
 function checkAllCoreSigned(const core : set(address); const signs : set(address)) : unit is

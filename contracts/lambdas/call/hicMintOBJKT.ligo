@@ -6,10 +6,10 @@ function lambda(const store : storage; const packedParams : bytes) : list(operat
 block {
 
     const paramsOption: option(mintParams) = Bytes.unpack(packedParams);
-    const params : mintParams = case paramsOption of
+    const params : mintParams = case paramsOption of [
     | None -> (failwith("Unpack failed") : mintParams)
     | Some(p) -> p
-    end;
+    ];
 
     const callToHic = callMintOBJKT(store.minterAddress, params);
 

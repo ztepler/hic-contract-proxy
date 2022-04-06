@@ -152,11 +152,12 @@ block {
     var operations : list(operation) := nil;
     var _opNumber : nat := 0n;
     var _allocatedPayouts : nat := 0n;
+    const participantCount = Bytes.length(store.shares);
     const natAmount = tezToNat(Tezos.amount);
 
     for participantAddress -> participantShare in map store.shares block {
         _opNumber := _opNumber + 1n;
-        const isLast : bool = _opNumber = Set.size(store.shares);
+        const isLast : bool = _opNumber = participantCount;
         const payoutAmount : nat = if isLast
             then abs(natAmount - _allocatedPayouts)
             else natAmount * participantShare / store.totalShares;
@@ -198,10 +199,10 @@ block {
 function getParticipantShares(var store : storage; var params : getParticipantShares) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
-    const sharesCount : nat = case Map.find_opt(params.participantAddress, store.shares) of
+    const sharesCount : nat = case Map.find_opt(params.participantAddress, store.shares) of [
     | Some(shares) -> shares
     | None -> 0n
-    end;
+    ];
     const returnOperation = Tezos.transaction(sharesCount, 0mutez, params.callback);
 } with (list[returnOperation], store)
 
@@ -218,10 +219,10 @@ function acceptOwnership(var store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
 
-    const proposedAdministrator : address = case store.proposedAdministrator of
+    const proposedAdministrator : address = case store.proposedAdministrator of [
     | Some(proposed) -> proposed
     | None -> (failwith("Not proposed admin") : address)
-    end;
+    ];
 
     if Tezos.sender = proposedAdministrator then
     block {
@@ -277,7 +278,7 @@ block {
 
 
 function main (const params : action; const store : storage) : (list(operation) * storage) is
-case params of
+case params of [
 | Execute(call) -> execute(call, store)
 | Mint_OBJKT(p) -> mint_OBJKT(store, p)
 | Swap(p) -> swap(store, p)
@@ -296,5 +297,5 @@ case params of
 | Trigger_pause -> triggerPause(store)
 | Update_operators(p) -> updateOperators(store, p)
 | Transfer(p) -> transfer(store, p)
-end
+]
 

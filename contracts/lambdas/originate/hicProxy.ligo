@@ -34,10 +34,10 @@ function lambda(
 block {
 
     const participantsOption: option(participantsMap) = Bytes.unpack(packedParams);
-    const participants : participantsMap = case participantsOption of
+    const participants : participantsMap = case participantsOption of [
     | None -> (failwith("Unpack failed") : participantsMap)
     | Some(p) -> p
-    end;
+    ];
 
     (* Calculating total shares and core participants: *)
     var shares : map(address, nat) := map [];
@@ -48,8 +48,8 @@ block {
         shares[participantAddress] := participantRec.share;
         totalShares := totalShares + participantRec.share;
 
-        if participantRec.isCore then
-            coreParticipants := Set.add (participantAddress, coreParticipants);
+        if participantRec.isCore
+        then coreParticipants := Set.add (participantAddress, coreParticipants)
         else skip;
     };
 
