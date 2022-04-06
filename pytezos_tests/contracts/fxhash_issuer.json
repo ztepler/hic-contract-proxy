@@ -1,0 +1,15 @@
+{
+  "administrator": "tz1fepn7jZsCYBqCDhpM63hzh9g2Ytqk4Tpv",
+  "all_gentk_tokens": 0,
+  "all_tokens": 0,
+  "fees": 25,
+  "gentk_void_metadata": "697066733a2f2f516d614168423165577270556461685a5a687457684c707034777a71396734756e686550396f7a3448656e704c51",
+  "ledger": {},
+  "ledger_gentk": {},
+  "metadata": {},
+  "min_price": 0,
+  "objkt_contract": "KT1KEa8z6vWXDJrVqtMrAeDVzsvxat3kHaCE",
+  "paused": false,
+  "token_metadata": {},
+  "treasury_address": "tz1dtzgLYUHMhP6sWeFtFsHkHqyPezBBPLsZ"
+}
