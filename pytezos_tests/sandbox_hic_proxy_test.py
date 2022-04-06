@@ -68,6 +68,7 @@ class HicProxyTestCase(ContractInteractionsTestCase):
             'objkt': self.objkts.address,
             'manager': pkh(client) 
         })
+
         opg = self._deploy_contract(
             client=client,
             contract=read_contract('objkt_swap'),
@@ -90,6 +91,8 @@ class HicProxyTestCase(ContractInteractionsTestCase):
 
         # configure objkts and hdao:
         self.objkts.set_administrator(self.minter.address).send()
+        self.bake_block()
+
         self.hdao.set_administrator(self.minter.address).send()
         self.bake_block()
 
