@@ -736,7 +736,7 @@ code { DUP ;
                        IF_NONE { PUSH int 165 ; FAILWITH } { CAR } ;
                        MUL ;
                        AMOUNT ;
-                       SUB ;
+                       SUB_MUTEZ; ASSERT_SOME;
                        UNIT ;
                        TRANSFER_TOKENS ;
                        CONS ;

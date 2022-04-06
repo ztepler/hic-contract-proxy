@@ -545,8 +545,8 @@ code
                     DIG 2;      # mutez : @some : list operation : mutez : @parameter%collect : @storage
                     DIG 3;      # mutez : mutez : @some : list operation : @parameter%collect : @storage
                     AMOUNT;     # @amount : mutez : mutez : @some : list operation : @parameter%collect : @storage
-                    SUB;        # mutez : mutez : @some : list operation : @parameter%collect : @storage
-                    SUB;        # mutez : @some : list operation : @parameter%collect : @storage
+                    SUB_MUTEZ; ASSERT_SOME;        # mutez : mutez : @some : list operation : @parameter%collect : @storage
+                    SUB_MUTEZ; ASSERT_SOME;        # mutez : @some : list operation : @parameter%collect : @storage
                     UNIT;       # unit : mutez : @some : list operation : @parameter%collect : @storage
                     TRANSFER_TOKENS; # operation : list operation : @parameter%collect : @storage
                     CONS;       # list operation : @parameter%collect : @storage
