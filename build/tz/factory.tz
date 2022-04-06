@@ -50,7 +50,7 @@
                { IF_LEFT
                    { DIG 2 ;
                      DROP 2 ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 2 ;
                      SWAP ;
                      EXEC ;
@@ -97,7 +97,7 @@
                         { DROP ; PUSH string "Not proposed admin" ; FAILWITH } ;
                      NIL operation ;
                      PAIR }
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -138,7 +138,7 @@
                      NIL operation ;
                      PAIR } }
                { IF_LEFT
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -171,7 +171,7 @@
                      PAIR }
                    { DIG 2 ;
                      DROP ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
@@ -231,7 +231,7 @@
                { IF_LEFT
                    { DIG 2 ;
                      DROP ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
@@ -253,7 +253,7 @@
                      DIG 2 ;
                      CONS ;
                      PAIR }
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -290,7 +290,7 @@
                      NIL operation ;
                      PAIR } }
                { IF_LEFT
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -316,7 +316,7 @@
                      NIL operation ;
                      PAIR }
                    { SWAP ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;

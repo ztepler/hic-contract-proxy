@@ -8,13 +8,12 @@
                (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))
             (unit %withdraw))) ;
   storage
-    (pair (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
+    (pair (pair (pair (big_map %accounts address (pair (nat %share) (nat %withdrawalsSum)))
                       (address %administrator))
                 (pair (address %marketplaceAddress) (address %minterAddress)))
-          (mutez %totalWithdrawalsSum)) ;
+          (nat %totalWithdrawalsSum)) ;
   code { LAMBDA
-           (pair (pair (pair (big_map address (pair nat mutez)) address) (pair address address))
-                 mutez)
+           (pair (pair (pair (big_map address (pair nat nat)) address) (pair address address)) nat)
            unit
            { CAR ;
              CAR ;
@@ -80,6 +79,11 @@
                  DUP ;
                  CDR ;
                  BALANCE ;
+                 PUSH mutez 1 ;
+                 SWAP ;
+                 EDIV ;
+                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                 CAR ;
                  ADD ;
                  SWAP ;
                  DUP ;
@@ -91,7 +95,7 @@
                  CAR ;
                  SWAP ;
                  GET ;
-                 IF_NONE { PUSH mutez 0 ; PUSH nat 0 ; PAIR } {} ;
+                 IF_NONE { PUSH nat 0 ; PUSH nat 0 ; PAIR } {} ;
                  PUSH nat 1000 ;
                  DUG 2 ;
                  DUP ;
@@ -107,7 +111,8 @@
                  CDR ;
                  SWAP ;
                  SUB ;
-                 PUSH mutez 0 ;
+                 ABS ;
+                 PUSH nat 0 ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -117,9 +122,9 @@
                  SENDER ;
                  CONTRACT unit ;
                  IF_NONE { PUSH string "Not a contract" ; FAILWITH } {} ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
+                 PUSH mutez 1 ;
+                 DUP 3 ;
+                 MUL ;
                  UNIT ;
                  TRANSFER_TOKENS ;
                  SWAP ;

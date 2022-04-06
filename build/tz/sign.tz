@@ -18,7 +18,7 @@
          IF_LEFT
            { IF_LEFT
                { SWAP ;
-                 PUSH unit Unit ;
+                 UNIT ;
                  DIG 3 ;
                  SWAP ;
                  EXEC ;
@@ -45,7 +45,7 @@
                  CONS ;
                  PAIR }
                { SWAP ;
-                 PUSH unit Unit ;
+                 UNIT ;
                  DIG 3 ;
                  SWAP ;
                  EXEC ;
@@ -54,7 +54,7 @@
                  SENDER ;
                  PAIR ;
                  SWAP ;
-                 PUSH unit Unit ;
+                 UNIT ;
                  DIG 2 ;
                  SWAP ;
                  SOME ;
@@ -63,7 +63,7 @@
                  NIL operation ;
                  PAIR } }
            { SWAP ;
-             PUSH unit Unit ;
+             UNIT ;
              DIG 3 ;
              SWAP ;
              EXEC ;
