@@ -147,27 +147,25 @@ block {
 } with (list[callToHic], store)
 
 
-function natDiv(const value : tez; const num : nat; const den : nat) : tez is
-    natToTez(tezToNat(value) * num / den)
-
-
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
     var _opNumber : nat := 0n;
-    var _allocatedPayouts : tez := 0tez;
+    var _allocatedPayouts : nat := 0n;
+    const natAmount = tezToNat(Tezos.amount);
 
     for participantAddress -> participantShare in map store.shares block {
         _opNumber := _opNumber + 1n;
         const isLast : bool = _opNumber = Set.size(store.shares);
-        const payoutAmount : tez = if isLast
-            then Tezos.amount - _allocatedPayouts
-            else natDiv(Tezos.amount, participantShare, store.totalShares);
+        const payoutAmount : nat = if isLast
+            then abs(natAmount - _allocatedPayouts)
+            else natAmount * participantShare / store.totalShares;
 
         const receiver : contract(unit) = getReceiver(participantAddress);
-        const op : operation = Tezos.transaction(unit, payoutAmount, receiver);
+        const payout : tez = natToTez(payoutAmount);
+        const op : operation = Tezos.transaction(unit, payout, receiver);
 
-        if payoutAmount > 0tez then operations := op # operations else skip;
+        if payout > 0tez then operations := op # operations else skip;
         _allocatedPayouts := _allocatedPayouts + payoutAmount;
     }
 
