@@ -11,7 +11,7 @@ type account is record [
     share : nat;
 
     (* withdrawalsSum is the sum that already withdrawn from contract by this participant *)
-    withdrawalsSum : tez;
+    withdrawalsSum : nat;
 ]
 
 
@@ -30,7 +30,7 @@ type storage is record [
     accounts : big_map(address, account);
 
     (* totalWithdrawalsSum is the total amount of all withdrawals from all of the participants *)
-    totalWithdrawalsSum : tez;
+    totalWithdrawalsSum : nat;
 
     (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
     minterAddress : address;
@@ -41,27 +41,29 @@ type storage is record [
 
 
 function getAccount(var participant : address; var s : storage) : account is
-case Big_map.find_opt(participant, s.accounts) of
+case Big_map.find_opt(participant, s.accounts) of [
 | Some(acc) -> acc
-| None -> record[ share = 0n; withdrawalsSum = 0tez ]
-end;
+| None -> record[ share = 0n; withdrawalsSum = 0n ]
+];
 
 
 function withdraw(var s : storage) : (list(operation) * storage) is
 block {
 
-    const totalRevenue = Tezos.balance + s.totalWithdrawalsSum;
+    const totalRevenue = tezToNat(Tezos.balance) + s.totalWithdrawalsSum;
 
     var participant : account := getAccount(Tezos.sender, s);
 
     (* NOTE: there are can be not equal division, what would happen? *)
     const totalParticipantEarnings = participant.share * totalRevenue / 1000n;
-    const payoutAmount = totalParticipantEarnings - participant.withdrawalsSum;
+    (* TODO: assert that participant.withdrawalsSum <= totalParticipantEarnings *)
+    const payoutAmount = abs(totalParticipantEarnings - participant.withdrawalsSum);
 
-    if (payoutAmount = 0tez) then failwith("Nothing to withdraw") else skip;
+    if (payoutAmount = 0n) then failwith("Nothing to withdraw") else skip;
 
     const receiver : contract(unit) = getReceiver(Tezos.sender);
-    const payoutOperation : operation = Tezos.transaction(unit, payoutAmount, receiver);
+    const payout = natToTez(payoutAmount);
+    const payoutOperation : operation = Tezos.transaction(unit, payout, receiver);
 
     s.totalWithdrawalsSum := s.totalWithdrawalsSum + payoutAmount;
     participant.withdrawalsSum := participant.withdrawalsSum + payoutAmount;
