@@ -46,6 +46,7 @@ type storage is record [
     coreParticipants : set(address);
 
     isPaused : bool;
+    totalReceived : nat;
 ]
 
 type executableCall is storage*bytes -> list(operation)
@@ -154,6 +155,7 @@ block {
     var _allocatedPayouts : nat := 0n;
     const participantCount = Bytes.length(store.shares);
     const natAmount = tezToNat(Tezos.amount);
+    store.totalReceived := store.totalReceived + natAmount;
 
     for participantAddress -> participantShare in map store.shares block {
         _opNumber := _opNumber + 1n;
@@ -302,4 +304,5 @@ case params of [
 [@view] function get_shares (const _ : unit ; const s : storage) is s.shares
 [@view] function get_core_participants (const _ : unit; const s : storage) is s.coreParticipants
 [@view] function get_administrator (const _ : unit; const s : storage) is s.administrator
+[@view] function get_total_received (const _ : unit; const s : storage) is s.totalReceived
 

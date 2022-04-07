@@ -66,6 +66,7 @@ block {
         registryAddress = unpackAddressRecord("hicRegistryAddress", records);
         coreParticipants = coreParticipants;
         isPaused = False;
+        totalReceived = 0n;
     ];
 
     (* Making originate operation: *)
