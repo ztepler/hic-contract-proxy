@@ -398,6 +398,8 @@ class HicBaseCase(TestCase):
         # Check all amounts equals
         self.assertEqual(calc_amounts, amounts)
 
+        self.collab_storage = self.result.storage
+
 
     def _call_view_entrypoint(
             self, entrypoint, params, storage, callback,
@@ -636,5 +638,10 @@ class HicBaseCase(TestCase):
 
     def _collab_get_core_participants(self):
         call = self.collab.get_core_participants()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_total_received(self):
+        call = self.collab.get_total_received()
         return call.onchain_view(storage=self.collab_storage)
 
