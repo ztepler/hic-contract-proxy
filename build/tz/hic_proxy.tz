@@ -8,7 +8,7 @@
                                                       (pair (bool %isPaused) (address %marketplaceAddress)))
                                                 (pair (pair (address %minterAddress) (option %proposedAdministrator address))
                                                       (pair (address %registryAddress) (map %shares address nat))))
-                                          (pair (address %tokenAddress) (nat %totalShares)))
+                                          (pair (pair (address %tokenAddress) (nat %totalReceived)) (nat %totalShares)))
                                     bytes)
                               (list operation))
                            (bytes %packedParams)))
@@ -39,7 +39,7 @@
                       (pair (bool %isPaused) (address %marketplaceAddress)))
                 (pair (pair (address %minterAddress) (option %proposedAdministrator address))
                       (pair (address %registryAddress) (map %shares address nat))))
-          (pair (address %tokenAddress) (nat %totalShares))) ;
+          (pair (pair (address %tokenAddress) (nat %totalReceived)) (nat %totalShares))) ;
   code { LAMBDA
            unit
            unit
@@ -53,7 +53,7 @@
          LAMBDA
            (pair (pair (pair (pair address (set address)) (pair bool address))
                        (pair (pair address (option address)) (pair address (map address nat))))
-                 (pair address nat))
+                 (pair (pair address nat) nat))
            unit
            { CAR ;
              CAR ;
@@ -67,7 +67,7 @@
          LAMBDA
            (pair (pair (pair (pair address (set address)) (pair bool address))
                        (pair (pair address (option address)) (pair address (map address nat))))
-                 (pair address nat))
+                 (pair (pair address nat) nat))
            unit
            { CAR ;
              CAR ;
@@ -254,12 +254,36 @@
                              EDIV ;
                              IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
                              CAR ;
+                             SWAP ;
+                             DUP ;
+                             DUG 2 ;
+                             CDR ;
+                             CDR ;
+                             SWAP ;
+                             DUP ;
+                             DUG 2 ;
+                             DUP 4 ;
+                             CDR ;
+                             CAR ;
+                             CDR ;
+                             ADD ;
+                             DUP 4 ;
+                             CDR ;
+                             CAR ;
+                             CAR ;
+                             PAIR ;
+                             PAIR ;
+                             DUP 3 ;
+                             CAR ;
+                             PAIR ;
                              PUSH nat 0 ;
                              NIL operation ;
                              PUSH nat 0 ;
                              PAIR ;
                              PAIR ;
-                             DUP 3 ;
+                             SWAP ;
+                             DUP ;
+                             DUG 2 ;
                              CAR ;
                              CDR ;
                              CDR ;
@@ -281,7 +305,7 @@
                                     CAR ;
                                     CAR ;
                                     ADD ;
-                                    DUP 6 ;
+                                    DUP 7 ;
                                     CAR ;
                                     CDR ;
                                     CDR ;
@@ -292,14 +316,14 @@
                                     DUG 2 ;
                                     COMPARE ;
                                     EQ ;
-                                    IF { SWAP ; DUP ; DUG 2 ; DUP 6 ; SUB ; ABS }
-                                       { DUP 6 ;
+                                    IF { SWAP ; DUP ; DUG 2 ; DUP 7 ; SUB ; ABS }
+                                       { DUP 5 ;
                                          CDR ;
                                          CDR ;
                                          DUP 5 ;
                                          CDR ;
                                          CDR ;
-                                         DUP 7 ;
+                                         DUP 8 ;
                                          MUL ;
                                          EDIV ;
                                          IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
@@ -340,8 +364,9 @@
                                     PAIR ;
                                     CAR ;
                                     PAIR } ;
-                             SWAP ;
-                             DROP ;
+                             DIG 2 ;
+                             DIG 3 ;
+                             DROP 2 ;
                              CAR ;
                              CDR ;
                              PAIR }
@@ -594,6 +619,7 @@
                              DUG 2 ;
                              CDR ;
                              CAR ;
+                             CAR ;
                              CONTRACT %transfer
                                (list (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount))))) ;
                              IF_NONE { PUSH string "No FA2 contract found" ; FAILWITH } {} ;
@@ -735,6 +761,7 @@
                  DUG 2 ;
                  CDR ;
                  CAR ;
+                 CAR ;
                  CONTRACT %update_operators
                    (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
                              (pair %remove_operator (address %owner) (address %operator) (nat %token_id)))) ;
@@ -747,6 +774,7 @@
                  DIG 2 ;
                  CONS ;
                  PAIR } } } ;
+  view "get_total_received" unit nat { CDR ; CDR ; CAR ; CDR } ;
   view "get_administrator" unit address { CDR ; CAR ; CAR ; CAR ; CAR } ;
   view "get_core_participants" unit (set address) { CDR ; CAR ; CAR ; CAR ; CDR } ;
   view "get_shares" unit (map address nat) { CDR ; CAR ; CDR ; CDR ; CDR } }
