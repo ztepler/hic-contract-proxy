@@ -52,6 +52,8 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
             lambda: self._collab_accept_ownership(self.admin, amount=100),
             lambda: self._collab_trigger_pause(self.admin, amount=100),
+            lambda: self._collab_set_threshold(self.admin, amount=100),
+            lambda: self._collab_withdraw(self.admin, amount=100),
         ]
 
         for call in calls:
@@ -76,6 +78,7 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_update_admin(not_admin, self.tips),
             lambda: self._collab_trigger_pause(not_admin),
             lambda: self._collab_execute(not_admin),
+            lambda: self._collab_set_threshold(not_admin),
         ]
 
         for call in admin_calls:

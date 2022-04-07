@@ -678,6 +678,8 @@ class HicBaseCase(TestCase):
 
     def _collab_withdraw(self, sender=None, recipient=None, amount=0):
         sender = sender or self.admin
+        recipient = recipient or self.admin
+
         result = self.collab.withdraw(recipient).interpret(
             storage=self.collab_storage,
             sender=sender,
