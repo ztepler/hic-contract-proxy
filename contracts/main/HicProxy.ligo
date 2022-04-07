@@ -299,3 +299,7 @@ case params of [
 | Transfer(p) -> transfer(store, p)
 ]
 
+[@view] function get_shares (const _ : unit ; const s : storage) is s.shares
+[@view] function get_core_participants (const _ : unit; const s : storage) is s.coreParticipants
+[@view] function get_administrator (const _ : unit; const s : storage) is s.administrator
+
