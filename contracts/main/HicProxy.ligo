@@ -13,38 +13,30 @@
 (* FA2 interface *)
 #include "../partials/fa2.ligo"
 
-(* TODO: import BasicProxy and its calls or move this calls into some core file? *)
-
+(*
+- administrator is originator of the contract, this is the only one who can call mint
+- proposedAdministrator can be set by administrator to change ownership
+- shares is map of all participants with the shares that they would recieve
+- totalShares is the sum of the shares should be equal to totalShares
+- tokenAddress is hicetnunc fa2 token address
+- miterAddress is address of the Hic Et Nunc Minter
+- marketplaceAddress address of the Hic Et Nunc V2 marketplace
+- registryAddress is address of the Hic Et Nunc registry
+- coreParticipants set of participants that should sign and signs itself
+- isPaused is flag that can be triggered by admin that turns off mint/swap entries
+- totalReceived - is amount of mutez that was received by a collab
+*)
 
 type storage is record [
-    (* administrator is originator of the contract, this is the only one who can call mint *)
     administrator : address;
-    (* TODO admins is a set too? *)
-
     proposedAdministrator : option(address);
-
-    (* shares is map of all participants with the shares that they would recieve *)
     shares : map(address, nat);
-
-    (* the sum of the shares should be equal to totalShares *)
     totalShares : nat;
-
-    (* hicetnunc fa2 token address *)
     tokenAddress : address;
-
-    (* address of the Hic Et Nunc Minter (mainnet: KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9) *)
     minterAddress : address;
-
-    (* address of the Hic Et Nunc marketplace *)
     marketplaceAddress : address;
-
-    (* address of the Hic Et Nunc registry *)
     registryAddress : address;
-
-    (* set of participants that should sign and signs itself *)
-    (* contract can call mint only when all core participant signed *)
     coreParticipants : set(address);
-
     isPaused : bool;
     totalReceived : nat;
 ]
