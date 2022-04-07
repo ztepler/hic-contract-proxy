@@ -12,6 +12,15 @@ def str_to_hex_bytes(string):
     return codecs.encode(string.encode("ascii"), "hex")
 
 
+def filter_zero(dct):
+    return {key: value for key, value in dct.items() if value > 0}
+
+
+def sum_dicts(dct_a, dct_b):
+    keys = set([*dct_a, *dct_b])
+    return {key: dct_a.get(key, 0) + dct_b.get(key, 0) for key in keys}
+
+
 def split_amount(amount, shares, last_address):
     """ Splits amount according to the shares dict """
 
@@ -27,14 +36,8 @@ def split_amount(amount, shares, last_address):
     accumulated_amount = sum(amounts.values())
     amounts[last_address] = amount - accumulated_amount
 
-    # removing 0-operations:
-    amounts = {
-        address: amount for address, amount in amounts.items()
-        if amount > 0
-    }
-
     return amounts
-  
+
 
 # TODO: consider split this one big base case into separate:
 # - one for collab
@@ -384,19 +387,34 @@ class HicBaseCase(TestCase):
         ops = list(reversed(ops))
 
         shares = self.collab_storage['shares']
-        last_address = ops[-1]['destination']
+        last_address = list(shares.keys())[-1]
         calc_amounts = split_amount(amount, shares, last_address)
+
+        undistributed = self.collab_storage['undistributed']
+        threshold = self.collab_storage['threshold']
+        calc_amounts = sum_dicts(calc_amounts, undistributed)
+
+        new_undistributed = {
+            address: 0 if amount >= threshold else amount
+            for address, amount in calc_amounts.items()
+        }
+
+        calc_amounts = filter_zero({
+            address: 0 if amount < threshold else amount
+            for address, amount in calc_amounts.items()
+        })
 
         # Checking that sum of the operations is correct and no dust is left
         ops_sum = sum(int(op['amount']) for op in ops)
-        self.assertEqual(ops_sum, amount)
+        exp_sum = sum(calc_amounts.values())
+        self.assertEqual(ops_sum, exp_sum)
         self.assertEqual(len(ops), len(calc_amounts))
 
         # Checking that each participant get amount he should receive:
         amounts = {op['destination']: int(op['amount']) for op in ops}
 
-        # Check all amounts equals
         self.assertEqual(calc_amounts, amounts)
+        self.assertEqual(new_undistributed, self.result.storage['undistributed'])
 
         self.collab_storage = self.result.storage
 
@@ -644,4 +662,37 @@ class HicBaseCase(TestCase):
     def _collab_get_total_received(self):
         call = self.collab.get_total_received()
         return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_set_threshold(self, sender=None, threshold=0, amount=0):
+        sender = sender or self.admin
+        result = self.collab.set_threshold(threshold).interpret(
+            storage=self.collab_storage,
+            sender=sender,
+            amount=amount
+        )
+
+        self.assertEqual(result.storage['threshold'], threshold)
+        self.collab_storage = result.storage
+
+
+    def _collab_withdraw(self, sender=None, recipient=None, amount=0):
+        sender = sender or self.admin
+        result = self.collab.withdraw(recipient).interpret(
+            storage=self.collab_storage,
+            sender=sender,
+            amount=amount
+        )
+
+        self.assertEqual(result.storage['undistributed'][recipient], 0)
+        self.assertEqual(len(result.operations), 1)
+        op = result.operations[0]
+        origin_undistributed = self.collab_storage['undistributed'][recipient]
+        withdrawn_amount = int(op['amount'])
+        self.assertEqual(withdrawn_amount, origin_undistributed)
+        self.assertEqual(op['destination'], recipient)
+
+        self.collab_storage = result.storage
+
+        return withdrawn_amount
 

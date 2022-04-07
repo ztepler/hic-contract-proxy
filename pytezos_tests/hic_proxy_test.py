@@ -371,3 +371,51 @@ class MapInteractionTest(HicBaseCase):
         self._collab_default(self.p1, 42)
         self.assertEqual(150, self._collab_get_total_received())
 
+
+    def test_should_redistribute_with_given_threshold(self):
+        def calc_undistributed_sum():
+            return sum(self.collab_storage['undistributed'].values())
+
+        originate_params = {
+            self.p1:   {'share': 1, 'isCore': True},
+            self.p2:   {'share': 1, 'isCore': True},
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+
+        # setting threshold for 1xtz:
+        self._collab_set_threshold(self.admin, threshold=1_000_000)
+
+        # first time it should not be distributed because 0.5xtz < 1xtz
+        self._collab_default(self.p1, amount=1_000_000)
+        self.assertEqual(calc_undistributed_sum(), 1_000_000)
+
+        # second time it should redistribute all funds
+        self._collab_default(self.p1, amount=1_000_000)
+        self.assertEqual(calc_undistributed_sum(), 0)
+
+        # third time with the same threshold should be enough too:
+        self._collab_default(self.p1, amount=2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 0)
+
+        # the same amount with new threshold shold not be distributed:
+        self._collab_set_threshold(self.admin, threshold=3_000_000)
+        self._collab_default(self.p1, amount=2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 2_000_000)
+
+        self._collab_default(self.p1, amount=2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 4_000_000)
+
+        # checking that withdraw works:
+        amount = self._collab_withdraw(self.p1, recipient=self.p2)
+        self.assertEqual(amount, 2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 2_000_000)
+
+        # withdraw second time should fail:
+        amount = self._collab_withdraw(self.p1, recipient=self.p2)
+        self.assertEqual(amount, 0)
+
+        # and then auto-distribution should work:
+        self._collab_default(self.p1, amount=10_000_000)
+        self.assertEqual(calc_undistributed_sum(), 0)
+
