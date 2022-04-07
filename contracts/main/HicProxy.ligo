@@ -25,6 +25,8 @@
 - coreParticipants set of participants that should sign and signs itself
 - isPaused is flag that can be triggered by admin that turns off mint/swap entries
 - totalReceived - is amount of mutez that was received by a collab
+- threshold - is minimal amount that can be payed to the participant during default split
+- undistributed - is mapping with all undistributed values
 *)
 
 type storage is record [
@@ -39,6 +41,8 @@ type storage is record [
     coreParticipants : set(address);
     isPaused : bool;
     totalReceived : nat;
+    threshold : nat;
+    undistributed : map(address, nat);
 ]
 
 type executableCall is storage*bytes -> list(operation)
@@ -69,8 +73,8 @@ type action is
 | Accept_ownership of unit
 | Trigger_pause of unit
 | Transfer of transferParams
-
-(* TODO: Transfer method to withdraw tokens from contract *)
+| Set_threshold of nat
+| Withdraw of address
 
 
 function checkSenderIsAdmin(var store : storage) : unit is
@@ -140,6 +144,13 @@ block {
 } with (list[callToHic], store)
 
 
+function getUndistributed(const participant : address; const store : storage) is
+    case Map.find_opt(participant, store.undistributed) of [
+    | Some(value) -> value
+    | None -> 0n
+    ]
+
+
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
@@ -152,16 +163,25 @@ block {
     for participantAddress -> participantShare in map store.shares block {
         _opNumber := _opNumber + 1n;
         const isLast : bool = _opNumber = participantCount;
-        const payoutAmount : nat = if isLast
+        var payoutAmount := if isLast
             then abs(natAmount - _allocatedPayouts)
             else natAmount * participantShare / store.totalShares;
+        _allocatedPayouts := _allocatedPayouts + payoutAmount;
+
+        payoutAmount := payoutAmount + getUndistributed(participantAddress, store);
+
+        if payoutAmount >= store.threshold
+        then store.undistributed[participantAddress] := 0n
+        else block {
+            store.undistributed[participantAddress] := payoutAmount;
+            payoutAmount := 0n;
+        };
 
         const receiver : contract(unit) = getReceiver(participantAddress);
         const payout : tez = natToTez(payoutAmount);
         const op : operation = Tezos.transaction(unit, payout, receiver);
 
         if payout > 0tez then operations := op # operations else skip;
-        _allocatedPayouts := _allocatedPayouts + payoutAmount;
     }
 
 } with (operations, store)
@@ -271,6 +291,24 @@ block {
 } with (list[callToHic], store)
 
 
+function set_threshold(const store : storage; const newThreshold : nat) is
+block {
+    checkNoAmount(Unit);
+    checkSenderIsAdmin(store);
+} with ((nil: list(operation)), store with record [threshold = newThreshold])
+
+
+function withdraw(var store : storage; var recipient : address) is
+block {
+    (* anyone can trigger withdraw for anyone *)
+    checkNoAmount(Unit);
+    const receiver = getReceiver(recipient);
+    const payout = natToTez(getUndistributed(recipient, store));
+    store.undistributed[recipient] := 0n;
+    const op = Tezos.transaction(unit, payout, receiver);
+} with (list[op], store)
+
+
 function main (const params : action; const store : storage) : (list(operation) * storage) is
 case params of [
 | Execute(call) -> execute(call, store)
@@ -291,6 +329,8 @@ case params of [
 | Trigger_pause -> triggerPause(store)
 | Update_operators(p) -> updateOperators(store, p)
 | Transfer(p) -> transfer(store, p)
+| Set_threshold(p) -> set_threshold(store, p)
+| Withdraw(p) -> withdraw(store, p)
 ]
 
 [@view] function get_shares (const _ : unit ; const s : storage) is s.shares

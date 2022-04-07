@@ -32,11 +32,13 @@ block {
 
     (* Calculating total shares and core participants: *)
     var shares : map(address, nat) := map [];
+    var undistributed : map(address, nat) := map [];
     var coreParticipants : set (address) := set [];
     var totalShares : nat := 0n;
 
     for participantAddress -> participantRec in map participants block {
         shares[participantAddress] := participantRec.share;
+        undistributed[participantAddress] := 0n;
         totalShares := totalShares + participantRec.share;
 
         if participantRec.isCore
@@ -67,6 +69,8 @@ block {
         coreParticipants = coreParticipants;
         isPaused = False;
         totalReceived = 0n;
+        threshold = 0n;
+        undistributed = undistributed;
     ];
 
     (* Making originate operation: *)
