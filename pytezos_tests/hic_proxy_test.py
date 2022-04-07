@@ -348,3 +348,20 @@ class MapInteractionTest(HicBaseCase):
         msg = 'The maximum shares is 10**12'
         self.assertTrue(msg in str(cm.exception))
 
+
+    def test_hangzhou_views(self):
+        shares = {self.p1: 420, self.p2: 69}
+        core_participants = [self.p1]
+        administrator = self.p2
+
+        originate_params = {
+            address: {'share': share, 'isCore': address in core_participants}
+            for address, share in shares.items()
+        }
+
+        self._factory_create_proxy(administrator, originate_params)
+
+        self.assertEqual(administrator, self._collab_get_administrator())
+        self.assertEqual(shares, self._collab_get_shares())
+        self.assertEqual(core_participants, self._collab_get_core_participants())
+

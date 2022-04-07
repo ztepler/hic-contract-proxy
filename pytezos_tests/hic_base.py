@@ -622,3 +622,19 @@ class HicBaseCase(TestCase):
             amount=amount)
 
         return result.operations[0]['parameters']['value']['prim'] == 'True'
+
+
+    def _collab_get_administrator(self):
+        call = self.collab.get_administrator()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_shares(self):
+        call = self.collab.get_shares()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_core_participants(self):
+        call = self.collab.get_core_participants()
+        return call.onchain_view(storage=self.collab_storage)
+
