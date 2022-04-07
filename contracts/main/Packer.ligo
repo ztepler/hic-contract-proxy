@@ -1,5 +1,5 @@
 #include "../partials/hicetnunc.ligo"
-#include "../lambdas/originate/hicProxy.ligo"
+#include "../partials/proxyTypes.ligo"
 
 // TODO: include basicProxy is failed it use Default entry with HicProxy
 // so it is required to refactor structure and move types somewhere

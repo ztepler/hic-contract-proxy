@@ -1,16 +1,7 @@
 #include "../../partials/factory.ligo"
 #include "../../main/HicProxy.ligo"
+#include "../../partials/proxyTypes.ligo"
 
-
-type participantRec is record [
-    (* share is the fraction that participant would receive from every sale *)
-    share : nat;
-
-    (* role isCore allow participant to sign as one of the creator *)
-    isCore : bool;
-]
-
-type participantsMap is map(address, participantRec);
 
 (*  I was unable to make contract using Tezos.create_contract.
     I don't undertand what happened in next few lines.
