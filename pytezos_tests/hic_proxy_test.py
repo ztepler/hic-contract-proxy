@@ -283,6 +283,7 @@ class MapInteractionTest(HicBaseCase):
         self.assertEqual(administrator, self._collab_get_administrator())
         self.assertEqual(shares, self._collab_get_shares())
         self.assertEqual(core_participants, self._collab_get_core_participants())
+        self.assertEqual(sum(shares.values()), self._collab_get_total_shares())
 
         self.assertEqual(0, self._collab_get_total_received())
         self._collab_default(self.p1, 108)

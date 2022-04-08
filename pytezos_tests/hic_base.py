@@ -540,6 +540,11 @@ class HicBaseCase(TestCase):
         return call.onchain_view(storage=self.collab_storage)
 
 
+    def _collab_get_total_shares(self):
+        call = self.collab.get_total_shares()
+        return call.onchain_view(storage=self.collab_storage)
+
+
     def _collab_get_core_participants(self):
         call = self.collab.get_core_participants()
         return call.onchain_view(storage=self.collab_storage)
