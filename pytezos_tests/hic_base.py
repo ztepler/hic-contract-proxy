@@ -21,7 +21,7 @@ def sum_dicts(dct_a, dct_b):
     return {key: dct_a.get(key, 0) + dct_b.get(key, 0) for key in keys}
 
 
-def split_amount(amount, shares, last_address):
+def split_amount(amount, shares):
     """ Splits amount according to the shares dict """
 
     total_shares = sum(shares.values())
@@ -29,14 +29,13 @@ def split_amount(amount, shares, last_address):
     # calculating amounts, int always rounds down:
     amounts = {
         address: share * amount // total_shares
-        for address, share in shares.items() if address != last_address
+        for address, share in shares.items()
     }
 
-    # dust goes to the last_address:
     accumulated_amount = sum(amounts.values())
-    amounts[last_address] = amount - accumulated_amount
+    residuals = amount - accumulated_amount
 
-    return amounts
+    return amounts, residuals
 
 
 # TODO: consider split this one big base case into separate:
@@ -387,8 +386,9 @@ class HicBaseCase(TestCase):
         ops = list(reversed(ops))
 
         shares = self.collab_storage['shares']
-        last_address = list(shares.keys())[-1]
-        calc_amounts = split_amount(amount, shares, last_address)
+        dist_amount = amount + self.collab_storage['residuals']
+        calc_amounts, residuals = split_amount(dist_amount, shares)
+        self.assertEqual(residuals, self.result.storage['residuals'])
 
         undistributed = self.collab_storage['undistributed']
         threshold = self.collab_storage['threshold']
