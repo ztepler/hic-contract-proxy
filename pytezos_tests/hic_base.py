@@ -322,23 +322,6 @@ class HicBaseCase(TestCase):
         )
 
 
-    def _collab_curate(self, sender, amount=0):
-        """ Testing that curate doesn't fail with default params """
-
-        curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
-        self.result = self.collab.curate(curate_params).interpret(
-            storage=self.collab_storage, sender=sender, amount=amount)
-
-        assert len(self.result.operations) == 1
-        assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
-        assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '100'}
-        assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '100000'}
-        self.assertEqual(
-            self.result.operations[0]['destination'],
-            self.collab_storage['minterAddress']
-        )
-
-
     def _collab_registry(self, sender, amount=0):
 
         metadata = str_to_hex_bytes(
@@ -439,29 +422,6 @@ class HicBaseCase(TestCase):
         return self.result
 
 
-    def _collab_is_core_participant(
-            self, participant, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that is_core_participant call emits correct callback """
-
-        callback = callback or self.random_contract_address
-
-        params = {
-            'participantAddress': participant,
-            'callback': callback + '%' + entrypoint
-        }
-
-        result = self._call_view_entrypoint(
-            self.collab.is_core_participant,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return result.operations[0]['parameters']['value']['prim'] == 'True'
-
-
     def _collab_update_operators(
             self, sender, operator=None, token_id=0, amount=0):
 
@@ -493,70 +453,6 @@ class HicBaseCase(TestCase):
         self.assertEqual(op['parameters']['entrypoint'], 'update_operators')
 
 
-    def _collab_is_administrator(
-            self, participant, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that is_administrator call emits correct callback """
-
-        callback = callback or self.random_contract_address
-
-        params = {
-            'participantAddress': participant,
-            'callback': callback + '%' + entrypoint
-        }
-
-        result = self._call_view_entrypoint(
-            self.collab.is_administrator,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return result.operations[0]['parameters']['value']['prim'] == 'True'
-
-
-    def _collab_get_total_shares(
-            self, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that get_total_shares call emits correct callback """
-
-        callback = callback or self.random_contract_address
-        params = callback + '%' + entrypoint
-
-        result = self._call_view_entrypoint(
-            self.collab.get_total_shares,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return int(result.operations[0]['parameters']['value']['int'])
-
-
-    def _collab_get_participant_shares(
-            self, participant, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that get_participant_shares call emits correct callback """
-
-        callback = callback or self.random_contract_address
-        params = {
-            'participantAddress': participant,
-            'callback': callback + '%' + entrypoint
-        }
-
-        result = self._call_view_entrypoint(
-            self.collab.get_participant_shares,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return int(result.operations[0]['parameters']['value']['int'])
-
-
     def _collab_update_admin(self, sender, proposed_admin, amount=0):
 
         result = self.collab.update_admin(proposed_admin).interpret(
@@ -577,16 +473,6 @@ class HicBaseCase(TestCase):
         self.assertEqual(
             self.collab_storage['administrator'],
             sender)
-
-
-    def _collab_trigger_pause(self, sender, amount=0):
-
-        wasPaused = self.collab_storage['isPaused']
-        result = self.collab.trigger_pause().interpret(
-            storage=self.collab_storage, sender=sender, amount=amount)
-        self.collab_storage = result.storage
-
-        self.assertEqual(self.collab_storage['isPaused'], not wasPaused)
 
 
     def _collab_execute(self, sender, params=None, amount=0):

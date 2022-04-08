@@ -41,17 +41,11 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_swap(self.admin, amount=100),
             lambda: self._collab_cancel_swap(self.admin, amount=100),
             lambda: self._collab_collect(self.admin, amount=100),
-            lambda: self._collab_curate(self.admin, amount=100),
             lambda: self._collab_registry(self.admin, amount=100),
             lambda: self._collab_unregistry(self.admin, amount=100),
-            lambda: self._collab_is_core_participant(self.admin, amount=100),
             lambda: self._collab_update_operators(self.admin, amount=100),
-            lambda: self._collab_is_administrator(self.admin, amount=100),
-            lambda: self._collab_get_total_shares(amount=100),
-            lambda: self._collab_get_participant_shares(self.admin, amount=100),
             lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
             lambda: self._collab_accept_ownership(self.admin, amount=100),
-            lambda: self._collab_trigger_pause(self.admin, amount=100),
             lambda: self._collab_set_threshold(self.admin, amount=100),
             lambda: self._collab_withdraw(self.admin, amount=100),
         ]
@@ -71,12 +65,10 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_swap(not_admin),
             lambda: self._collab_cancel_swap(not_admin),
             lambda: self._collab_collect(not_admin),
-            lambda: self._collab_curate(not_admin),
             lambda: self._collab_registry(not_admin),
             lambda: self._collab_unregistry(not_admin),
             lambda: self._collab_update_operators(not_admin),
             lambda: self._collab_update_admin(not_admin, self.tips),
-            lambda: self._collab_trigger_pause(not_admin),
             lambda: self._collab_execute(not_admin),
             lambda: self._collab_set_threshold(not_admin),
         ]
@@ -85,61 +77,6 @@ class MapInteractionTest(HicBaseCase):
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
             self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-
-    def _test_views(self):
-
-        # is_core_participant test, True case:
-        result = self._collab_is_core_participant(self.p1)
-        self.assertTrue(result)
-
-        # is_core_participant test, False case:
-        result = self._collab_is_core_participant(self.tips)
-        self.assertFalse(result)
-
-        # is_administrator test, True case:
-        result = self._collab_is_administrator(self.admin)
-        self.assertTrue(result)
-
-        # is_administrator test, False case:
-        result = self._collab_is_administrator(self.tips)
-        self.assertFalse(result)
-
-        # get_total_shares test:
-        result = self._collab_get_total_shares()
-        self.assertEqual(result, self.collab_storage['totalShares'])
-
-        # get_participant_shares test:
-        result = self._collab_get_participant_shares(self.p1)
-        participantShares = self.collab_storage['shares'].get(self.p1, 0)
-        self.assertEqual(result, participantShares)
-
-
-    def _test_pause(self):
-
-        # Checking pause:
-        self._collab_trigger_pause(self.admin)
-
-        # These calls should fail when pause:
-        paused_calls = [
-            lambda: self._collab_mint(self.admin),
-            lambda: self._collab_swap(self.admin),
-            lambda: self._collab_cancel_swap(self.admin),
-            lambda: self._collab_collect(self.admin),
-            lambda: self._collab_curate(self.admin),
-            lambda: self._collab_registry(self.admin),
-            lambda: self._collab_unregistry(self.admin),
-            lambda: self._collab_update_operators(self.admin),
-            lambda: self._collab_execute(self.admin),
-        ]
-
-        for call in paused_calls:
-            with self.assertRaises(MichelsonRuntimeError) as cm:
-                call()
-            self.assertTrue('Contract is paused' in str(cm.exception))
-
-        # Unpausing collab:
-        self._collab_trigger_pause(self.admin)
 
 
     def _test_lambdas(self):
@@ -164,12 +101,6 @@ class MapInteractionTest(HicBaseCase):
 
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
-
-        # Checking how pause works:
-        self._test_pause()
-
-        # Running views test before any contract updates:
-        self._test_views()
 
         # Checking that not admin fails to run admin entrypoints:
         self._test_no_admin_rights()
@@ -205,14 +136,6 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling collect from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_collect(self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-        # Test curate call from admin succeed:
-        self._collab_curate(self.admin)
-
-        # Testing that curate call from non-administrator address is not possible:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._collab_curate(self.tips)
         self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
         # Default entrypoint tests with value that can be easy splitted:
@@ -264,9 +187,6 @@ class MapInteractionTest(HicBaseCase):
 
         self._test_no_tez_entrypoints()
 
-        # Running views again for collab with 1 participant:
-        self._test_views()
-
         # Running update operatiors from admin check:
         self._collab_update_operators(self.admin)
 
@@ -275,10 +195,6 @@ class MapInteractionTest(HicBaseCase):
 
         # checking that self.tips can mint now:
         self._collab_mint(self.tips)
-
-        # checking view returns true now::
-        result = self._collab_is_administrator(self.tips)
-        self.assertTrue(result)
 
         # returning admin back:
         self._collab_update_admin(self.tips, self.admin)
