@@ -63,17 +63,11 @@ type action is
 | Swap of swapParams
 | Cancel_swap of cancelSwapParams
 | Collect of collectParams
-| Curate of curateParams
 | Registry of registryParams
 | Unregistry of unit
 | Update_operators of updateOperatorsParam
-| Is_core_participant of isParticipantParams
-| Is_administrator of isParticipantParams
-| Get_total_shares of getTotalSharesParams
-| Get_participant_shares of getParticipantShares
 | Update_admin of address
 | Accept_ownership of unit
-| Trigger_pause of unit
 | Transfer of transferParams
 | Set_threshold of nat
 | Withdraw of address
@@ -84,18 +78,12 @@ function checkSenderIsAdmin(var store : storage) : unit is
     else failwith("Entrypoint can call only administrator");
 
 
-function checkIsNotPaused(var store : storage) : unit is
-    if store.isPaused then failwith("Contract is paused")
-    else unit;
-
-
 function execute(const params : executeParams; const store : storage)
     : (list(operation) * storage) is
 
 block {
     (* This is the only entrypoint (besides default) that allows tez in *)
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const operations : list(operation) =
         params.lambda(store, params.packedParams);
 } with (operations, store)
@@ -105,7 +93,6 @@ function mint_OBJKT(var store : storage; const params: mintParams) : (list(opera
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callMintOBJKT(store.minterAddress, params);
 } with (list[callToHic], store)
 
@@ -114,7 +101,6 @@ function swap(var store : storage; var params : swapParams) : (list(operation) *
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
 
@@ -123,7 +109,6 @@ function cancelSwap(var store : storage; var params : cancelSwapParams) : (list(
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callCancelSwap(store.marketplaceAddress, params);
 } with (list[callToHic], store)
 
@@ -132,17 +117,7 @@ function collect(var store : storage; var params : collectParams) : (list(operat
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callCollect(store.marketplaceAddress, params);
-} with (list[callToHic], store)
-
-
-function curate(var store : storage; var params : curateParams) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-    checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
-    const callToHic = callCurate(store.minterAddress, params);
 } with (list[callToHic], store)
 
 
@@ -189,40 +164,6 @@ block {
 } with (operations, store)
 
 
-function isCoreParticipant(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-    const isCore = store.coreParticipants contains params.participantAddress;
-    const returnOperation = Tezos.transaction(isCore, 0mutez, params.callback);
-} with (list[returnOperation], store)
-
-
-function isParticipantAdministrator(var store : storage; var params : isParticipantParams) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-    const isAdmin : bool = store.administrator = params.participantAddress;
-    const returnOperation = Tezos.transaction(isAdmin, 0mutez, params.callback);
-} with (list[returnOperation], store)
-
-
-function getTotalShares(var store : storage; var callback : getTotalSharesParams) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-    const returnOperation = Tezos.transaction(store.totalShares, 0mutez, callback);
-} with (list[returnOperation], store)
-
-
-function getParticipantShares(var store : storage; var params : getParticipantShares) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-    const sharesCount : nat = case Map.find_opt(params.participantAddress, store.shares) of [
-    | Some(shares) -> shares
-    | None -> 0n
-    ];
-    const returnOperation = Tezos.transaction(sharesCount, 0mutez, params.callback);
-} with (list[returnOperation], store)
-
-
 function updateAdmin(var store : storage; var newAdmin : address) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
@@ -253,7 +194,6 @@ function registry(var store : storage; var params : registryParams) : (list(oper
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callRegistry(store.registryAddress, params);
 } with (list[callToHic], store)
 
@@ -262,24 +202,14 @@ function unregistry(var store : storage) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callUnregistry(store.registryAddress);
 } with (list[callToHic], store)
-
-
-function triggerPause(var store : storage) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-    checkSenderIsAdmin(store);
-    store.isPaused := not store.isPaused;
-} with ((nil: list(operation)), store)
 
 
 function updateOperators(var store : storage; var params : updateOperatorsParam) : (list(operation) * storage) is
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callUpdateOperators(store.tokenAddress, params);
 } with (list[callToHic], store)
 
@@ -288,7 +218,6 @@ function transfer(var store : storage; var params : transferParams) : (list(oper
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    checkIsNotPaused(store);
     const callToHic = callTransfer(store.tokenAddress, params);
 } with (list[callToHic], store)
 
@@ -318,17 +247,11 @@ case params of [
 | Swap(p) -> swap(store, p)
 | Cancel_swap(p) -> cancelSwap(store, p)
 | Collect(p) -> collect(store, p)
-| Curate(p) -> curate(store, p)
 | Default -> default(store)
-| Is_core_participant(p) -> isCoreParticipant(store, p)
-| Is_administrator(p) -> isParticipantAdministrator(store, p)
-| Get_total_shares(p) -> getTotalShares(store, p)
-| Get_participant_shares(p) -> getParticipantShares(store, p)
 | Update_admin(p) -> updateAdmin(store, p)
 | Accept_ownership -> acceptOwnership(store)
 | Registry(p) -> registry(store, p)
 | Unregistry -> unregistry(store)
-| Trigger_pause -> triggerPause(store)
 | Update_operators(p) -> updateOperators(store, p)
 | Transfer(p) -> transfer(store, p)
 | Set_threshold(p) -> set_threshold(store, p)
