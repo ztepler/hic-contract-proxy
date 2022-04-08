@@ -262,4 +262,5 @@ case params of [
 [@view] function get_core_participants (const _ : unit; const s : storage) is s.coreParticipants
 [@view] function get_administrator (const _ : unit; const s : storage) is s.administrator
 [@view] function get_total_received (const _ : unit; const s : storage) is s.totalReceived
+[@view] function get_total_shares (const _ : unit; const s : storage) is s.totalShares
 
