@@ -1,4 +1,4 @@
-from pytezos import MichelsonRuntimeError
+from pytezos import MichelsonRuntimeError, pytezos
 from hic_base import HicBaseCase
 from pytezos.crypto.key import Key
 
@@ -421,4 +421,45 @@ class MapInteractionTest(HicBaseCase):
         # and then auto-distribution should work:
         self._collab_default(self.p1, amount=10_000_000)
         self.assertEqual(calc_undistributed_sum(), 0)
+
+
+    def test_should_aggregate_residuals_and_then_redistribute_them(self):
+        def generate_key():
+            return pytezos.key.generate(export=False).public_key_hash()
+
+        originate_params = {
+            generate_key(): {'share': 1, 'isCore': True}
+            for _ in range(42)
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+
+        # in the following case 42 should be distributed and 41 will kept as
+        # residuals:
+        self._collab_default(self.p1, amount=83)
+        self.assertEqual(self.collab_storage['residuals'], 41)
+
+        # then only 1 mutez required to redistribute all:
+        self._collab_default(self.p1, amount=1)
+        self.assertEqual(self.collab_storage['residuals'], 0)
+
+        # checking scenario with accumulation:
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 12)
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 24)
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 36)
+
+        # checking overflow:
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 48-42)
+
+        # increasing threshold:
+        self._collab_set_threshold(self.admin, 100)
+        self._collab_default(self.p1, amount=50)
+        self.assertEqual(self.collab_storage['residuals'], 6+8)
+
+        self._collab_default(self.p1, amount=50)
+        self.assertEqual(self.collab_storage['residuals'], 6+8+8)
 
