@@ -958,6 +958,7 @@
                            DIG 2 ;
                            CONS ;
                            PAIR } } } } ;
+        view "get_total_shares" unit nat { CDR ; CDR ; CDR ; CAR } ;
         view "get_total_received" unit nat { CDR ; CDR ; CAR ; CDR ; CDR } ;
         view "get_administrator" unit address { CDR ; CAR ; CAR ; CAR ; CAR } ;
         view "get_core_participants" unit (set address) { CDR ; CAR ; CAR ; CAR ; CDR } ;
