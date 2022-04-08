@@ -246,29 +246,14 @@
                    EQ ;
                    IF { UNIT }
                       { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
-               LAMBDA
-                 (pair address
-                       (pair (pair (pair (pair address (set address)) (pair bool address))
-                                   (pair (pair address (option address)) (pair address nat)))
-                             (pair (pair (pair (map address nat) nat) (pair address nat)) (pair nat (map address nat)))))
-                 nat
-                 { UNPAIR ;
-                   SWAP ;
-                   CDR ;
-                   CDR ;
-                   CDR ;
-                   SWAP ;
-                   GET ;
-                   IF_NONE { PUSH nat 0 } {} } ;
-               DIG 5 ;
+               DIG 4 ;
                UNPAIR ;
                IF_LEFT
                  { IF_LEFT
                      { IF_LEFT
-                         { DIG 2 ;
+                         { DIG 4 ;
                            DIG 5 ;
-                           DIG 6 ;
-                           DROP 3 ;
+                           DROP 2 ;
                            IF_LEFT
                              { DIG 2 ;
                                DROP 2 ;
@@ -360,10 +345,9 @@
                                CONS ;
                                PAIR } }
                          { IF_LEFT
-                             { DIG 2 ;
+                             { DIG 4 ;
                                DIG 5 ;
-                               DIG 6 ;
-                               DROP 3 ;
+                               DROP 2 ;
                                SWAP ;
                                UNIT ;
                                DIG 4 ;
@@ -391,8 +375,8 @@
                                DIG 2 ;
                                CONS ;
                                PAIR }
-                             { DIG 3 ;
-                               DIG 4 ;
+                             { DIG 2 ;
+                               DIG 3 ;
                                DROP 3 ;
                                AMOUNT ;
                                PUSH mutez 1 ;
@@ -482,10 +466,13 @@
                                       ADD ;
                                       DUP 5 ;
                                       DUP 4 ;
-                                      PAIR ;
-                                      DUP 9 ;
                                       SWAP ;
-                                      EXEC ;
+                                      CDR ;
+                                      CDR ;
+                                      CDR ;
+                                      SWAP ;
+                                      GET ;
+                                      IF_NONE { PUSH nat 0 } {} ;
                                       DIG 2 ;
                                       ADD ;
                                       DUP 5 ;
@@ -546,14 +533,14 @@
                                            PAIR ;
                                            PAIR } ;
                                       DIG 2 ;
-                                      DUP 9 ;
+                                      DUP 8 ;
                                       SWAP ;
                                       EXEC ;
                                       SWAP ;
                                       DUP ;
                                       DUG 2 ;
                                       CDR ;
-                                      DUP 9 ;
+                                      DUP 8 ;
                                       SWAP ;
                                       EXEC ;
                                       DUP ;
@@ -585,8 +572,7 @@
                                       PAIR } ;
                                DIG 2 ;
                                DIG 3 ;
-                               DIG 4 ;
-                               DROP 3 ;
+                               DROP 2 ;
                                DUP ;
                                CAR ;
                                CDR ;
@@ -629,10 +615,9 @@
                                SWAP ;
                                CDR ;
                                PAIR } } }
-                     { DIG 2 ;
+                     { DIG 4 ;
                        DIG 5 ;
-                       DIG 6 ;
-                       DROP 3 ;
+                       DROP 2 ;
                        IF_LEFT
                          { IF_LEFT
                              { DIG 3 ;
@@ -744,10 +729,9 @@
                                NIL operation ;
                                PAIR } } } }
                  { IF_LEFT
-                     { DIG 2 ;
+                     { DIG 4 ;
                        DIG 5 ;
-                       DIG 6 ;
-                       DROP 3 ;
+                       DROP 2 ;
                        IF_LEFT
                          { IF_LEFT
                              { SWAP ;
@@ -870,10 +854,9 @@
                                NIL operation ;
                                PAIR } } }
                      { IF_LEFT
-                         { DIG 2 ;
+                         { DIG 4 ;
                            DIG 5 ;
-                           DIG 6 ;
-                           DROP 3 ;
+                           DROP 2 ;
                            SWAP ;
                            UNIT ;
                            DIG 4 ;
@@ -903,28 +886,31 @@
                            DIG 2 ;
                            CONS ;
                            PAIR }
-                         { DIG 3 ;
+                         { DIG 2 ;
                            DROP ;
                            SWAP ;
                            UNIT ;
-                           DIG 4 ;
+                           DIG 3 ;
                            SWAP ;
                            EXEC ;
                            DROP ;
                            SWAP ;
                            DUP ;
                            DUG 2 ;
-                           DIG 5 ;
+                           DIG 4 ;
                            SWAP ;
                            EXEC ;
                            SWAP ;
                            DUP ;
                            DUG 2 ;
                            DUP 4 ;
-                           PAIR ;
-                           DIG 4 ;
                            SWAP ;
-                           EXEC ;
+                           CDR ;
+                           CDR ;
+                           CDR ;
+                           SWAP ;
+                           GET ;
+                           IF_NONE { PUSH nat 0 } {} ;
                            DIG 4 ;
                            SWAP ;
                            EXEC ;

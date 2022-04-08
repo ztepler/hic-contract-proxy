@@ -121,7 +121,7 @@ block {
 } with (list[callToHic], store)
 
 
-function getUndistributed(const participant : address; const store : storage) is
+[@inline] function getUndistributed(const participant : address; const store : storage) is
     case Map.find_opt(participant, store.undistributed) of [
     | Some(value) -> value
     | None -> 0n
