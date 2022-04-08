@@ -463,3 +463,19 @@ class MapInteractionTest(HicBaseCase):
         self._collab_default(self.p1, amount=50)
         self.assertEqual(self.collab_storage['residuals'], 6+8+8)
 
+
+    def test_wrong_share_configuration_lead_to_default_failwith(self):
+        # making wrong collab just to test this case:
+        originate_params = {
+            self.p1:   {'share': 10, 'isCore': True},
+            self.p2:   {'share': 10, 'isCore': True},
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+        self.collab_storage['totalShares'] = 18
+
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collab_default(self.p2, amount=100)
+        msg = 'Wrong share configuration'
+        self.assertTrue(msg in str(cm.exception))
+
