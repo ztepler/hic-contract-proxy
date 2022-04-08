@@ -28,7 +28,8 @@ def deploy():
         'undistributed': {
             one_address: 0,
             another_address: 0
-        }
+        },
+        'residuals': 0
     }
 
     contract = ContractInterface.from_file(COLLAB_TZ).using(
