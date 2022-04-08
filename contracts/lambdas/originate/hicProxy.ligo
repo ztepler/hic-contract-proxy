@@ -71,6 +71,7 @@ block {
         totalReceived = 0n;
         threshold = 0n;
         undistributed = undistributed;
+        residuals = 0n;
     ];
 
     (* Making originate operation: *)

@@ -27,6 +27,7 @@
 - totalReceived - is amount of mutez that was received by a collab
 - threshold - is minimal amount that can be payed to the participant during default split
 - undistributed - is mapping with all undistributed values
+- residuals - is amount of mutez that wasn't distributed and kept until next income
 *)
 
 type storage is record [
@@ -43,6 +44,7 @@ type storage is record [
     totalReceived : nat;
     threshold : nat;
     undistributed : map(address, nat);
+    residuals : nat;
 ]
 
 type executableCall is storage*bytes -> list(operation)
@@ -154,19 +156,14 @@ function getUndistributed(const participant : address; const store : storage) is
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
-    var _opNumber : nat := 0n;
-    var _allocatedPayouts : nat := 0n;
-    const participantCount = Bytes.length(store.shares);
+    var allocatedPayouts := 0n;
     const natAmount = tezToNat(Tezos.amount);
+    const distAmount = natAmount + store.residuals;
     store.totalReceived := store.totalReceived + natAmount;
 
     for participantAddress -> participantShare in map store.shares block {
-        _opNumber := _opNumber + 1n;
-        const isLast : bool = _opNumber = participantCount;
-        var payoutAmount := if isLast
-            then abs(natAmount - _allocatedPayouts)
-            else natAmount * participantShare / store.totalShares;
-        _allocatedPayouts := _allocatedPayouts + payoutAmount;
+        var payoutAmount := distAmount * participantShare / store.totalShares;
+        allocatedPayouts := allocatedPayouts + payoutAmount;
 
         payoutAmount := payoutAmount + getUndistributed(participantAddress, store);
 
@@ -182,7 +179,12 @@ block {
         const op : operation = Tezos.transaction(unit, payout, receiver);
 
         if payout > 0tez then operations := op # operations else skip;
-    }
+    };
+
+    const residuals = distAmount - allocatedPayouts;
+    if residuals >= 0
+    then store.residuals := abs(residuals)
+    else failwith("Wrong share configuration")
 
 } with (operations, store)
 
