@@ -125,6 +125,10 @@ block {
     ]
 
 
+function makePayment(const payoutAmount : nat; const participant : address) is
+    Tezos.transaction(unit, natToTez(payoutAmount), getReceiver(participant))
+
+
 function default(var store : storage) : (list(operation) * storage) is
 block {
     var operations : list(operation) := nil;
@@ -133,24 +137,23 @@ block {
     const distAmount = natAmount + store.residuals;
     store.totalReceived := store.totalReceived + natAmount;
 
-    for participantAddress -> participantShare in map store.shares block {
-        var payoutAmount := distAmount * participantShare / store.totalShares;
+    for participant -> share in map store.shares block {
+        var payoutAmount := distAmount * share / store.totalShares;
         allocatedPayouts := allocatedPayouts + payoutAmount;
 
-        payoutAmount := payoutAmount + getUndistributed(participantAddress, store);
+        payoutAmount := payoutAmount + getUndistributed(participant, store);
 
-        if payoutAmount >= store.threshold
-        then store.undistributed[participantAddress] := 0n
-        else block {
-            store.undistributed[participantAddress] := payoutAmount;
-            payoutAmount := 0n;
-        };
+        store.undistributed[participant] := if payoutAmount >= store.threshold
+            then 0n
+            else payoutAmount;
 
-        const receiver : contract(unit) = getReceiver(participantAddress);
-        const payout : tez = natToTez(payoutAmount);
-        const op : operation = Tezos.transaction(unit, payout, receiver);
+        payoutAmount := if payoutAmount >= store.threshold
+            then payoutAmount
+            else 0n;
 
-        if payout > 0tez then operations := op # operations else skip;
+        operations := if payoutAmount > 0n
+            then makePayment(payoutAmount, participant) # operations
+            else operations;
     };
 
     const residuals = distAmount - allocatedPayouts;
