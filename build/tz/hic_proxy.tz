@@ -40,8 +40,7 @@
   code { LAMBDA
            address
            (contract unit)
-           { CONTRACT unit ;
-             IF_NONE { PUSH string "Not a contract" ; FAILWITH } {} } ;
+           { CONTRACT unit ; IF_NONE { PUSH string "ADDR_NF" ; FAILWITH } {} } ;
          LAMBDA nat mutez { PUSH mutez 1 ; SWAP ; MUL } ;
          LAMBDA
            unit
@@ -51,8 +50,7 @@
              AMOUNT ;
              COMPARE ;
              EQ ;
-             IF { UNIT }
-                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+             IF { UNIT } { PUSH string "AMNT_FRBD" ; FAILWITH } } ;
          LAMBDA
            (pair (pair (pair (pair address (set address)) (pair bool address))
                        (pair (pair address address) (pair nat (map address nat))))
@@ -65,8 +63,7 @@
              SENDER ;
              COMPARE ;
              EQ ;
-             IF { UNIT }
-                { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
+             IF { UNIT } { PUSH string "NOT_ADMIN" ; FAILWITH } } ;
          DIG 4 ;
          UNPAIR ;
          IF_LEFT
@@ -94,7 +91,7 @@
                          CDR ;
                          CDR ;
                          CONTRACT %cancel_swap nat ;
-                         IF_NONE { PUSH string "No marketplace found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "SWAP_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;
@@ -121,7 +118,7 @@
                          CDR ;
                          CDR ;
                          CONTRACT %collect nat ;
-                         IF_NONE { PUSH string "No marketplace found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "SWAP_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;
@@ -356,7 +353,7 @@
                               CAR ;
                               PAIR ;
                               PAIR }
-                            { DROP ; PUSH string "Wrong share configuration" ; FAILWITH } ;
+                            { DROP ; PUSH string "WR_SHARES" ; FAILWITH } ;
                          SWAP ;
                          CDR ;
                          PAIR }
@@ -403,7 +400,7 @@
                          CAR ;
                          CONTRACT %mint_OBJKT
                            (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
-                         IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "MINT_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;
@@ -430,7 +427,7 @@
                          CAR ;
                          CDR ;
                          CONTRACT %registry (pair (bytes %metadata) (bytes %subjkt)) ;
-                         IF_NONE { PUSH string "No registry found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "REG_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;
@@ -494,7 +491,7 @@
                          CONTRACT %swap
                            (pair (pair (address %creator) (nat %objkt_amount))
                                  (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt)))) ;
-                         IF_NONE { PUSH string "No marketplace found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "SWAP_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;
@@ -528,7 +525,7 @@
                          CDR ;
                          CONTRACT %transfer
                            (list (pair (address %from_) (list %txs (pair (address %to_) (nat %token_id) (nat %amount))))) ;
-                         IF_NONE { PUSH string "No FA2 contract found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "FA2_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;
@@ -554,7 +551,7 @@
                          CAR ;
                          CDR ;
                          CONTRACT %unregistry unit ;
-                         IF_NONE { PUSH string "No registry found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "REG_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          UNIT ;
                          TRANSFER_TOKENS ;
@@ -618,7 +615,7 @@
                          CONTRACT %update_operators
                            (list (or (pair %add_operator (address %owner) (address %operator) (nat %token_id))
                                      (pair %remove_operator (address %owner) (address %operator) (nat %token_id)))) ;
-                         IF_NONE { PUSH string "No FA2 contract found" ; FAILWITH } {} ;
+                         IF_NONE { PUSH string "FA2_NF" ; FAILWITH } {} ;
                          PUSH mutez 0 ;
                          DIG 2 ;
                          TRANSFER_TOKENS ;

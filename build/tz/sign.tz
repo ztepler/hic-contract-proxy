@@ -11,8 +11,7 @@
              AMOUNT ;
              COMPARE ;
              EQ ;
-             IF { UNIT }
-                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+             IF { UNIT } { PUSH string "AMNT_FRBD" ; FAILWITH } } ;
          SWAP ;
          UNPAIR ;
          IF_LEFT

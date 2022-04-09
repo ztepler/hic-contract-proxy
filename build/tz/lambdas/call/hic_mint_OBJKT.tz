@@ -10,7 +10,7 @@
   CAR ;
   CONTRACT %mint_OBJKT
     (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
-  IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+  IF_NONE { PUSH string "MINT_NF" ; FAILWITH } {} ;
   PUSH mutez 0 ;
   DIG 2 ;
   TRANSFER_TOKENS ;
