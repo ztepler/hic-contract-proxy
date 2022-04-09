@@ -6,4 +6,5 @@ faucet.json
 **/.ipynb_checkpoints/*
 **/__pycache__/*
 pytezos_tests/new_contracts/*
+ithacanet.json
 

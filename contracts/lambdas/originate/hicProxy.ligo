@@ -1,16 +1,7 @@
 #include "../../partials/factory.ligo"
 #include "../../main/HicProxy.ligo"
+#include "../../partials/proxyTypes.ligo"
 
-
-type participantRec is record [
-    (* share is the fraction that participant would receive from every sale *)
-    share : nat;
-
-    (* role isCore allow participant to sign as one of the creator *)
-    isCore : bool;
-]
-
-type participantsMap is map(address, participantRec);
 
 (*  I was unable to make contract using Tezos.create_contract.
     I don't undertand what happened in next few lines.
@@ -34,22 +25,24 @@ function lambda(
 block {
 
     const participantsOption: option(participantsMap) = Bytes.unpack(packedParams);
-    const participants : participantsMap = case participantsOption of
-    | None -> (failwith("Unpack failed") : participantsMap)
+    const participants : participantsMap = case participantsOption of [
+    | None -> (failwith("UNPK_FAIL") : participantsMap)
     | Some(p) -> p
-    end;
+    ];
 
     (* Calculating total shares and core participants: *)
     var shares : map(address, nat) := map [];
+    var undistributed : map(address, nat) := map [];
     var coreParticipants : set (address) := set [];
     var totalShares : nat := 0n;
 
     for participantAddress -> participantRec in map participants block {
         shares[participantAddress] := participantRec.share;
+        undistributed[participantAddress] := 0n;
         totalShares := totalShares + participantRec.share;
 
-        if participantRec.isCore then
-            coreParticipants := Set.add (participantAddress, coreParticipants);
+        if participantRec.isCore
+        then coreParticipants := Set.add (participantAddress, coreParticipants)
         else skip;
     };
 
@@ -57,16 +50,15 @@ block {
     else skip;
 
     if totalShares > 1_000_000_000_000n then
-        failwith("The maximum shares is 10**12")
+        failwith("EXCEED_MAX_SHARES")
     else skip;
 
-    if Map.size(participants) > 108n then failwith("The maximum participants count is 108")
+    if Map.size(participants) > 108n then failwith("EXCEED_MAX_PARTICIPANTS")
     else skip;
 
     (* Preparing initial storage: *)
     const initialStore : storage = record [
         administrator = Tezos.sender;
-        proposedAdministrator = (None : option(address));
         shares = shares;
         totalShares = totalShares;
         minterAddress = unpackAddressRecord("hicMinterAddress", records);
@@ -75,6 +67,10 @@ block {
         registryAddress = unpackAddressRecord("hicRegistryAddress", records);
         coreParticipants = coreParticipants;
         isPaused = False;
+        totalReceived = 0n;
+        threshold = 0n;
+        undistributed = undistributed;
+        residuals = 0n;
     ];
 
     (* Making originate operation: *)

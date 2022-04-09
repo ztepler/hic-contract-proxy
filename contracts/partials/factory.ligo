@@ -61,16 +61,16 @@ function unpackAddressRecord(
 block {
 
     (* Getting record by its name: *)
-    const packedRecord : bytes = case Big_map.find_opt(name, records) of
-    | None -> (failwith("Record is not found") : bytes)
+    const packedRecord : bytes = case Big_map.find_opt(name, records) of [
+    | None -> (failwith("RECORD_NF") : bytes)
     | Some(rec) -> rec
-    end;
+    ];
 
     (* Unpacking record to address type: *)
     const addressOption: option(address) = Bytes.unpack(packedRecord);
-    const unpackedAddress : address = case addressOption of
-    | None -> (failwith("Unpack failed") : address)
+    const unpackedAddress : address = case addressOption of [
+    | None -> (failwith("UNPK_FAIL") : address)
     | Some(adr) -> adr
-    end;
+    ];
 
 } with unpackedAddress

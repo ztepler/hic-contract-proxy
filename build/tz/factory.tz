@@ -27,8 +27,7 @@
              AMOUNT ;
              COMPARE ;
              EQ ;
-             IF { UNIT }
-                { PUSH string "This entrypoint should not receive tez" ; FAILWITH } } ;
+             IF { UNIT } { PUSH string "AMNT_FRBD" ; FAILWITH } } ;
          LAMBDA
            (pair (pair (pair address (big_map address bytes))
                        (pair (option address) (big_map string bytes)))
@@ -41,8 +40,7 @@
              SENDER ;
              COMPARE ;
              EQ ;
-             IF { UNIT }
-                { PUSH string "Entrypoint can call only administrator" ; FAILWITH } } ;
+             IF { UNIT } { PUSH string "NOT_ADM" ; FAILWITH } } ;
          DIG 2 ;
          UNPAIR ;
          IF_LEFT
@@ -50,7 +48,7 @@
                { IF_LEFT
                    { DIG 2 ;
                      DROP 2 ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 2 ;
                      SWAP ;
                      EXEC ;
@@ -59,7 +57,7 @@
                      CAR ;
                      CDR ;
                      CAR ;
-                     IF_NONE { PUSH string "Not proposed admin" ; FAILWITH } {} ;
+                     IF_NONE { PUSH string "NOT_PROPOSED" ; FAILWITH } {} ;
                      DUP ;
                      SENDER ;
                      COMPARE ;
@@ -94,10 +92,10 @@
                           CAR ;
                           PAIR ;
                           PAIR }
-                        { DROP ; PUSH string "Not proposed admin" ; FAILWITH } ;
+                        { DROP ; PUSH string "NOT_PROPOSED" ; FAILWITH } ;
                      NIL operation ;
                      PAIR }
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -138,7 +136,7 @@
                      NIL operation ;
                      PAIR } }
                { IF_LEFT
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -171,7 +169,7 @@
                      PAIR }
                    { DIG 2 ;
                      DROP ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
@@ -185,7 +183,7 @@
                      DUG 2 ;
                      CDR ;
                      GET ;
-                     IF_NONE { PUSH string "Template is not found" ; FAILWITH } {} ;
+                     IF_NONE { PUSH string "TEMPLATE_NF" ; FAILWITH } {} ;
                      SWAP ;
                      CAR ;
                      DUP 3 ;
@@ -231,7 +229,7 @@
                { IF_LEFT
                    { DIG 2 ;
                      DROP ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 3 ;
                      SWAP ;
                      EXEC ;
@@ -253,7 +251,7 @@
                      DIG 2 ;
                      CONS ;
                      PAIR }
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -290,7 +288,7 @@
                      NIL operation ;
                      PAIR } }
                { IF_LEFT
-                   { PUSH unit Unit ;
+                   { UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;
@@ -316,7 +314,7 @@
                      NIL operation ;
                      PAIR }
                    { SWAP ;
-                     PUSH unit Unit ;
+                     UNIT ;
                      DIG 4 ;
                      SWAP ;
                      EXEC ;

@@ -8,13 +8,12 @@
                (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt))))
             (unit %withdraw))) ;
   storage
-    (pair (pair (pair (big_map %accounts address (pair (nat %share) (mutez %withdrawalsSum)))
+    (pair (pair (pair (big_map %accounts address (pair (nat %share) (nat %withdrawalsSum)))
                       (address %administrator))
                 (pair (address %marketplaceAddress) (address %minterAddress)))
-          (mutez %totalWithdrawalsSum)) ;
+          (nat %totalWithdrawalsSum)) ;
   code { LAMBDA
-           (pair (pair (pair (big_map address (pair nat mutez)) address) (pair address address))
-                 mutez)
+           (pair (pair (pair (big_map address (pair nat nat)) address) (pair address address)) nat)
            unit
            { CAR ;
              CAR ;
@@ -42,7 +41,7 @@
                  CDR ;
                  CONTRACT %mint_OBJKT
                    (pair (pair (address %address) (nat %amount)) (pair (bytes %metadata) (nat %royalties))) ;
-                 IF_NONE { PUSH string "No minter found" ; FAILWITH } {} ;
+                 IF_NONE { PUSH string "MINT_NF" ; FAILWITH } {} ;
                  PUSH mutez 0 ;
                  DIG 2 ;
                  TRANSFER_TOKENS ;
@@ -66,7 +65,7 @@
                  CONTRACT %swap
                    (pair (pair (address %creator) (nat %objkt_amount))
                          (pair (nat %objkt_id) (pair (nat %royalties) (mutez %xtz_per_objkt)))) ;
-                 IF_NONE { PUSH string "No marketplace found" ; FAILWITH } {} ;
+                 IF_NONE { PUSH string "SWAP_NF" ; FAILWITH } {} ;
                  PUSH mutez 0 ;
                  DIG 2 ;
                  TRANSFER_TOKENS ;
@@ -80,6 +79,11 @@
                  DUP ;
                  CDR ;
                  BALANCE ;
+                 PUSH mutez 1 ;
+                 SWAP ;
+                 EDIV ;
+                 IF_NONE { PUSH string "DIV by 0" ; FAILWITH } {} ;
+                 CAR ;
                  ADD ;
                  SWAP ;
                  DUP ;
@@ -91,7 +95,7 @@
                  CAR ;
                  SWAP ;
                  GET ;
-                 IF_NONE { PUSH mutez 0 ; PUSH nat 0 ; PAIR } {} ;
+                 IF_NONE { PUSH nat 0 ; PUSH nat 0 ; PAIR } {} ;
                  PUSH nat 1000 ;
                  DUG 2 ;
                  DUP ;
@@ -107,7 +111,8 @@
                  CDR ;
                  SWAP ;
                  SUB ;
-                 PUSH mutez 0 ;
+                 ABS ;
+                 PUSH nat 0 ;
                  SWAP ;
                  DUP ;
                  DUG 2 ;
@@ -116,10 +121,10 @@
                  IF { PUSH string "Nothing to withdraw" ; FAILWITH } {} ;
                  SENDER ;
                  CONTRACT unit ;
-                 IF_NONE { PUSH string "Not a contract" ; FAILWITH } {} ;
-                 SWAP ;
-                 DUP ;
-                 DUG 2 ;
+                 IF_NONE { PUSH string "ADDR_NF" ; FAILWITH } {} ;
+                 PUSH mutez 1 ;
+                 DUP 3 ;
+                 MUL ;
                  UNIT ;
                  TRANSFER_TOKENS ;
                  SWAP ;

@@ -16,7 +16,7 @@ class SignTest(HicBaseCase):
         for call in calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+            self.assertTrue('AMNT_FRBD' in str(cm.exception))
 
 
     def test_signing(self):

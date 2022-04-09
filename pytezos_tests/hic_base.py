@@ -12,7 +12,16 @@ def str_to_hex_bytes(string):
     return codecs.encode(string.encode("ascii"), "hex")
 
 
-def split_amount(amount, shares, last_address):
+def filter_zero(dct):
+    return {key: value for key, value in dct.items() if value > 0}
+
+
+def sum_dicts(dct_a, dct_b):
+    keys = set([*dct_a, *dct_b])
+    return {key: dct_a.get(key, 0) + dct_b.get(key, 0) for key in keys}
+
+
+def split_amount(amount, shares):
     """ Splits amount according to the shares dict """
 
     total_shares = sum(shares.values())
@@ -20,21 +29,14 @@ def split_amount(amount, shares, last_address):
     # calculating amounts, int always rounds down:
     amounts = {
         address: share * amount // total_shares
-        for address, share in shares.items() if address != last_address
+        for address, share in shares.items()
     }
 
-    # dust goes to the last_address:
     accumulated_amount = sum(amounts.values())
-    amounts[last_address] = amount - accumulated_amount
+    residuals = amount - accumulated_amount
 
-    # removing 0-operations:
-    amounts = {
-        address: amount for address, amount in amounts.items()
-        if amount > 0
-    }
+    return amounts, residuals
 
-    return amounts
-  
 
 # TODO: consider split this one big base case into separate:
 # - one for collab
@@ -114,6 +116,8 @@ class HicBaseCase(TestCase):
 
         # default execute_lambda call params:
         self.execute_params = self._prepare_lambda_params('mint_OBJKT')
+
+        self.balances = {'proxy': 0}
 
 
     def _pack_address(self, address):
@@ -320,23 +324,6 @@ class HicBaseCase(TestCase):
         )
 
 
-    def _collab_curate(self, sender, amount=0):
-        """ Testing that curate doesn't fail with default params """
-
-        curate_params = {'hDAO_amount': 100, 'objkt_id': 100_000}
-        self.result = self.collab.curate(curate_params).interpret(
-            storage=self.collab_storage, sender=sender, amount=amount)
-
-        assert len(self.result.operations) == 1
-        assert self.result.operations[0]['parameters']['entrypoint'] == 'curate'
-        assert self.result.operations[0]['parameters']['value']['args'][0] == {'int': '100'}
-        assert self.result.operations[0]['parameters']['value']['args'][1] == {'int': '100000'}
-        self.assertEqual(
-            self.result.operations[0]['destination'],
-            self.collab_storage['minterAddress']
-        )
-
-
     def _collab_registry(self, sender, amount=0):
 
         metadata = str_to_hex_bytes(
@@ -384,19 +371,40 @@ class HicBaseCase(TestCase):
         ops = list(reversed(ops))
 
         shares = self.collab_storage['shares']
-        last_address = ops[-1]['destination']
-        calc_amounts = split_amount(amount, shares, last_address)
+        dist_amount = amount + self.collab_storage['residuals']
+        calc_amounts, residuals = split_amount(dist_amount, shares)
+        self.assertEqual(residuals, self.result.storage['residuals'])
+
+        undistributed = self.collab_storage['undistributed']
+        threshold = self.collab_storage['threshold']
+        calc_amounts = sum_dicts(calc_amounts, undistributed)
+
+        new_undistributed = {
+            address: 0 if amount >= threshold else amount
+            for address, amount in calc_amounts.items()
+        }
+
+        calc_amounts = filter_zero({
+            address: 0 if amount < threshold else amount
+            for address, amount in calc_amounts.items()
+        })
 
         # Checking that sum of the operations is correct and no dust is left
         ops_sum = sum(int(op['amount']) for op in ops)
-        self.assertEqual(ops_sum, amount)
+        exp_sum = sum(calc_amounts.values())
+        self.assertEqual(ops_sum, exp_sum)
         self.assertEqual(len(ops), len(calc_amounts))
 
         # Checking that each participant get amount he should receive:
         amounts = {op['destination']: int(op['amount']) for op in ops}
 
-        # Check all amounts equals
         self.assertEqual(calc_amounts, amounts)
+        self.assertEqual(new_undistributed, self.result.storage['undistributed'])
+
+        self.collab_storage = self.result.storage
+        for address, amount in calc_amounts.items():
+            self.balances[address] = self.balances.get(address, 0) + amount
+            self.balances['proxy'] -= amount
 
 
     def _call_view_entrypoint(
@@ -417,29 +425,6 @@ class HicBaseCase(TestCase):
         self.assertEqual(op['destination'], callback)
 
         return self.result
-
-
-    def _collab_is_core_participant(
-            self, participant, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that is_core_participant call emits correct callback """
-
-        callback = callback or self.random_contract_address
-
-        params = {
-            'participantAddress': participant,
-            'callback': callback + '%' + entrypoint
-        }
-
-        result = self._call_view_entrypoint(
-            self.collab.is_core_participant,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return result.operations[0]['parameters']['value']['prim'] == 'True'
 
 
     def _collab_update_operators(
@@ -473,100 +458,15 @@ class HicBaseCase(TestCase):
         self.assertEqual(op['parameters']['entrypoint'], 'update_operators')
 
 
-    def _collab_is_administrator(
-            self, participant, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that is_administrator call emits correct callback """
+    def _collab_update_admin(self, sender, new_admin, amount=0):
 
-        callback = callback or self.random_contract_address
-
-        params = {
-            'participantAddress': participant,
-            'callback': callback + '%' + entrypoint
-        }
-
-        result = self._call_view_entrypoint(
-            self.collab.is_administrator,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return result.operations[0]['parameters']['value']['prim'] == 'True'
-
-
-    def _collab_get_total_shares(
-            self, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that get_total_shares call emits correct callback """
-
-        callback = callback or self.random_contract_address
-        params = callback + '%' + entrypoint
-
-        result = self._call_view_entrypoint(
-            self.collab.get_total_shares,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return int(result.operations[0]['parameters']['value']['int'])
-
-
-    def _collab_get_participant_shares(
-            self, participant, callback=None,
-            entrypoint='random_entry', amount=0):
-        """ Testing that get_participant_shares call emits correct callback """
-
-        callback = callback or self.random_contract_address
-        params = {
-            'participantAddress': participant,
-            'callback': callback + '%' + entrypoint
-        }
-
-        result = self._call_view_entrypoint(
-            self.collab.get_participant_shares,
-            params,
-            self.collab_storage,
-            callback,
-            entrypoint,
-            amount=amount)
-
-        return int(result.operations[0]['parameters']['value']['int'])
-
-
-    def _collab_update_admin(self, sender, proposed_admin, amount=0):
-
-        result = self.collab.update_admin(proposed_admin).interpret(
-            storage=self.collab_storage, sender=sender, amount=amount)
-        self.collab_storage = result.storage
-
-        self.assertEqual(
-            self.collab_storage['proposedAdministrator'],
-            proposed_admin)
-
-
-    def _collab_accept_ownership(self, sender, amount=0):
-
-        result = self.collab.accept_ownership().interpret(
+        result = self.collab.update_admin(new_admin).interpret(
             storage=self.collab_storage, sender=sender, amount=amount)
         self.collab_storage = result.storage
 
         self.assertEqual(
             self.collab_storage['administrator'],
-            sender)
-
-
-    def _collab_trigger_pause(self, sender, amount=0):
-
-        wasPaused = self.collab_storage['isPaused']
-        result = self.collab.trigger_pause().interpret(
-            storage=self.collab_storage, sender=sender, amount=amount)
-        self.collab_storage = result.storage
-
-        self.assertEqual(self.collab_storage['isPaused'], not wasPaused)
+            new_admin)
 
 
     def _collab_execute(self, sender, params=None, amount=0):
@@ -622,3 +522,67 @@ class HicBaseCase(TestCase):
             amount=amount)
 
         return result.operations[0]['parameters']['value']['prim'] == 'True'
+
+
+    def _collab_get_administrator(self):
+        call = self.collab.get_administrator()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_shares(self):
+        call = self.collab.get_shares()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_total_shares(self):
+        call = self.collab.get_total_shares()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_core_participants(self):
+        call = self.collab.get_core_participants()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_get_total_received(self):
+        call = self.collab.get_total_received()
+        return call.onchain_view(storage=self.collab_storage)
+
+
+    def _collab_set_threshold(self, sender=None, threshold=0, amount=0):
+        sender = sender or self.admin
+        result = self.collab.set_threshold(threshold).interpret(
+            storage=self.collab_storage,
+            sender=sender,
+            amount=amount
+        )
+
+        self.assertEqual(result.storage['threshold'], threshold)
+        self.collab_storage = result.storage
+
+
+    def _collab_withdraw(self, sender=None, recipient=None, amount=0):
+        sender = sender or self.admin
+        recipient = recipient or self.admin
+
+        result = self.collab.withdraw(recipient).interpret(
+            storage=self.collab_storage,
+            sender=sender,
+            amount=amount
+        )
+
+        self.assertEqual(result.storage['undistributed'][recipient], 0)
+        self.assertEqual(len(result.operations), 1)
+        op = result.operations[0]
+        origin_undistributed = self.collab_storage['undistributed'][recipient]
+        withdrawn_amount = int(op['amount'])
+        self.assertEqual(withdrawn_amount, origin_undistributed)
+        self.assertEqual(op['destination'], recipient)
+
+        self.collab_storage = result.storage
+
+        self.balances['proxy'] -= origin_undistributed
+        self.balances[recipient] = self.balances.get(recipient, 0) + origin_undistributed
+
+        return withdrawn_amount
+

@@ -9,12 +9,12 @@ class FactoryTest(HicBaseCase):
         # Trying to update admin from not admin address:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_update_admin(self.p2, self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADM' in str(cm.exception))
 
         # Trying to accept admin rights before transfer:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_accept_ownership(self.tips)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
+        self.assertTrue('NOT_PROPOSED' in str(cm.exception))
 
         # Trying to update admin admin address:
         self._factory_update_admin(self.admin, self.tips)
@@ -22,7 +22,7 @@ class FactoryTest(HicBaseCase):
         # Checking that another address can't accept:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_accept_ownership(self.p2)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
+        self.assertTrue('NOT_PROPOSED' in str(cm.exception))
 
         # Checking that proposed can accept:
         self._factory_accept_ownership(self.tips)
@@ -45,7 +45,7 @@ class FactoryTest(HicBaseCase):
         for call in calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+            self.assertTrue('AMNT_FRBD' in str(cm.exception))
 
 
     def _test_no_admin_rights(self):
@@ -63,7 +63,7 @@ class FactoryTest(HicBaseCase):
         for call in admin_calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+            self.assertTrue('NOT_ADM' in str(cm.exception))
 
 
     def _test_records(self):
@@ -74,7 +74,7 @@ class FactoryTest(HicBaseCase):
         # and failwith "Record is not found":
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p1, self.originate_params)
-        self.assertTrue('Record is not found' in str(cm.exception))
+        self.assertTrue('RECORD_NF' in str(cm.exception))
 
         # adding all records is succeeded:
         for name, address in self.addresses.items():
@@ -100,10 +100,10 @@ class FactoryTest(HicBaseCase):
         self._factory_add_record(
             self.admin, 'hicMinterAddress', self._pack_nat(42))
 
-        # contract origination failed: "Unpack failed"
+        # contract origination failed: "UNPK_FAIL"
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p1, self.originate_params)
-        self.assertTrue('Unpack failed' in str(cm.exception))
+        self.assertTrue('UNPK_FAIL' in str(cm.exception))
 
         # replacing record with this name with correct address:
         self._factory_add_record(
@@ -140,7 +140,7 @@ class FactoryTest(HicBaseCase):
         # Trying to add template from not admin address:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_add_template(self.p2)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADM' in str(cm.exception))
 
         # Trying to add template from admin address:
         self._factory_add_template(self.admin)
@@ -148,7 +148,7 @@ class FactoryTest(HicBaseCase):
         # Trying to remove template from not admin address:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_remove_template(self.p2)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADM' in str(cm.exception))
 
         # Trying to remove template from admin address:
         self._factory_remove_template(self.admin)
@@ -156,7 +156,7 @@ class FactoryTest(HicBaseCase):
         # Checking that removed template is not possible to use:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p2, self.originate_params, contract='added_template')
-        self.assertTrue('Template is not found' in str(cm.exception))
+        self.assertTrue('TEMPLATE_NF' in str(cm.exception))
 
         # Running tests that in result changes admin to self.tips:
         self._test_admin_change()

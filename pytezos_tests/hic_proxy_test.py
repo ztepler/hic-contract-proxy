@@ -1,10 +1,14 @@
-from pytezos import MichelsonRuntimeError
+from random import randint
+from pytezos import MichelsonRuntimeError, pytezos
 from hic_base import HicBaseCase
 from pytezos.crypto.key import Key
 
 
-# TODO: should I split this test into separate ones?
+def generate_key():
+    return pytezos.key.generate(export=False).public_key_hash()
 
+
+# TODO: should I split this test into separate ones?
 class MapInteractionTest(HicBaseCase):
 
     def _test_admin_change(self):
@@ -15,23 +19,10 @@ class MapInteractionTest(HicBaseCase):
         # Trying to update admin from not admin address:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_update_admin(self.p2, self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-        # Trying to accept admin rights before transfer:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._collab_accept_ownership(self.tips)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Trying to update admin admin address:
         self._collab_update_admin(self.admin, self.tips)
-
-        # Checking that another address can't accept:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._collab_accept_ownership(self.p2)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
-
-        # Checking that proposed can accept:
-        self._collab_accept_ownership(self.tips)
 
 
     def _test_no_tez_entrypoints(self):
@@ -41,23 +32,18 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_swap(self.admin, amount=100),
             lambda: self._collab_cancel_swap(self.admin, amount=100),
             lambda: self._collab_collect(self.admin, amount=100),
-            lambda: self._collab_curate(self.admin, amount=100),
             lambda: self._collab_registry(self.admin, amount=100),
             lambda: self._collab_unregistry(self.admin, amount=100),
-            lambda: self._collab_is_core_participant(self.admin, amount=100),
             lambda: self._collab_update_operators(self.admin, amount=100),
-            lambda: self._collab_is_administrator(self.admin, amount=100),
-            lambda: self._collab_get_total_shares(amount=100),
-            lambda: self._collab_get_participant_shares(self.admin, amount=100),
             lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
-            lambda: self._collab_accept_ownership(self.admin, amount=100),
-            lambda: self._collab_trigger_pause(self.admin, amount=100),
+            lambda: self._collab_set_threshold(self.admin, amount=100),
+            lambda: self._collab_withdraw(self.admin, amount=100),
         ]
 
         for call in calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+            self.assertTrue('AMNT_FRBD' in str(cm.exception))
 
 
     def _test_no_admin_rights(self):
@@ -69,74 +55,18 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_swap(not_admin),
             lambda: self._collab_cancel_swap(not_admin),
             lambda: self._collab_collect(not_admin),
-            lambda: self._collab_curate(not_admin),
             lambda: self._collab_registry(not_admin),
             lambda: self._collab_unregistry(not_admin),
             lambda: self._collab_update_operators(not_admin),
             lambda: self._collab_update_admin(not_admin, self.tips),
-            lambda: self._collab_trigger_pause(not_admin),
             lambda: self._collab_execute(not_admin),
+            lambda: self._collab_set_threshold(not_admin),
         ]
 
         for call in admin_calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-
-    def _test_views(self):
-
-        # is_core_participant test, True case:
-        result = self._collab_is_core_participant(self.p1)
-        self.assertTrue(result)
-
-        # is_core_participant test, False case:
-        result = self._collab_is_core_participant(self.tips)
-        self.assertFalse(result)
-
-        # is_administrator test, True case:
-        result = self._collab_is_administrator(self.admin)
-        self.assertTrue(result)
-
-        # is_administrator test, False case:
-        result = self._collab_is_administrator(self.tips)
-        self.assertFalse(result)
-
-        # get_total_shares test:
-        result = self._collab_get_total_shares()
-        self.assertEqual(result, self.collab_storage['totalShares'])
-
-        # get_participant_shares test:
-        result = self._collab_get_participant_shares(self.p1)
-        participantShares = self.collab_storage['shares'].get(self.p1, 0)
-        self.assertEqual(result, participantShares)
-
-
-    def _test_pause(self):
-
-        # Checking pause:
-        self._collab_trigger_pause(self.admin)
-
-        # These calls should fail when pause:
-        paused_calls = [
-            lambda: self._collab_mint(self.admin),
-            lambda: self._collab_swap(self.admin),
-            lambda: self._collab_cancel_swap(self.admin),
-            lambda: self._collab_collect(self.admin),
-            lambda: self._collab_curate(self.admin),
-            lambda: self._collab_registry(self.admin),
-            lambda: self._collab_unregistry(self.admin),
-            lambda: self._collab_update_operators(self.admin),
-            lambda: self._collab_execute(self.admin),
-        ]
-
-        for call in paused_calls:
-            with self.assertRaises(MichelsonRuntimeError) as cm:
-                call()
-            self.assertTrue('Contract is paused' in str(cm.exception))
-
-        # Unpausing collab:
-        self._collab_trigger_pause(self.admin)
+            self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
 
     def _test_lambdas(self):
@@ -162,12 +92,6 @@ class MapInteractionTest(HicBaseCase):
         # Factory test:
         self._factory_create_proxy(self.admin, self.originate_params)
 
-        # Checking how pause works:
-        self._test_pause()
-
-        # Running views test before any contract updates:
-        self._test_views()
-
         # Checking that not admin fails to run admin entrypoints:
         self._test_no_admin_rights()
 
@@ -177,7 +101,7 @@ class MapInteractionTest(HicBaseCase):
         # Test mint call without admin role failed:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_mint(self.p2)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Test swap call from admin succeed:
         self._collab_swap(self.admin)
@@ -186,7 +110,7 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling swap from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_swap(self.p2)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Test cancel swap call from admin succeed:
         self._collab_cancel_swap(self.admin)
@@ -194,7 +118,7 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling cancel swap from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_cancel_swap(self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Test collect call from admin succeed:
         self._collab_collect(self.admin)
@@ -202,15 +126,7 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling collect from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_collect(self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
-
-        # Test curate call from admin succeed:
-        self._collab_curate(self.admin)
-
-        # Testing that curate call from non-administrator address is not possible:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._collab_curate(self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Default entrypoint tests with value that can be easy splitted:
         self._collab_default(self.tips, 1000)
@@ -238,7 +154,7 @@ class MapInteractionTest(HicBaseCase):
         self._collab_mint(self.p2)
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_mint(self.admin)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Collab with 1 participant can be created with only 1 share,
         # and we allow to have participants with 0 share (why not?):
@@ -261,9 +177,6 @@ class MapInteractionTest(HicBaseCase):
 
         self._test_no_tez_entrypoints()
 
-        # Running views again for collab with 1 participant:
-        self._test_views()
-
         # Running update operatiors from admin check:
         self._collab_update_operators(self.admin)
 
@@ -273,13 +186,8 @@ class MapInteractionTest(HicBaseCase):
         # checking that self.tips can mint now:
         self._collab_mint(self.tips)
 
-        # checking view returns true now::
-        result = self._collab_is_administrator(self.tips)
-        self.assertTrue(result)
-
         # returning admin back:
         self._collab_update_admin(self.tips, self.admin)
-        self._collab_accept_ownership(self.admin)
 
         # running lambda testing:
         self._test_lambdas()
@@ -331,7 +239,7 @@ class MapInteractionTest(HicBaseCase):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p2, originate_params)
-        msg = 'The maximum participants count is 108'
+        msg = 'EXCEED_MAX_PARTICIPANTS'
         self.assertTrue(msg in str(cm.exception))
 
 
@@ -345,6 +253,164 @@ class MapInteractionTest(HicBaseCase):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p2, originate_params)
-        msg = 'The maximum shares is 10**12'
+        msg = 'EXCEED_MAX_SHARES'
         self.assertTrue(msg in str(cm.exception))
+
+
+    def test_hangzhou_views(self):
+        shares = {self.p1: 420, self.p2: 69}
+        core_participants = [self.p1]
+        administrator = self.p2
+
+        originate_params = {
+            address: {'share': share, 'isCore': address in core_participants}
+            for address, share in shares.items()
+        }
+
+        self._factory_create_proxy(administrator, originate_params)
+
+        self.assertEqual(administrator, self._collab_get_administrator())
+        self.assertEqual(shares, self._collab_get_shares())
+        self.assertEqual(core_participants, self._collab_get_core_participants())
+        self.assertEqual(sum(shares.values()), self._collab_get_total_shares())
+
+        self.assertEqual(0, self._collab_get_total_received())
+        self._collab_default(self.p1, 108)
+        self.assertEqual(108, self._collab_get_total_received())
+        self._collab_default(self.p1, 42)
+        self.assertEqual(150, self._collab_get_total_received())
+
+
+    def test_should_redistribute_with_given_threshold(self):
+        def calc_undistributed_sum():
+            return sum(self.collab_storage['undistributed'].values())
+
+        originate_params = {
+            self.p1:   {'share': 1, 'isCore': True},
+            self.p2:   {'share': 1, 'isCore': True},
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+
+        # setting threshold for 1xtz:
+        self._collab_set_threshold(self.admin, threshold=1_000_000)
+
+        # first time it should not be distributed because 0.5xtz < 1xtz
+        self._collab_default(self.p1, amount=1_000_000)
+        self.assertEqual(calc_undistributed_sum(), 1_000_000)
+
+        # second time it should redistribute all funds
+        self._collab_default(self.p1, amount=1_000_000)
+        self.assertEqual(calc_undistributed_sum(), 0)
+
+        # third time with the same threshold should be enough too:
+        self._collab_default(self.p1, amount=2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 0)
+
+        # the same amount with new threshold shold not be distributed:
+        self._collab_set_threshold(self.admin, threshold=3_000_000)
+        self._collab_default(self.p1, amount=2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 2_000_000)
+
+        self._collab_default(self.p1, amount=2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 4_000_000)
+
+        # checking that withdraw works:
+        amount = self._collab_withdraw(self.p1, recipient=self.p2)
+        self.assertEqual(amount, 2_000_000)
+        self.assertEqual(calc_undistributed_sum(), 2_000_000)
+
+        # withdraw second time should fail:
+        amount = self._collab_withdraw(self.p1, recipient=self.p2)
+        self.assertEqual(amount, 0)
+
+        # and then auto-distribution should work:
+        self._collab_default(self.p1, amount=10_000_000)
+        self.assertEqual(calc_undistributed_sum(), 0)
+
+
+    def test_should_aggregate_residuals_and_then_redistribute_them(self):
+
+        originate_params = {
+            generate_key(): {'share': 1, 'isCore': True}
+            for _ in range(42)
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+
+        # in the following case 42 should be distributed and 41 will kept as
+        # residuals:
+        self._collab_default(self.p1, amount=83)
+        self.assertEqual(self.collab_storage['residuals'], 41)
+
+        # then only 1 mutez required to redistribute all:
+        self._collab_default(self.p1, amount=1)
+        self.assertEqual(self.collab_storage['residuals'], 0)
+
+        # checking scenario with accumulation:
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 12)
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 24)
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 36)
+
+        # checking overflow:
+        self._collab_default(self.p1, amount=12)
+        self.assertEqual(self.collab_storage['residuals'], 48-42)
+
+        # increasing threshold:
+        self._collab_set_threshold(self.admin, 100)
+        self._collab_default(self.p1, amount=50)
+        self.assertEqual(self.collab_storage['residuals'], 6+8)
+        amounts = [a for a in self.collab_storage['undistributed'].values()]
+        self.assertTrue(all(amount == 1 for amount in amounts))
+
+        self._collab_default(self.p1, amount=50)
+        self.assertEqual(self.collab_storage['residuals'], 6+8+8)
+        amounts = [a for a in self.collab_storage['undistributed'].values()]
+        self.assertTrue(all(amount == 2 for amount in amounts))
+
+
+    def test_wrong_share_configuration_lead_to_default_failwith(self):
+        # making wrong collab just to test this case:
+        originate_params = {
+            self.p1:   {'share': 10, 'isCore': True},
+            self.p2:   {'share': 10, 'isCore': True},
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+        self.collab_storage['totalShares'] = 18
+
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collab_default(self.p2, amount=100)
+        msg = 'WR_SHARES'
+        self.assertTrue(msg in str(cm.exception))
+
+
+    def test_random_interactions(self):
+        ITERATIONS = 3
+
+        for iteration in range(ITERATIONS):
+            total_sum = 0
+
+            shares = {
+                generate_key(): {'share': randint(1, 100), 'isCore': True}
+                for _ in range(randint(2, 5))
+            }
+
+            self._factory_create_proxy(self.admin, shares)
+            self._collab_set_threshold(self.admin, randint(0, 100))
+
+            for call in range(randint(2, 5)):
+                new_sum = randint(0, 100)
+                self._collab_default(self.p1, amount=new_sum)
+                total_sum += new_sum
+                self.assertTrue(self.collab_storage['residuals'] < len(shares))
+
+            balances = sum(self.balances.get(addr, 0) for addr in shares)
+            undistributed = sum(
+                self.collab_storage['undistributed'][addr] for addr in shares)
+            residuals = self.collab_storage['residuals']
+            self.assertEqual(total_sum, balances+undistributed+residuals)
 

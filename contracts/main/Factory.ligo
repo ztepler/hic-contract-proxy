@@ -15,7 +15,7 @@ type factoryAction is
 
 function checkSenderIsAdmin(const factoryStore : factoryStorage) : unit is
     if (Tezos.sender = factoryStore.administrator) then unit
-    else failwith("Entrypoint can call only administrator");
+    else failwith("NOT_ADM");
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
@@ -24,10 +24,10 @@ block {
 
     checkNoAmount(Unit);
     const optionalOriginator = Map.find_opt(params.templateName, factoryStore.templates);
-    const proxyOriginator : originateContractFunc = case optionalOriginator of
+    const proxyOriginator : originateContractFunc = case optionalOriginator of [
     | Some(originator) -> originator
-    | None -> (failwith("Template is not found") : originateContractFunc)
-    end;
+    | None -> (failwith("TEMPLATE_NF") : originateContractFunc)
+    ];
 
     const result : originationResult = proxyOriginator(
         factoryStore.records, params.params);
@@ -68,10 +68,10 @@ function isOriginatedContract(
 block {
     checkNoAmount(Unit);
     const isOriginatedOption = Big_map.find_opt(params.contractAddress, factoryStore.originatedContracts);
-    const isOriginated : bool = case isOriginatedOption of
+    const isOriginated : bool = case isOriginatedOption of [
     | Some(_metadata) -> True
     | None -> False
-    end;
+    ];
 
     const returnOperation = Tezos.transaction(isOriginated, 0mutez, params.callback);
 } with (list[returnOperation], factoryStore)
@@ -89,16 +89,16 @@ function acceptOwnership(var factoryStore : factoryStorage) : (list(operation) *
 block {
     checkNoAmount(Unit);
 
-    const proposedAdministrator : address = case factoryStore.proposedAdministrator of
+    const proposedAdministrator : address = case factoryStore.proposedAdministrator of [
     | Some(proposed) -> proposed
-    | None -> (failwith("Not proposed admin") : address)
-    end;
+    | None -> (failwith("NOT_PROPOSED") : address)
+    ];
 
     if Tezos.sender = proposedAdministrator then
     block {
         factoryStore.administrator := proposedAdministrator;
         factoryStore.proposedAdministrator := (None : option(address));
-    } else failwith("Not proposed admin")
+    } else failwith("NOT_PROPOSED")
 
 } with ((nil: list(operation)), factoryStore)
 
@@ -128,7 +128,7 @@ block {
 
 function main (const params : factoryAction; var factoryStore : factoryStorage)
     : (list(operation) * factoryStorage) is
-case params of
+case params of [
 | Create_proxy(p) -> createProxy(p, factoryStore)
 | Add_template(p) -> addTemplate(p, factoryStore)
 | Remove_template(p) -> removeTemplate(p, factoryStore)
@@ -137,4 +137,4 @@ case params of
 | Accept_ownership -> acceptOwnership(factoryStore)
 | Add_record(p) -> addRecord(p, factoryStore)
 | Remove_record(p) -> removeRecord(p, factoryStore)
-end
+]
