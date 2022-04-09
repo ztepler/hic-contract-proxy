@@ -771,9 +771,6 @@ class HicProxyTestCase(ContractInteractionsTestCase):
         self.collab.update_admin(self.swap_admin.address).send()
         self.bake_block()
 
-        self.swap_admin.accept_gallery_ownership().send()
-        self.bake_block()
-
         self.assertEqual(
             self.collab.storage['administrator'](),
             self.swap_admin.address)
@@ -825,10 +822,6 @@ class HicProxyTestCase(ContractInteractionsTestCase):
         # return back rights and check that collab admin is p1 again
         swap_admin = self.p1.contract(self.swap_admin.address)
         result = swap_admin.return_admin().send()
-        self.bake_block()
-
-        gallery = self.p1.contract(self.collab.address)
-        result = gallery.accept_ownership().send()
         self.bake_block()
 
         self.assertEqual(

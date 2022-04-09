@@ -453,26 +453,15 @@ class HicBaseCase(TestCase):
         self.assertEqual(op['parameters']['entrypoint'], 'update_operators')
 
 
-    def _collab_update_admin(self, sender, proposed_admin, amount=0):
+    def _collab_update_admin(self, sender, new_admin, amount=0):
 
-        result = self.collab.update_admin(proposed_admin).interpret(
-            storage=self.collab_storage, sender=sender, amount=amount)
-        self.collab_storage = result.storage
-
-        self.assertEqual(
-            self.collab_storage['proposedAdministrator'],
-            proposed_admin)
-
-
-    def _collab_accept_ownership(self, sender, amount=0):
-
-        result = self.collab.accept_ownership().interpret(
+        result = self.collab.update_admin(new_admin).interpret(
             storage=self.collab_storage, sender=sender, amount=amount)
         self.collab_storage = result.storage
 
         self.assertEqual(
             self.collab_storage['administrator'],
-            sender)
+            new_admin)
 
 
     def _collab_execute(self, sender, params=None, amount=0):

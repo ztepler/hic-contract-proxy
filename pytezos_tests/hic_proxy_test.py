@@ -17,21 +17,8 @@ class MapInteractionTest(HicBaseCase):
             self._collab_update_admin(self.p2, self.tips)
         self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
 
-        # Trying to accept admin rights before transfer:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._collab_accept_ownership(self.tips)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
-
         # Trying to update admin admin address:
         self._collab_update_admin(self.admin, self.tips)
-
-        # Checking that another address can't accept:
-        with self.assertRaises(MichelsonRuntimeError) as cm:
-            self._collab_accept_ownership(self.p2)
-        self.assertTrue('Not proposed admin' in str(cm.exception))
-
-        # Checking that proposed can accept:
-        self._collab_accept_ownership(self.tips)
 
 
     def _test_no_tez_entrypoints(self):
@@ -45,7 +32,6 @@ class MapInteractionTest(HicBaseCase):
             lambda: self._collab_unregistry(self.admin, amount=100),
             lambda: self._collab_update_operators(self.admin, amount=100),
             lambda: self._collab_update_admin(self.admin, self.p2, amount=100),
-            lambda: self._collab_accept_ownership(self.admin, amount=100),
             lambda: self._collab_set_threshold(self.admin, amount=100),
             lambda: self._collab_withdraw(self.admin, amount=100),
         ]
@@ -198,7 +184,6 @@ class MapInteractionTest(HicBaseCase):
 
         # returning admin back:
         self._collab_update_admin(self.tips, self.admin)
-        self._collab_accept_ownership(self.admin)
 
         # running lambda testing:
         self._test_lambdas()
