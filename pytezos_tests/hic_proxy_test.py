@@ -376,9 +376,13 @@ class MapInteractionTest(HicBaseCase):
         self._collab_set_threshold(self.admin, 100)
         self._collab_default(self.p1, amount=50)
         self.assertEqual(self.collab_storage['residuals'], 6+8)
+        amounts = [a for a in self.collab_storage['undistributed'].values()]
+        self.assertTrue(all(amount == 1 for amount in amounts))
 
         self._collab_default(self.p1, amount=50)
         self.assertEqual(self.collab_storage['residuals'], 6+8+8)
+        amounts = [a for a in self.collab_storage['undistributed'].values()]
+        self.assertTrue(all(amount == 2 for amount in amounts))
 
 
     def test_wrong_share_configuration_lead_to_default_failwith(self):
