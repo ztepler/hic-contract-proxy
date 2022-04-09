@@ -15,7 +15,6 @@
 
 (*
 - administrator is originator of the contract, this is the only one who can call mint
-- proposedAdministrator can be set by administrator to change ownership
 - shares is map of all participants with the shares that they would recieve
 - totalShares is the sum of the shares should be equal to totalShares
 - tokenAddress is hicetnunc fa2 token address
@@ -32,7 +31,6 @@
 
 type storage is record [
     administrator : address;
-    proposedAdministrator : option(address);
     shares : map(address, nat);
     totalShares : nat;
     tokenAddress : address;
@@ -67,7 +65,6 @@ type action is
 | Unregistry of unit
 | Update_operators of updateOperatorsParam
 | Update_admin of address
-| Accept_ownership of unit
 | Transfer of transferParams
 | Set_threshold of nat
 | Withdraw of address
@@ -168,25 +165,7 @@ function updateAdmin(var store : storage; var newAdmin : address) : (list(operat
 block {
     checkNoAmount(Unit);
     checkSenderIsAdmin(store);
-    store.proposedAdministrator := Some(newAdmin);
-} with ((nil: list(operation)), store)
-
-
-function acceptOwnership(var store : storage) : (list(operation) * storage) is
-block {
-    checkNoAmount(Unit);
-
-    const proposedAdministrator : address = case store.proposedAdministrator of [
-    | Some(proposed) -> proposed
-    | None -> (failwith("Not proposed admin") : address)
-    ];
-
-    if Tezos.sender = proposedAdministrator then
-    block {
-        store.administrator := proposedAdministrator;
-        store.proposedAdministrator := (None : option(address));
-    } else failwith("Not proposed admin")
-
+    store.administrator := newAdmin;
 } with ((nil: list(operation)), store)
 
 
@@ -249,7 +228,6 @@ case params of [
 | Collect(p) -> collect(store, p)
 | Default -> default(store)
 | Update_admin(p) -> updateAdmin(store, p)
-| Accept_ownership -> acceptOwnership(store)
 | Registry(p) -> registry(store, p)
 | Unregistry -> unregistry(store)
 | Update_operators(p) -> updateOperators(store, p)

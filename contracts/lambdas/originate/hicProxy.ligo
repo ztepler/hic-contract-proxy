@@ -59,7 +59,6 @@ block {
     (* Preparing initial storage: *)
     const initialStore : storage = record [
         administrator = Tezos.sender;
-        proposedAdministrator = (None : option(address));
         shares = shares;
         totalShares = totalShares;
         minterAddress = unpackAddressRecord("hicMinterAddress", records);
