@@ -15,7 +15,7 @@ class MapInteractionTest(HicBaseCase):
         # Trying to update admin from not admin address:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_update_admin(self.p2, self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Trying to update admin admin address:
         self._collab_update_admin(self.admin, self.tips)
@@ -39,7 +39,7 @@ class MapInteractionTest(HicBaseCase):
         for call in calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('This entrypoint should not receive tez' in str(cm.exception))
+            self.assertTrue('AMNT_FRBD' in str(cm.exception))
 
 
     def _test_no_admin_rights(self):
@@ -62,7 +62,7 @@ class MapInteractionTest(HicBaseCase):
         for call in admin_calls:
             with self.assertRaises(MichelsonRuntimeError) as cm:
                 call()
-            self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+            self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
 
     def _test_lambdas(self):
@@ -97,7 +97,7 @@ class MapInteractionTest(HicBaseCase):
         # Test mint call without admin role failed:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_mint(self.p2)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Test swap call from admin succeed:
         self._collab_swap(self.admin)
@@ -106,7 +106,7 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling swap from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_swap(self.p2)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Test cancel swap call from admin succeed:
         self._collab_cancel_swap(self.admin)
@@ -114,7 +114,7 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling cancel swap from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_cancel_swap(self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Test collect call from admin succeed:
         self._collab_collect(self.admin)
@@ -122,7 +122,7 @@ class MapInteractionTest(HicBaseCase):
         # Testing that calling collect from non-administrator address is not possible:
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_collect(self.tips)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Default entrypoint tests with value that can be easy splitted:
         self._collab_default(self.tips, 1000)
@@ -150,7 +150,7 @@ class MapInteractionTest(HicBaseCase):
         self._collab_mint(self.p2)
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_mint(self.admin)
-        self.assertTrue('Entrypoint can call only administrator' in str(cm.exception))
+        self.assertTrue('NOT_ADMIN' in str(cm.exception))
 
         # Collab with 1 participant can be created with only 1 share,
         # and we allow to have participants with 0 share (why not?):
@@ -235,7 +235,7 @@ class MapInteractionTest(HicBaseCase):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p2, originate_params)
-        msg = 'The maximum participants count is 108'
+        msg = 'EXCEED_MAX_PARTICIPANTS'
         self.assertTrue(msg in str(cm.exception))
 
 
@@ -249,7 +249,7 @@ class MapInteractionTest(HicBaseCase):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._factory_create_proxy(self.p2, originate_params)
-        msg = 'The maximum shares is 10**12'
+        msg = 'EXCEED_MAX_SHARES'
         self.assertTrue(msg in str(cm.exception))
 
 
@@ -382,6 +382,6 @@ class MapInteractionTest(HicBaseCase):
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_default(self.p2, amount=100)
-        msg = 'Wrong share configuration'
+        msg = 'WR_SHARES'
         self.assertTrue(msg in str(cm.exception))
 

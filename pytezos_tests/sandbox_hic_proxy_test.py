@@ -518,7 +518,7 @@ class HicProxyTestCase(ContractInteractionsTestCase):
         with self.assertRaises(MichelsonError) as cm:
             opg = self.factory.create_proxy(originate_params).send()
             self.bake_block()
-        self.assertTrue("Template is not found" in str(cm.exception))
+        self.assertTrue("TEMPLATE_NF" in str(cm.exception))
 
 
     def test_registry_communication(self):
