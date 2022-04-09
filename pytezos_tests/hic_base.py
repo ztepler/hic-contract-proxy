@@ -117,6 +117,8 @@ class HicBaseCase(TestCase):
         # default execute_lambda call params:
         self.execute_params = self._prepare_lambda_params('mint_OBJKT')
 
+        self.balances = {'proxy': 0}
+
 
     def _pack_address(self, address):
         return self.packer.pack_address(address).interpret().storage.hex()
@@ -400,6 +402,9 @@ class HicBaseCase(TestCase):
         self.assertEqual(new_undistributed, self.result.storage['undistributed'])
 
         self.collab_storage = self.result.storage
+        for address, amount in calc_amounts.items():
+            self.balances[address] = self.balances.get(address, 0) + amount
+            self.balances['proxy'] -= amount
 
 
     def _call_view_entrypoint(
@@ -575,6 +580,9 @@ class HicBaseCase(TestCase):
         self.assertEqual(op['destination'], recipient)
 
         self.collab_storage = result.storage
+
+        self.balances['proxy'] -= origin_undistributed
+        self.balances[recipient] = self.balances.get(recipient, 0) + origin_undistributed
 
         return withdrawn_amount
 

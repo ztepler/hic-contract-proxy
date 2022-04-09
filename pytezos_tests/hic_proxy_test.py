@@ -1,10 +1,14 @@
+from random import randint
 from pytezos import MichelsonRuntimeError, pytezos
 from hic_base import HicBaseCase
 from pytezos.crypto.key import Key
 
 
-# TODO: should I split this test into separate ones?
+def generate_key():
+    return pytezos.key.generate(export=False).public_key_hash()
 
+
+# TODO: should I split this test into separate ones?
 class MapInteractionTest(HicBaseCase):
 
     def _test_admin_change(self):
@@ -326,8 +330,6 @@ class MapInteractionTest(HicBaseCase):
 
 
     def test_should_aggregate_residuals_and_then_redistribute_them(self):
-        def generate_key():
-            return pytezos.key.generate(export=False).public_key_hash()
 
         originate_params = {
             generate_key(): {'share': 1, 'isCore': True}
@@ -384,4 +386,31 @@ class MapInteractionTest(HicBaseCase):
             self._collab_default(self.p2, amount=100)
         msg = 'WR_SHARES'
         self.assertTrue(msg in str(cm.exception))
+
+
+    def test_random_interactions(self):
+        ITERATIONS = 3
+
+        for iteration in range(ITERATIONS):
+            total_sum = 0
+
+            shares = {
+                generate_key(): {'share': randint(1, 100), 'isCore': True}
+                for _ in range(randint(2, 5))
+            }
+
+            self._factory_create_proxy(self.admin, shares)
+            self._collab_set_threshold(self.admin, randint(0, 100))
+
+            for call in range(randint(2, 5)):
+                new_sum = randint(0, 100)
+                self._collab_default(self.p1, amount=new_sum)
+                total_sum += new_sum
+                self.assertTrue(self.collab_storage['residuals'] < len(shares))
+
+            balances = sum(self.balances.get(addr, 0) for addr in shares)
+            undistributed = sum(
+                self.collab_storage['undistributed'][addr] for addr in shares)
+            residuals = self.collab_storage['residuals']
+            self.assertEqual(total_sum, balances+undistributed+residuals)
 
