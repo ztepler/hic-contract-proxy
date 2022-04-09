@@ -11,7 +11,6 @@ def deploy():
 
     storage = {
         'administrator': one_address,
-        'proposedAdministrator': None,
         'shares': {
             one_address: 1000,
             another_address: 10
