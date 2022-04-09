@@ -51,7 +51,7 @@ block {
     const hicReceiver : contract(mintParams) =
         case (Tezos.get_entrypoint_opt("%mint_OBJKT", minterAddress)
             : option(contract(mintParams))) of [
-        | None -> (failwith("No minter found") : contract(mintParams))
+        | None -> (failwith("MINT_NF") : contract(mintParams))
         | Some(con) -> con
         ];
 
@@ -65,7 +65,7 @@ block {
     const hicReceiver : contract(swapParams) =
         case (Tezos.get_entrypoint_opt("%swap", marketplaceAddress)
             : option(contract(swapParams))) of [
-        | None -> (failwith("No marketplace found") : contract(swapParams))
+        | None -> (failwith("SWAP_NF") : contract(swapParams))
         | Some(con) -> con
         ];
 
@@ -80,7 +80,7 @@ block {
     const hicReceiver : contract(cancelSwapParams) =
         case (Tezos.get_entrypoint_opt("%cancel_swap", marketplaceAddress)
             : option(contract(cancelSwapParams))) of [
-        | None -> (failwith("No marketplace found") : contract(cancelSwapParams))
+        | None -> (failwith("SWAP_NF") : contract(cancelSwapParams))
         | Some(con) -> con
         ];
 
@@ -95,7 +95,7 @@ block {
     const hicReceiver : contract(collectParams) =
         case (Tezos.get_entrypoint_opt("%collect", marketplaceAddress)
             : option(contract(collectParams))) of [
-        | None -> (failwith("No marketplace found") : contract(collectParams))
+        | None -> (failwith("SWAP_NF") : contract(collectParams))
         | Some(con) -> con
         ];
 
@@ -110,7 +110,7 @@ block {
     const hicReceiver : contract(curateParams) =
         case (Tezos.get_entrypoint_opt("%curate", minterAddress)
             : option(contract(curateParams))) of [
-        | None -> (failwith("No minter found") : contract(curateParams))
+        | None -> (failwith("MINT_NF") : contract(curateParams))
         | Some(con) -> con
         ];
 
@@ -125,7 +125,7 @@ block {
     const receiver : contract(registryParams) =
         case (Tezos.get_entrypoint_opt("%registry", registryAddress)
             : option(contract(registryParams))) of [
-        | None -> (failwith("No registry found") : contract(registryParams))
+        | None -> (failwith("REG_NF") : contract(registryParams))
         | Some(con) -> con
         ];
 
@@ -140,7 +140,7 @@ block {
     const receiver : contract(unit) =
         case (Tezos.get_entrypoint_opt("%unregistry", registryAddress)
             : option(contract(unit))) of [
-        | None -> (failwith("No registry found") : contract(unit))
+        | None -> (failwith("REG_NF") : contract(unit))
         | Some(con) -> con
         ];
 

@@ -39,7 +39,7 @@ block {
     const receiver : contract(updateOperatorsParam) =
         case (Tezos.get_entrypoint_opt("%update_operators", tokenAddress)
             : option(contract(updateOperatorsParam))) of [
-        | None -> (failwith("No FA2 contract found") : contract(updateOperatorsParam))
+        | None -> (failwith("FA2_NF") : contract(updateOperatorsParam))
         | Some(con) -> con
         ];
 
@@ -56,7 +56,7 @@ block {
     const receiver : contract(transferParams) =
         case (Tezos.get_entrypoint_opt("%transfer", tokenAddress)
             : option(contract(transferParams))) of [
-        | None -> (failwith("No FA2 contract found") : contract(transferParams))
+        | None -> (failwith("FA2_NF") : contract(transferParams))
         | Some(con) -> con
         ];
 

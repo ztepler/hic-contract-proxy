@@ -26,7 +26,7 @@ block {
 
     const participantsOption: option(participantsMap) = Bytes.unpack(packedParams);
     const participants : participantsMap = case participantsOption of [
-    | None -> (failwith("Unpack failed") : participantsMap)
+    | None -> (failwith("UNPK_FAIL") : participantsMap)
     | Some(p) -> p
     ];
 
@@ -50,10 +50,10 @@ block {
     else skip;
 
     if totalShares > 1_000_000_000_000n then
-        failwith("The maximum shares is 10**12")
+        failwith("EXCEED_MAX_SHARES")
     else skip;
 
-    if Map.size(participants) > 108n then failwith("The maximum participants count is 108")
+    if Map.size(participants) > 108n then failwith("EXCEED_MAX_PARTICIPANTS")
     else skip;
 
     (* Preparing initial storage: *)

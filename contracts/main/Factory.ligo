@@ -15,7 +15,7 @@ type factoryAction is
 
 function checkSenderIsAdmin(const factoryStore : factoryStorage) : unit is
     if (Tezos.sender = factoryStore.administrator) then unit
-    else failwith("Entrypoint can call only administrator");
+    else failwith("NOT_ADM");
 
 
 function createProxy(const params : originationParams; var factoryStore : factoryStorage)
@@ -26,7 +26,7 @@ block {
     const optionalOriginator = Map.find_opt(params.templateName, factoryStore.templates);
     const proxyOriginator : originateContractFunc = case optionalOriginator of [
     | Some(originator) -> originator
-    | None -> (failwith("Template is not found") : originateContractFunc)
+    | None -> (failwith("TEMPLATE_NF") : originateContractFunc)
     ];
 
     const result : originationResult = proxyOriginator(
@@ -91,14 +91,14 @@ block {
 
     const proposedAdministrator : address = case factoryStore.proposedAdministrator of [
     | Some(proposed) -> proposed
-    | None -> (failwith("Not proposed admin") : address)
+    | None -> (failwith("NOT_PROPOSED") : address)
     ];
 
     if Tezos.sender = proposedAdministrator then
     block {
         factoryStore.administrator := proposedAdministrator;
         factoryStore.proposedAdministrator := (None : option(address));
-    } else failwith("Not proposed admin")
+    } else failwith("NOT_PROPOSED")
 
 } with ((nil: list(operation)), factoryStore)
 

@@ -72,7 +72,7 @@ type action is
 
 function checkSenderIsAdmin(var store : storage) : unit is
     if (Tezos.sender = store.administrator) then unit
-    else failwith("Entrypoint can call only administrator");
+    else failwith("NOT_ADMIN");
 
 
 function execute(const params : executeParams; const store : storage)
@@ -156,7 +156,7 @@ block {
     const residuals = distAmount - allocatedPayouts;
     if residuals >= 0
     then store.residuals := abs(residuals)
-    else failwith("Wrong share configuration")
+    else failwith("WR_SHARES")
 
 } with (operations, store)
 
