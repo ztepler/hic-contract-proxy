@@ -1,21 +1,24 @@
 from pytezos import pytezos, ContractInterface
+from random import randint
+
 COLLAB_TZ = 'build/tz/hic_proxy.tz'
+PARTICIPANTS = 100
+
+
+def generate_key():
+    return pytezos.key.generate(export=False).public_key_hash()
 
 
 def deploy():
     """ Deploys collab contract with two participants """
 
     client = pytezos.using(key='ithacanet.json')
-    one_address = client.key.public_key_hash()
-    another_address = 'tz1dnyX1j91SkCEZxiQNuvSs6zzGhCyVmazx'
+    shares = {generate_key(): randint(1, 1000) for _ in range(PARTICIPANTS)}
 
     storage = {
-        'administrator': one_address,
-        'shares': {
-            one_address: 1000,
-            another_address: 10
-        },
-        'totalShares': 1010,
+        'administrator': client.key.public_key_hash(),
+        'shares': shares,
+        'totalShares': sum(shares.values()),
         'minterAddress': 'KT1Hkg5qeNhfwpKW4fXvq7HGZB9z2EnmCCA9',
         'marketplaceAddress': 'KT1HbQepzV1nVGg8QVznG7z4RcHseD5kwqBn',
         'tokenAddress': 'KT1RJ6PbjHpwc3M5rw5s2Nbmefwbuwbdxton',
@@ -24,10 +27,7 @@ def deploy():
         'isPaused': False,
         'totalReceived': 0,
         'threshold': 0,
-        'undistributed': {
-            one_address: 0,
-            another_address: 0
-        },
+        'undistributed': {address: 0 for address in shares},
         'residuals': 0
     }
 
