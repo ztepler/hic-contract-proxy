@@ -213,11 +213,13 @@ block {
 
 function withdraw(var store : storage; var recipient : address) is
 block {
-    (* anyone can trigger withdraw for anyone *)
+    (* anyone can trigger withdraw for anyone in share mapping *)
     checkNoAmount(Unit);
     const receiver = getReceiver(recipient);
     const payout = natToTez(getUndistributed(recipient, store));
-    store.undistributed[recipient] := 0n;
+    store.undistributed[recipient] := if Map.mem(recipient, store.shares)
+        then 0n
+        else (failwith("WR_ADDR") : nat);
     const op = Tezos.transaction(unit, payout, receiver);
 } with (list[op], store)
 
