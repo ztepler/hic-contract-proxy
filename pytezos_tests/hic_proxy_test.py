@@ -425,6 +425,7 @@ class MapInteractionTest(HicBaseCase):
         }
 
         self._factory_create_proxy(self.admin, originate_params)
+        self.collab_storage['undistributed'] = {}
 
         with self.assertRaises(MichelsonRuntimeError) as cm:
             self._collab_withdraw(recipient=self.tips)
