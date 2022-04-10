@@ -29,29 +29,12 @@ Special entrypoint `add_record` allows factory admin to add / rewrite some packe
 TODO: there should be pytezos script with all this deploy process
 Example with configuration batch call: [`ontP..PMaQ`](https://better-call.dev/mainnet/opg/ontPJgVMWCmQ1VbWSsEKs35uQNAFFRnXKBmjxXDDYu4ByDTPMaQ/contents)
 
+There is more details about Factory described [here](docs/factory_reference.md)
+
 ### HicProxy: the first split-contract implementation
 HicProxy is the first example of the split-contract proxy that allows to communicate with h=n ecosystem (mint, swap v2, registry, transfer tokens). It consists of two parts: [the contract](contracts/main/HicProxy.ligo) and lambda function used to originate this contract, [the template](contracts/lambdas/originate/hicProxy.ligo).
 
-HicProxy implements next entrypoints:
-* `default`: this entrypoint allows HicProxy contract to receive xtz and this is where all split magic are implemented. When this contract used as a recepient of xtz (as a seller in the marketplace or as a royalty receiver) it runs logic that redistribute incoming value using participant shares.
-* `mint_OBJKT`: this entrypoint have the same interface as h=n minter `mint_OBJKT` entrypoint. Only split-contract admin can call this entrypoint. When this entrypoint is called all given params redirected to the h=n minter using split-contract name as a Source, so split-contract became creator of the minted objkt.
-* `swap`: the same as `mint_OBJKT` this have the same interface as h=n marketplace `swap` and redirects any calls to the marketplace from the split-contract name and it became swapper of the objkt. Only admininstrator can call this entrypoint.
-* `cancel_swap`: the same as `swap` and `mint_OBJKT` logic with redirection to the h=n marketplace.
-* `collect`: the same logic with redirect to h=n marketplace
-* `curate`: the same logic with redirect to h=n minter
-* `registry`: the same logic with redirect to h=n name registry
-* `unregistry`: the same logic with redirect to h=n name registry
-* `update_operators`: the same logic with redirect to h=n objkt FA2 contract
-* `transfer`: the same logic with redirect to h=n objkt FA2 contract
-* `is_core_participant`: view that allows to check onchain if address given in params is on of the core participants
-* `is_administrator`: view that allows to check onchain if address given in params is split-contract administrator
-* `get_total_shares`: view that allows to get all contract shares onchain
-* `get_participant_shares`: view that allows to get given address shares count onchain
-* `update_admin`: entrypoint that allow admin to transfer admin rights to another address
-* `accept_ownership`: entrypoint that allow new admin to accept his rights
-* `trigger_pause`: entrypoint that set mint/swap operations on pause and resume it
-* `execute`: magic entrypoint that allows administrator to make any operation from the contract name (this can be useful to support another marketplaces that can arise in the future). Shortly: this entrypoint allows admin to run any code that does not change contract storage.
-TODO: it is good to have special subsection about lambda creation / compiling / using in the contracts
+HicProxy entrypoints described in [separate reference doc](docs/hic_proxy_reference.md).
 
 Admin can not change shares distribution after contract creation. Admin can mint new objkts from the contract name and swap them. Admin have rights to run any operation from the contract name.
 
@@ -90,7 +73,6 @@ You can have a look at the compilation+test script: [compile\_and\_test](compile
 - extra logic in `default` entrypoint
     * broker collaborator: buying hDAO from QuipuSwap and providing liquidity back to the hDAO/xtz pair
     * mint/distribute FA2 tokens on the primary sales (for everyone who buys from Gallery split-contract, for example). This may be possible if check transaction Sender is h=n marketplace
-    * aggregating xtz in split-contract before it reached some minimum value to redistribute or using special `withdraw` method instead of autodistribute if participant is another split-contract to allow more complex distribution trees
     * whitelisted gallery that allow to buy only for given list of allowed addresses (that either added during origination, either with some token staking logic)
     * FA2 token redistribution
     * Also this factory can be used to create this split-contracts for another cases, for example dividends split can be implemented or some split payments (we used this split-contract in wg3.2 to receive hicathon rewards)
