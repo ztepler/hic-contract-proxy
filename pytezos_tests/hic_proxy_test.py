@@ -414,3 +414,20 @@ class MapInteractionTest(HicBaseCase):
             residuals = self.collab_storage['residuals']
             self.assertEqual(total_sum, balances+undistributed+residuals)
 
+
+    def test_should_not_allow_to_withdraw_for_not_shareholder(self):
+        """ This withdrawals can be used to spam attack contract and increase
+            undistributed map size """
+
+        originate_params = {
+            self.p1: {'share': 1, 'isCore': True},
+            self.p2: {'share': 1, 'isCore': True}
+        }
+
+        self._factory_create_proxy(self.admin, originate_params)
+
+        with self.assertRaises(MichelsonRuntimeError) as cm:
+            self._collab_withdraw(recipient=self.tips)
+        msg = 'WR_ADDR'
+        self.assertTrue(msg in str(cm.exception))
+
