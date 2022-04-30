@@ -11,5 +11,6 @@ docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expressi
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/originate/basicProxy.ligo" > build/tz/lambdas/originate/basic_proxy.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3Swap.ligo" > build/tz/lambdas/call/marketplace_v3_swap.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3CancelSwap.ligo" > build/tz/lambdas/call/marketplace_v3_cancel_swap.tz
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3Swap.ligo" --michelson-format json > build/tz/lambdas/call/marketplace_v3_swap.json
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3CancelSwap.ligo" --michelson-format json > build/tz/lambdas/call/marketplace_v3_cancel_swap.json
 pytest -v
-
