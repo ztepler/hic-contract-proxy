@@ -9,8 +9,8 @@ docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile contract
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/hicMintOBJKT.ligo" > build/tz/lambdas/call/hic_mint_OBJKT.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/originate/hicProxy.ligo" > build/tz/lambdas/originate/hic_proxy.tz
 docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/originate/basicProxy.ligo" > build/tz/lambdas/originate/basic_proxy.tz
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3Swap.ligo" > build/tz/lambdas/call/marketplace_v3_swap.tz
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3CancelSwap.ligo" > build/tz/lambdas/call/marketplace_v3_cancel_swap.tz
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3Swap.ligo" --michelson-format json > build/tz/lambdas/call/marketplace_v3_swap.json
-docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/marketplaceV3CancelSwap.ligo" --michelson-format json > build/tz/lambdas/call/marketplace_v3_cancel_swap.json
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/teiaMarketplaceSwap.ligo" > build/tz/lambdas/call/teia_marketplace_swap.tz
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/teiaMarketplaceCancelSwap.ligo" > build/tz/lambdas/call/teia_marketplace_cancel_swap.tz
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/teiaMarketplaceSwap.ligo" --michelson-format json > build/tz/lambdas/call/teiaMarketplaceSwap.json
+docker run --rm -v "$PWD":"$PWD" -w "$PWD" ligolang/ligo:0.39.0 compile expression pascaligo lambda --init-file "contracts/lambdas/call/teiaMarketplaceCancelSwap.ligo" --michelson-format json > build/tz/lambdas/call/teiaMarketplaceCancelSwap.json
 pytest -v
